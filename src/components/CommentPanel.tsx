@@ -17,6 +17,11 @@ interface CommentPanelProps {
   isOpen: boolean;
   onClose: () => void;
   ideaTitle: string;
+  assignedTo?: {
+    id: string;
+    name: string;
+    avatar: string;
+  };
   comments: Comment[];
   onAddComment: (text: string) => void;
 }
@@ -25,6 +30,7 @@ export const CommentPanel = ({
   isOpen,
   onClose,
   ideaTitle,
+  assignedTo,
   comments,
   onAddComment,
 }: CommentPanelProps) => {
@@ -51,8 +57,34 @@ export const CommentPanel = ({
       {/* Panel */}
       <div className="fixed right-0 top-0 h-full w-full md:w-[440px] bg-card shadow-float z-50 animate-slide-in-right flex flex-col">
         {/* Header */}
-        <div className="p-8 border-b border-border/50 flex items-center justify-between">
-          <h2 className="text-xl font-semibold text-foreground pr-4">{ideaTitle}</h2>
+        <div className="p-8 border-b border-border/50 flex items-start justify-between gap-4">
+          <div className="flex-1 space-y-2">
+            <h2 className="text-xl font-semibold text-foreground">
+              {ideaTitle}
+            </h2>
+            {assignedTo && (
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-muted-foreground">
+                  Assigned to:
+                </span>
+                <div className="flex items-center gap-2">
+                  <Avatar className="h-7 w-7 border border-border/60">
+                    <AvatarFallback className="bg-primary/10 text-primary text-xs font-medium">
+                      {assignedTo.avatar}
+                    </AvatarFallback>
+                  </Avatar>
+                  <span className="text-xs text-foreground line-clamp-1 max-w-[180px]">
+                    {assignedTo.name}
+                  </span>
+                </div>
+              </div>
+            )}
+            {!assignedTo && (
+              <p className="text-xs text-muted-foreground">
+                Assigned to: Unassigned
+              </p>
+            )}
+          </div>
           <Button
             variant="ghost"
             size="icon"
@@ -104,7 +136,10 @@ export const CommentPanel = ({
         </div>
 
         {/* Input */}
-        <form onSubmit={handleSubmit} className="p-8 border-t border-border/50 bg-muted/20">
+        <form
+          onSubmit={handleSubmit}
+          className="p-8 border-t border-border/50 bg-muted/20"
+        >
           <div className="flex gap-3">
             <Input
               value={newComment}
