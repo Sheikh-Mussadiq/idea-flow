@@ -67,6 +67,7 @@ interface TaskModalProps {
   onAddCommentToIdea: (id: string, text: string) => void;
   onDeleteComment: (ideaId: string, commentId: string) => void;
   onUpdateComment: (ideaId: string, commentId: string, text: string) => void;
+  onArchiveTask: (id: string) => void;
 }
 
 export const TaskModal = ({
@@ -90,6 +91,7 @@ export const TaskModal = ({
   onAddCommentToIdea,
   onDeleteComment,
   onUpdateComment,
+  onArchiveTask,
 }: TaskModalProps) => {
   const [localTitle, setLocalTitle] = useState("");
   const [localDescription, setLocalDescription] = useState("");
@@ -184,14 +186,28 @@ export const TaskModal = ({
                 )}
               </div>
             </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={onClose}
-              className="rounded-full hover:bg-muted shrink-0"
-            >
-              <X className="h-5 w-5" />
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-7 px-3 text-[11px] text-muted-foreground hover:text-destructive border-border/60"
+                onClick={() => {
+                  onArchiveTask(idea.id);
+                  onClose();
+                }}
+              >
+                Archive Task
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={onClose}
+                className="rounded-full hover:bg-muted shrink-0"
+              >
+                <X className="h-5 w-5" />
+              </Button>
+            </div>
           </div>
 
           <div className="flex flex-col md:flex-row h-full max-h-[70vh]">
