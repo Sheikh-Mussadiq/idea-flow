@@ -13,7 +13,9 @@ const App = () => (
     <Sonner />
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<BoardPage />} />
+        <Route path="/" element={<BoardPage initialView="flow" />} />
+        <Route path="/flow" element={<BoardPage initialView="flow" />} />
+        <Route path="/tasks" element={<BoardPage initialView="kanban" />} />
         <Route path="/analytics" element={<AnalyticsPage />} />
         <Route path="/settings" element={<SettingsPage />} />
         {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

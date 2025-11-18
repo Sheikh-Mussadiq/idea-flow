@@ -87,7 +87,7 @@ const createEmptyBoard = (name, color, icon) => ({
   isArchived: false,
 });
 
-export const IdeaBoardLayout = () => {
+export const IdeaBoardLayout = ({ initialView = "flow" }) => {
   const [boards, setBoards] = useState([
     createEmptyBoard("Main Content Board", "#6366f1", "\u007f"),
     createEmptyBoard("Marketing Board", "#22c55e"),
@@ -508,6 +508,7 @@ export const IdeaBoardLayout = () => {
 
       <div className="h-full w-full">
         <FlowContent
+          initialView={initialView}
           ideas={filteredIdeas}
           comments={activeBoard.comments}
           onUpdateIdeas={handleUpdateIdeas}

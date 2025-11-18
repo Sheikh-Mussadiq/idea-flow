@@ -76,8 +76,9 @@ export const FlowContent = ({
   teamMembers,
   currentUser,
   currentRole,
+  initialView = "flow",
 }) => {
-  const [viewMode, setViewMode] = useState("flow");
+  const [viewMode, setViewMode] = useState(initialView);
   const [mode, setMode] = useState("ai");
   const [prompt, setPrompt] = useState("");
   const [manualIdea, setManualIdea] = useState("");

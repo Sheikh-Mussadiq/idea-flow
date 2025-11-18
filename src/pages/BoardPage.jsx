@@ -3,11 +3,11 @@ import "reactflow/dist/style.css";
 import { AppLayout } from "../layouts/AppLayout.jsx";
 import { IdeaBoardLayout } from "../components/BoardPage/IdeaBoardLayout.jsx";
 
-const BoardPage = () => {
+const BoardPage = ({ initialView = "flow" }) => {
   return (
     <AppLayout>
       <ReactFlowProvider>
-        <IdeaBoardLayout />
+        <IdeaBoardLayout initialView={initialView} />
       </ReactFlowProvider>
     </AppLayout>
   );
