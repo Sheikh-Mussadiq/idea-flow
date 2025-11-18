@@ -31,11 +31,11 @@ export function BoardHeader({
             <Button
               variant="outline"
               size="sm"
-              className="flex items-center gap-2 rounded-full border-border/70 bg-card/90 px-3 text-xs shadow-soft"
+              className="flex items-center gap-2 rounded-full border-neutral-200/70 bg-white/90 px-3 text-xs shadow-sm"
             >
               <span
                 className={`h-2.5 w-2.5 rounded-full ${
-                  activeBoard.color ? "" : "bg-primary"
+                  activeBoard.color ? "" : "bg-primary-500"
                 }`}
                 style={
                   activeBoard.color
@@ -44,23 +44,23 @@ export function BoardHeader({
                 }
               />
               <span className="flex items.center gap-1">
-                <LayoutTemplate className="h-3 w-3 text-muted-foreground" />
+                <LayoutTemplate className="h-3 w-3 text-neutral-500" />
                 <span className="max-w-[140px] truncate">
                   {activeBoard.name}
                 </span>
               </span>
-              <ChevronDown className="h-3 w-3 text-muted-foreground" />
+              <ChevronDown className="h-3 w-3 text-neutral-500" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" className="min-w-[220px]">
-            <DropdownMenuLabel className="text-xs text-muted-foreground">
+            <DropdownMenuLabel className="text-xs text-neutral-500">
               Workspaces
             </DropdownMenuLabel>
             {boards.map((board) => (
               <DropdownMenuItem
                 key={board.id}
                 className={`flex items-center gap-2 text-xs ${
-                  board.id === activeBoard.id ? "bg-accent/60" : ""
+                  board.id === activeBoard.id ? "bg-primary-50" : ""
                 }`}
                 onClick={() => onSelectBoard(board.id)}
               >
@@ -106,7 +106,7 @@ export function BoardHeader({
           <Button
             variant="outline"
             size="sm"
-            className="rounded-full border-border/70 bg-card/90 px-2 text-[11px] shadow-soft flex items-center gap-1"
+            className="rounded-full border-neutral-200/70 bg-white/90 px-2 text-[11px] shadow-sm flex items-center gap-1"
             onClick={onOpenMembers}
           >
             <Users className="h-3 w-3" />
@@ -117,8 +117,8 @@ export function BoardHeader({
       <div className="mt-2 flex items-center gap-1">
         {(activeBoard.members || []).map((member) => (
           <div key={member.id} className="relative group">
-            <Avatar className="h-6 w-6 border border-border/60">
-              <AvatarFallback className="bg-primary/10 text-[10px] font-medium">
+            <Avatar className="h-6 w-6 border border-neutral-200/60">
+              <AvatarFallback className="bg-primary-500/10 text-[10px] font-medium">
                 {member.avatar || member.name.charAt(0)}
               </AvatarFallback>
             </Avatar>
@@ -128,7 +128,7 @@ export function BoardHeader({
           <Button
             variant="outline"
             size="icon"
-            className="h-6 w-6 rounded-full border-dashed border-border/70 text-[10px] text-muted-foreground"
+            className="h-6 w-6 rounded-full border-dashed border-neutral-200/70 text-[10px] text-neutral-500"
             onClick={onOpenMembers}
           >
             +

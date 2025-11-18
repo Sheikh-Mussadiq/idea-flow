@@ -113,9 +113,9 @@ export const useIdeaFlowLayout = (
         type: "smoothstep",
         animated: true,
         style: {
-          stroke: "hsl(var(--primary))",
+          stroke: "#5865FF",
           strokeWidth: 2,
-          strokeOpacity: 0.6,
+          strokeOpacity: 0.9,
         },
       })),
     [ideas]

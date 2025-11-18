@@ -471,7 +471,7 @@ export const IdeaBoardLayout = () => {
   };
 
   return (
-    <div className="relative h-full w-full bg-background">
+    <div className="relative h-full w-full bg-neutral-50">
       <BoardHeader
         boards={boards}
         activeBoard={activeBoard}

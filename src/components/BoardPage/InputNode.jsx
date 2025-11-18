@@ -5,15 +5,15 @@ import { Sparkles, Plus, RotateCw, Trash2 } from "lucide-react";
 
 export const InputNode = ({ data }) => {
   return (
-    <div className="bg-card rounded-2xl shadow-large py-4 px-8 border border-border/50 min-w-[600px]">
+    <div className="bg-white rounded-2xl shadow-xl py-4 px-8 border border-neutral-200/60 min-w-[600px]">
       {/* Mode Toggle */}
       <div className="flex items-center justify-center gap-2 mb-6">
         <button
           onClick={() => data.onModeChange("ai")}
           className={`px-6 py-2.5 rounded-full text-sm font-medium transition-all duration-300 ${
             data.mode === "ai"
-              ? "bg-primary text-primary-foreground shadow-soft"
-              : "bg-muted text-muted-foreground hover:bg-muted/80"
+              ? "bg-primary-500 text-white shadow-md"
+              : "bg-neutral-100 text-neutral-600 hover:bg-neutral-200"
           }`}
         >
           <Sparkles className="inline h-4 w-4 mr-1.5" />
@@ -23,8 +23,8 @@ export const InputNode = ({ data }) => {
           onClick={() => data.onModeChange("manual")}
           className={`px-6 py-2.5 rounded-full text-sm font-medium transition-all duration-300 ${
             data.mode === "manual"
-              ? "bg-primary text-primary-foreground shadow-soft"
-              : "bg-muted text-muted-foreground hover:bg-muted/80"
+              ? "bg-primary-500 text-white shadow-md"
+              : "bg-neutral-100 text-neutral-600 hover:bg-neutral-200"
           }`}
         >
           <Plus className="inline h-4 w-4 mr-1.5" />
@@ -39,7 +39,7 @@ export const InputNode = ({ data }) => {
             value={data.prompt}
             onChange={(e) => data.onPromptChange(e.target.value)}
             placeholder="Describe what kind of content ideas you want…"
-            className="h-14 text-base rounded-xl border-border/50 bg-background"
+            className="h-14 text-base rounded-xl border-neutral-200 bg-neutral-50"
           />
           <div className="flex gap-3">
             <Button
@@ -68,7 +68,7 @@ export const InputNode = ({ data }) => {
             value={data.manualIdea}
             onChange={(e) => data.onManualIdeaChange(e.target.value)}
             placeholder="Write your idea…"
-            className="h-14 text-base rounded-xl border-border/50 bg-background"
+            className="h-14 text-base rounded-xl border-neutral-200 bg-neutral-50"
           />
           <div className="flex gap-3">
             <Button
@@ -94,7 +94,7 @@ export const InputNode = ({ data }) => {
       <Handle
         type="source"
         position={Position.Bottom}
-        className="!bg-primary !w-3 !h-3"
+        className="!bg-primary-500 !w-3 !h-3"
       />
     </div>
   );

@@ -41,7 +41,7 @@ export const DropdownMenuContent = ({
   if (!ctx || !ctx.open) return null;
   return (
     <div
-      className={`absolute z-50 mt-1 min-w-[10rem] rounded-md border border-border/60 bg-card p-1 shadow-float ${className}`}
+      className={`absolute z-50 mt-1 min-w-[10rem] rounded-md border border-neutral-200/60 bg-white p-1 shadow-md ${className}`}
       {...props}
     />
   );
@@ -56,7 +56,7 @@ export const DropdownMenuItem = ({ className = "", onClick, ...props }) => {
   return (
     <button
       type="button"
-      className={`flex w-full cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-xs text-foreground hover:bg-muted ${className}`}
+      className={`flex w-full cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-xs text-neutral-900 hover:bg-neutral-100 ${className}`}
       onClick={handleClick}
       {...props}
     />
@@ -65,11 +65,11 @@ export const DropdownMenuItem = ({ className = "", onClick, ...props }) => {
 
 export const DropdownMenuLabel = ({ className = "", ...props }) => (
   <div
-    className={`px-2 py-1.5 text-xs font-semibold text-muted-foreground ${className}`}
+    className={`px-2 py-1.5 text-xs font-semibold text-neutral-500 ${className}`}
     {...props}
   />
 );
 
 export const DropdownMenuSeparator = ({ className = "", ...props }) => (
-  <div className={`my-1 h-px bg-border/60 ${className}`} {...props} />
+  <div className={`my-1 h-px bg-neutral-200/60 ${className}`} {...props} />
 );

@@ -97,7 +97,7 @@ export function BoardFiltersSheet({
             <div className="font-medium">Labels</div>
             <div className="flex flex-wrap gap-2">
               {availableLabels.length === 0 && (
-                <span className="text-[11px] text-muted-foreground">
+                <span className="text-[11px] text-neutral-500">
                   No labels yet
                 </span>
               )}
@@ -134,7 +134,7 @@ export function BoardFiltersSheet({
             <div className="font-medium">Assigned to</div>
             <div className="flex flex-wrap gap-2">
               {availableAssignees.length === 0 && (
-                <span className="text-[11px] text-muted-foreground">
+                <span className="text-[11px] text-neutral-500">
                   No assignments yet
                 </span>
               )}
@@ -156,7 +156,7 @@ export function BoardFiltersSheet({
                       }));
                     }}
                   >
-                    <span className="flex h-4 w-4 items-center justify-center rounded-full bg-muted text-[9px] font-medium">
+                    <span className="flex h-4 w-4 items-center justify-center rounded-full bg-neutral-100 text-[9px] font-medium">
                       {member.avatar || member.name.charAt(0)}
                     </span>
                     <span>{member.name}</span>

@@ -5,7 +5,7 @@ export const AlertDialog = ({ open, onOpenChange, children }) => {
   if (!open) return null;
   return createPortal(
     <div
-      className="fixed inset-0 z-40 flex items-center justify-center bg-background/80 backdrop-blur-sm"
+      className="fixed inset-0 z-40 flex items-center justify-center bg-neutral-900/40 backdrop-blur-sm"
       onClick={() => onOpenChange?.(false)}
     >
       <div
@@ -21,7 +21,7 @@ export const AlertDialog = ({ open, onOpenChange, children }) => {
 
 export const AlertDialogContent = ({ className = "", ...props }) => (
   <div
-    className={`rounded-2xl border border-border/60 bg-card text-foreground shadow-float ${className}`}
+    className={`rounded-2xl border border-neutral-200/60 bg-white text-neutral-900 shadow-xl ${className}`}
     {...props}
   />
 );
@@ -39,7 +39,7 @@ export const AlertDialogTitle = ({ className = "", ...props }) => (
 );
 
 export const AlertDialogDescription = ({ className = "", ...props }) => (
-  <p className={`text-sm text-muted-foreground ${className}`} {...props} />
+  <p className={`text-sm text-neutral-500 ${className}`} {...props} />
 );
 
 export const AlertDialogCancel = ({ className = "", ...props }) => (

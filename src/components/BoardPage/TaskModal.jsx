@@ -66,29 +66,29 @@ export const TaskModal = ({
   return (
     <>
       <div
-        className="fixed inset-0 bg-background/80 backdrop-blur-sm z-40 animate-fade-in"
+        className="fixed inset-0 bg-neutral-900/40 backdrop-blur-sm z-40 animate-fade-in"
         onClick={onClose}
       />
       <div className="fixed inset-0 z-50 flex items-center justify-center px-4 py-8">
         <div
-          className="relative w-full max-w-3xl max-h-full bg-card rounded-2xl shadow-float border border-border/70 animate-slide-up overflow-hidden"
+          className="relative w-full max-w-3xl max-h-full bg-white rounded-2xl shadow-xl border border-neutral-200/60 animate-slide-up overflow-hidden"
           onClick={(e) => e.stopPropagation()}
         >
-          <div className="flex items-start justify-between p-6 border-b border-border/60 bg-card/80">
+          <div className="flex items-start justify-between p-6 border-b border-neutral-200/60 bg-white/80">
             <div className="space-y-2 flex-1 pr-4">
               <input
-                className="w-full bg-transparent text-xl font-semibold text-foreground outline-none border-none"
+                className="w-full bg-transparent text-xl font-semibold text-neutral-900 outline-none border-none"
                 value={localTitle}
                 onChange={(e) => setLocalTitle(e.target.value)}
                 onBlur={canEdit ? handleSaveTitle : undefined}
                 disabled={!canEdit}
                 placeholder="Task title"
               />
-              <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+              <div className="flex flex-wrap items-center gap-3 text-xs text-neutral-500">
                 {idea.assignedTo && (
                   <div className="flex items-center gap-2">
-                    <Avatar className="h-7 w-7 border border-border/60">
-                      <AvatarFallback className="bg-primary/10 text-primary text-xs font-medium">
+                    <Avatar className="h-7 w-7 border border-neutral-200/60">
+                      <AvatarFallback className="bg-primary-500/10 text-primary-500 text-xs font-medium">
                         {idea.assignedTo.avatar}
                       </AvatarFallback>
                     </Avatar>
@@ -96,21 +96,21 @@ export const TaskModal = ({
                   </div>
                 )}
                 {typeof idea.priority === "string" && (
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-muted/80">
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-neutral-100">
                     <span
                       className={`h-2 w-2 rounded-full ${
                         idea.priority === "low"
-                          ? "bg-emerald-500"
+                          ? "bg-success-500"
                           : idea.priority === "medium"
-                          ? "bg-amber-400"
-                          : "bg-red-500"
+                          ? "bg-warning-500"
+                          : "bg-error-500"
                       }`}
                     />
                     <span className="capitalize">{idea.priority}</span>
                   </span>
                 )}
                 {idea.dueDate && (
-                  <span className="px-2 py-0.5 rounded-full bg-muted/80">
+                  <span className="px-2 py-0.5 rounded-full bg-neutral-100">
                     Due {idea.dueDate}
                   </span>
                 )}
@@ -126,7 +126,7 @@ export const TaskModal = ({
                 type="button"
                 variant="outline"
                 size="sm"
-                className="h-7 px-3 text-[11px] text-muted-foreground hover:text-destructive border-border/60"
+                className="h-7 px-3 text-[11px] text-neutral-500 hover:text-error-500 border-neutral-200/60"
                 disabled={!canEdit}
                 onClick={() => {
                   onArchiveTask(idea.id);
@@ -139,7 +139,7 @@ export const TaskModal = ({
                 variant="ghost"
                 size="icon"
                 onClick={onClose}
-                className="rounded-full hover:bg-muted shrink-0"
+                className="rounded-full hover:bg-neutral-100 shrink-0"
               >
                 <X className="h-5 w-5" />
               </Button>
@@ -149,11 +149,11 @@ export const TaskModal = ({
           <div className="flex flex-col md:flex-row h-full max-h-[70vh]">
             <div className="flex-1 p-6 space-y-6 overflow-y-auto">
               <div className="space-y-2">
-                <label className="text-xs font-medium text-muted-foreground">
+                <label className="text-xs font-medium text-neutral-500">
                   Description
                 </label>
                 <textarea
-                  className="w-full min-h-[96px] rounded-xl border border-border/60 bg-background px-3 py-2 text-sm text-foreground outline-none resize-y"
+                  className="w-full min-h-[96px] rounded-xl border border-neutral-200/60 bg-white px-3 py-2 text-sm text-neutral-900 outline-none resize-y"
                   value={localDescription}
                   onChange={(e) => setLocalDescription(e.target.value)}
                   onBlur={canEdit ? handleSaveDescription : undefined}
@@ -164,11 +164,11 @@ export const TaskModal = ({
 
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-medium text-muted-foreground">
+                  <span className="text-xs font-medium text-neutral-500">
                     Subtasks
                   </span>
                   {idea.subtasks.length > 0 && (
-                    <span className="text-xs text-muted-foreground">
+                    <span className="text-xs text-neutral-500">
                       {completedCount}/{idea.subtasks.length} completed
                     </span>
                   )}
@@ -188,14 +188,14 @@ export const TaskModal = ({
                       <span
                         className={`flex-1 truncate ${
                           subtask.completed
-                            ? "line-through text-muted-foreground"
+                            ? "line-through text-neutral-400"
                             : ""
                         }`}
                       >
                         {subtask.text}
                       </span>
                       <button
-                        className="text-xs text-muted-foreground hover:text-destructive"
+                        className="text-xs text-neutral-500 hover:text-error-500"
                         onClick={() => onRemoveSubtask(idea.id, subtask.id)}
                         disabled={!canEdit}
                       >
@@ -207,7 +207,7 @@ export const TaskModal = ({
                 <div className="flex items-center gap-2">
                   <input
                     type="text"
-                    className="flex-1 h-8 rounded-lg bg-muted/60 border border-border/60 px-2 text-xs"
+                    className="flex-1 h-8 rounded-lg bg-neutral-100 border border-neutral-200/60 px-2 text-xs"
                     placeholder="Add subtask..."
                     value={newSubtask}
                     onChange={(e) => setNewSubtask(e.target.value)}
@@ -223,7 +223,7 @@ export const TaskModal = ({
                     type="button"
                     variant="ghost"
                     size="sm"
-                    className="h-8 px-3 text-xs text-muted-foreground hover:text-primary"
+                    className="h-8 px-3 text-xs text-neutral-500 hover:text-primary-500"
                     onClick={() => {
                       onAddSubtask(idea.id, newSubtask);
                       setNewSubtask("");
@@ -236,7 +236,7 @@ export const TaskModal = ({
               </div>
 
               <div className="space-y-3">
-                <div className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
+                <div className="flex items-center gap-2 text-xs font-medium text-neutral-500">
                   <Paperclip className="h-4 w-4" />
                   <span>Attachments</span>
                 </div>
@@ -271,7 +271,7 @@ export const TaskModal = ({
                   <div className="flex items-center gap-2">
                     <input
                       type="text"
-                      className="flex-1 h-8 rounded-lg bg-muted/60 border border-border/60 px-2 text-xs"
+                      className="flex-1 h-8 rounded-lg bg-neutral-100 border border-neutral-200/60 px-2 text-xs"
                       placeholder="Paste link URL..."
                       value={newLink}
                       onChange={(e) => setNewLink(e.target.value)}
@@ -281,7 +281,7 @@ export const TaskModal = ({
                       type="button"
                       variant="ghost"
                       size="sm"
-                      className="h-8 px-3 text-xs text-muted-foreground hover:text-primary"
+                      className="h-8 px-3 text-xs text-neutral-500 hover:text-primary-500"
                       onClick={() => {
                         if (!idea || !newLink.trim()) return;
                         onAddAttachment(idea.id, {
@@ -303,7 +303,7 @@ export const TaskModal = ({
                   {idea.attachments.map((att) => (
                     <div
                       key={att.id}
-                      className="border border-border/60 rounded-lg p-2 flex flex-col gap-1 bg-muted/40"
+                      className="border border-neutral-200/60 rounded-lg p-2 flex flex-col gap-1 bg-neutral-100/60"
                     >
                       {att.type === "image" ? (
                         <img
@@ -312,12 +312,12 @@ export const TaskModal = ({
                           className="w-full h-24 object-cover rounded"
                         />
                       ) : (
-                        <div className="h-24 flex items-center justify-center text-muted-foreground text-[10px] bg-background/60 rounded">
+                        <div className="h-24 flex items-center justify-center text-neutral-500 text-[10px] bg-neutral-100/60 rounded">
                           {att.type.toUpperCase()}
                         </div>
                       )}
                       <div className="flex items-center justify-between gap-2 mt-1">
-                        <span className="flex-1 truncate text-xs text-foreground">
+                        <span className="flex-1 truncate text-xs text-neutral-900">
                           {att.name}
                         </span>
                         <div className="flex items-center gap-1">
@@ -325,7 +325,7 @@ export const TaskModal = ({
                             type="button"
                             variant="ghost"
                             size="icon"
-                            className="h-6 w-6 text-muted-foreground hover:text-primary"
+                            className="h-6 w-6 text-neutral-500 hover:text-primary-500"
                             onClick={() => window.open(att.url, "_blank")}
                             disabled={!canEdit}
                           >
@@ -335,7 +335,7 @@ export const TaskModal = ({
                             type="button"
                             variant="ghost"
                             size="icon"
-                            className="h-6 w-6 text-muted-foreground hover:text-destructive"
+                            className="h-6 w-6 text-neutral-500 hover:text-error-500"
                             onClick={() => onRemoveAttachment(idea.id, att.id)}
                             disabled={!canEdit}
                           >
@@ -346,7 +346,7 @@ export const TaskModal = ({
                     </div>
                   ))}
                   {idea.attachments.length === 0 && (
-                    <div className="text-xs text-muted-foreground">
+                    <div className="text-xs text-neutral-500">
                       No attachments yet.
                     </div>
                   )}
@@ -354,26 +354,26 @@ export const TaskModal = ({
               </div>
             </div>
 
-            <div className="w-full md:w-80 border-t md:border-t-0 md:border-l border-border/60 bg-muted/30 p-6 space-y-6 overflow-y-auto">
+            <div className="w-full md:w-80 border-t md:border-t-0 md:border-l border-neutral-200/60 bg-neutral-100/60 p-6 space-y-6 overflow-y-auto">
               <div className="space-y-3">
-                <h3 className="text-xs font-semibold text-muted-foreground">
+                <h3 className="text-xs font-semibold text-neutral-500">
                   Assignment
                 </h3>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     {idea.assignedTo ? (
                       <>
-                        <Avatar className="h-7 w-7 border border-border/60">
-                          <AvatarFallback className="bg-primary/10 text-primary text-xs font-medium">
+                        <Avatar className="h-7 w-7 border border-neutral-200/60">
+                          <AvatarFallback className="bg-primary-500/10 text-primary-500 text-xs font-medium">
                             {idea.assignedTo.avatar}
                           </AvatarFallback>
                         </Avatar>
-                        <span className="text-xs text-foreground">
+                        <span className="text-xs text-neutral-900">
                           {idea.assignedTo.name}
                         </span>
                       </>
                     ) : (
-                      <span className="text-xs text-muted-foreground">
+                      <span className="text-xs text-neutral-500">
                         Unassigned
                       </span>
                     )}
@@ -382,30 +382,30 @@ export const TaskModal = ({
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="h-7 px-2 text-[11px] text-muted-foreground hover:text-primary"
+                      className="h-7 px-2 text-[11px] text-neutral-500 hover:text-primary-500"
                       onClick={() => setAssignOpen((v) => !v)}
                     >
                       Assign
                     </Button>
                     {assignOpen && (
-                      <div className="absolute right-0 mt-1 w-44 rounded-lg bg-card border border-border/60 shadow-float z-10 py-1">
+                      <div className="absolute right-0 mt-1 w-44 rounded-lg bg-neutral-100 border border-neutral-200/60 shadow-sm z-10 py-1">
                         {teamMembers.map((member) => (
                           <button
                             key={member.id}
-                            className="w-full flex items-center gap-2 px-2 py-1.5 text-left text-[11px] text-foreground hover:bg-muted/80"
+                            className="w-full flex items-center gap-2 px-2 py-1.5 text-left text-[11px] text-neutral-900 hover:bg-neutral-100/60"
                             onClick={() => {
                               onAssign(idea.id, member);
                               setAssignOpen(false);
                             }}
                           >
-                            <div className="h-5 w-5 rounded-full bg-primary/10 text-[10px] flex items-center justify-center text-primary font-medium">
+                            <div className="h-5 w-5 rounded-full bg-primary-500/10 text-[10px] flex items-center justify-center text-primary-500 font-medium">
                               {member.avatar}
                             </div>
                             <span className="truncate">{member.name}</span>
                           </button>
                         ))}
                         <button
-                          className="w-full px-2 py-1.5 text-left text-[11px] text-muted-foreground hover:bg-muted/80 border-t border-border/60 mt-1"
+                          className="w-full px-2 py-1.5 text-left text-[11px] text-neutral-500 hover:bg-neutral-100/60 border-t border-neutral-200/60 mt-1"
                           onClick={() => {
                             onAssign(idea.id, null);
                             setAssignOpen(false);
@@ -420,28 +420,26 @@ export const TaskModal = ({
               </div>
 
               <div className="space-y-3">
-                <h3 className="text-xs font-semibold text-muted-foreground">
+                <h3 className="text-xs font-semibold text-neutral-500">
                   Due date
                 </h3>
                 <div className="flex items-center gap-2 text-xs">
                   <input
                     type="date"
-                    className="h-8 rounded-lg border border-border/60 bg-background px-2 text-xs"
+                    className="h-8 rounded-lg border border-neutral-200/60 bg-white px-2 text-xs"
                     value={idea.dueDate ?? ""}
                     onChange={(e) =>
                       onChangeDueDate(idea.id, e.target.value || null)
                     }
                   />
                   {idea.dueDate && (
-                    <span className="text-muted-foreground">
-                      {idea.dueDate}
-                    </span>
+                    <span className="text-neutral-500">{idea.dueDate}</span>
                   )}
                 </div>
               </div>
 
               <div className="space-y-3">
-                <h3 className="text-xs font-semibold text-muted-foreground">
+                <h3 className="text-xs font-semibold text-neutral-500">
                   Priority
                 </h3>
                 <div className="flex flex-wrap gap-2 text-[11px]">
@@ -450,8 +448,8 @@ export const TaskModal = ({
                       key={level}
                       className={`px-2 py-1 rounded-full border capitalize ${
                         idea.priority === level
-                          ? "bg-primary text-primary-foreground border-primary"
-                          : "bg-background border-border/60"
+                          ? "bg-primary-500 text-white border-primary-500"
+                          : "bg-white border-neutral-200/60"
                       }`}
                       onClick={() => onChangePriority(idea.id, level)}
                     >
@@ -459,7 +457,7 @@ export const TaskModal = ({
                     </button>
                   ))}
                   <button
-                    className="px-2 py-1 rounded-full border border-border/60"
+                    className="px-2 py-1 rounded-full border border-neutral-200/60"
                     onClick={() => onChangePriority(idea.id, null)}
                   >
                     Clear
@@ -468,14 +466,14 @@ export const TaskModal = ({
               </div>
 
               <div className="space-y-3">
-                <h3 className="text-xs font-semibold text-muted-foreground">
+                <h3 className="text-xs font-semibold text-neutral-500">
                   Labels
                 </h3>
                 <div className="flex flex-wrap gap-2 text-[11px]">
                   {idea.labels.map((label) => (
                     <button
                       key={label.id}
-                      className="px-2 py-1 rounded-full text-[11px] text-background"
+                      className="px-2 py-1 rounded-full text-[11px] text-white"
                       style={{ backgroundColor: label.color }}
                       onClick={() => onRemoveLabel(idea.id, label.id)}
                       disabled={!canEdit}
@@ -484,7 +482,7 @@ export const TaskModal = ({
                     </button>
                   ))}
                   {idea.labels.length === 0 && (
-                    <span className="text-xs text-muted-foreground">
+                    <span className="text-xs text-neutral-500">
                       No labels yet.
                     </span>
                   )}
@@ -499,7 +497,7 @@ export const TaskModal = ({
                   ].map((preset) => (
                     <button
                       key={preset.name}
-                      className="px-2 py-1 rounded-full text-[11px] text-background"
+                      className="px-2 py-1 rounded-full text-[11px] text-white"
                       style={{ backgroundColor: preset.color }}
                       onClick={() =>
                         onAddLabel(idea.id, {
@@ -518,7 +516,7 @@ export const TaskModal = ({
 
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-xs font-semibold text-muted-foreground flex items-center gap-1">
+                  <h3 className="text-xs font-semibold text-neutral-500 flex items-center gap-1">
                     <MessageCircle className="h-3 w-3" /> Comments
                   </h3>
                 </div>
@@ -526,22 +524,22 @@ export const TaskModal = ({
                   {comments.map((comment) => (
                     <div key={comment.id} className="space-y-1">
                       <div className="flex items-start gap-2">
-                        <Avatar className="h-7 w-7 border border-border/60">
-                          <AvatarFallback className="bg-primary/10 text-primary text-xs font-medium">
+                        <Avatar className="h-7 w-7 border border-neutral-200/60">
+                          <AvatarFallback className="bg-primary-500/10 text-primary-500 text-xs font-medium">
                             {comment.avatar}
                           </AvatarFallback>
                         </Avatar>
                         <div className="flex-1 space-y-1">
                           <div className="flex items-center justify-between gap-2">
                             <div className="flex items-center gap-2">
-                              <span className="font-medium text-xs text-foreground">
+                              <span className="font-medium text-xs text-neutral-900">
                                 {comment.author}
                               </span>
-                              <span className="text-[11px] text-muted-foreground">
+                              <span className="text-[11px] text-neutral-500">
                                 {comment.timestamp}
                               </span>
                             </div>
-                            <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
+                            <div className="flex items-center gap-1 text-[11px] text-neutral-500">
                               <button
                                 onClick={() => {
                                   const next = prompt(
@@ -570,7 +568,7 @@ export const TaskModal = ({
                               </button>
                             </div>
                           </div>
-                          <p className="text-xs text-foreground/90">
+                          <p className="text-xs text-neutral-800">
                             {comment.text}
                           </p>
                         </div>
@@ -578,7 +576,7 @@ export const TaskModal = ({
                     </div>
                   ))}
                   {comments.length === 0 && (
-                    <div className="text-xs text-muted-foreground">
+                    <div className="text-xs text-neutral-500">
                       No comments yet.
                     </div>
                   )}
@@ -586,7 +584,7 @@ export const TaskModal = ({
                 <div className="flex items-center gap-2">
                   <input
                     type="text"
-                    className="flex-1 h-8 rounded-lg bg-muted/60 border border-border/60 px-2 text-xs"
+                    className="flex-1 h-8 rounded-lg bg-neutral-100 border border-neutral-200/60 px-2 text-xs"
                     placeholder="Write a comment…"
                     value={newComment}
                     onChange={(e) => setNewComment(e.target.value)}
@@ -604,7 +602,7 @@ export const TaskModal = ({
                     type="button"
                     variant="ghost"
                     size="sm"
-                    className="h-8 px-3 text-xs text-muted-foreground hover:text-primary"
+                    className="h-8 px-3 text-xs text-neutral-500 hover:text-primary-500"
                     onClick={() => {
                       if (newComment.trim()) {
                         onAddCommentToIdea(idea.id, newComment.trim());
@@ -619,10 +617,10 @@ export const TaskModal = ({
               </div>
 
               <div className="space-y-3">
-                <h3 className="text-xs font-semibold text-muted-foreground flex items-center gap-1">
+                <h3 className="text-xs font-semibold text-neutral-500 flex items-center gap-1">
                   <Sparkles className="h-3 w-3" /> AI Assistant
                 </h3>
-                <p className="text-[11px] text-muted-foreground">
+                <p className="text-[11px] text-neutral-500">
                   Prototype placeholder — hook this into your AI backend to
                   generate subtasks, rewrite descriptions, and more.
                 </p>
@@ -656,11 +654,11 @@ export const TaskModal = ({
 
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-xs font-semibold text-muted-foreground">
+                  <h3 className="text-xs font-semibold text-neutral-500">
                     Activity
                   </h3>
                 </div>
-                <div className="max-h-48 overflow-y-auto space-y-1 text-[11px] text-muted-foreground">
+                <div className="max-h-48 overflow-y-auto space-y-1 text-[11px] text-neutral-500">
                   {idea.activity.map((entry) => (
                     <div key={entry.id}>
                       [

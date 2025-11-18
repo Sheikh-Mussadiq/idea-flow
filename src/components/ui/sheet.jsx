@@ -4,7 +4,7 @@ export const Sheet = ({ open, onOpenChange, children }) => {
   if (!open) return null;
   return createPortal(
     <div
-      className="fixed inset-0 z-40 flex justify-end bg-background/60 backdrop-blur-sm"
+      className="fixed inset-0 z-40 flex justify-end bg-neutral-900/40 backdrop-blur-sm"
       onClick={() => onOpenChange?.(false)}
     >
       <div
@@ -20,7 +20,7 @@ export const Sheet = ({ open, onOpenChange, children }) => {
 
 export const SheetContent = ({ className = "", side = "right", ...props }) => (
   <div
-    className={`h-full w-full bg-card border-l border-border/60 shadow-float p-6 ${className}`}
+    className={`h-full w-full bg-white border-l border-neutral-200/60 shadow-xl p-6 ${className}`}
     {...props}
   />
 );
@@ -34,5 +34,5 @@ export const SheetTitle = ({ className = "", ...props }) => (
 );
 
 export const SheetDescription = ({ className = "", ...props }) => (
-  <p className={`text-xs text-muted-foreground ${className}`} {...props} />
+  <p className={`text-xs text-neutral-500 ${className}`} {...props} />
 );

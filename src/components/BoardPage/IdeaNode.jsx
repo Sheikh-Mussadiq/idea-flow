@@ -7,48 +7,48 @@ export const IdeaNode = ({ data }) => {
   return (
     <div
       onClick={() => data.onOpenComments(data.id)}
-      className="group relative bg-card rounded-2xl p-6 shadow-medium hover:shadow-float transition-all duration-300 cursor-pointer w-[320px] border border-border/50 animate-fade-in"
+      className="group relative bg-white rounded-2xl p-6 shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer w-[320px] border border-neutral-200/60 animate-fade-in"
     >
       {/* Top Handle for connections */}
       <Handle
         type="target"
         position={Position.Top}
-        className="!bg-primary !w-3 !h-3"
+        className="!bg-primary-500 !w-3 !h-3"
       />
 
       {/* Badge */}
       <Badge
         variant={data.type === "ai" ? "default" : "secondary"}
-        className="absolute -top-3 left-6 shadow-soft"
+        className="absolute -top-3 left-6 shadow-sm"
       >
         {data.type === "ai" ? "AI" : "Manual"}
       </Badge>
 
       {/* Content */}
       <div className="space-y-3 mt-2">
-        <h3 className="text-lg font-semibold text-foreground leading-snug">
+        <h3 className="text-lg font-semibold text-neutral-900 leading-snug">
           {data.title}
         </h3>
         {data.assignedTo && (
-          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <div className="flex items-center gap-2 text-xs text-neutral-500">
             <span>Assigned:</span>
             <div className="flex items-center gap-1">
-              <div className="h-5 w-5 rounded-full bg-primary/10 text-[10px] flex items-center justify-center text-primary font-medium">
+              <div className="h-5 w-5 rounded-full bg-primary-500/10 text-[10px] flex items-center justify-center text-primary-500 font-medium">
                 {data.assignedTo.avatar}
               </div>
-              <span className="max-w-[140px] truncate text-foreground/90">
+              <span className="max-w-[140px] truncate text-neutral-900/90">
                 {data.assignedTo.name}
               </span>
             </div>
           </div>
         )}
-        <p className="text-sm text-muted-foreground leading-relaxed line-clamp-3">
+        <p className="text-sm text-neutral-600 leading-relaxed line-clamp-3">
           {data.description}
         </p>
       </div>
 
       {/* Footer */}
-      <div className="flex items-center justify-between mt-4 pt-4 border-t border-border/50">
+      <div className="flex items-center justify-between mt-4 pt-4 border-t border-neutral-200/60">
         <Button
           variant="ghost"
           size="sm"
@@ -56,7 +56,7 @@ export const IdeaNode = ({ data }) => {
             e.stopPropagation();
             data.onOpenComments(data.id);
           }}
-          className="text-muted-foreground hover:text-primary transition-colors -ml-2"
+          className="text-neutral-600 hover:text-primary-500 hover:bg-neutral-100 transition-colors -ml-2"
         >
           <MessageSquare className="h-4 w-4 mr-1.5" />
           <span className="text-xs">Comment</span>
@@ -67,7 +67,7 @@ export const IdeaNode = ({ data }) => {
             <Button
               variant="ghost"
               size="icon"
-              className="h-7 w-7 text-muted-foreground hover:text-primary"
+              className="h-7 w-7 text-neutral-600 hover:text-primary-500 hover:bg-neutral-100"
               onClick={(e) => {
                 e.stopPropagation();
                 data.onSendToKanban?.(data.id);
@@ -85,7 +85,7 @@ export const IdeaNode = ({ data }) => {
                 e.stopPropagation();
                 data.onAddSubIdea?.(data.id);
               }}
-              className="text-muted-foreground hover:text-primary transition-colors text-xs"
+              className="text-neutral-600 hover:text-primary-500 hover:bg-neutral-100 transition-colors text-xs"
             >
               Sub-idea
             </Button>
@@ -99,7 +99,7 @@ export const IdeaNode = ({ data }) => {
                 e.stopPropagation();
                 data.onDelete(data.id);
               }}
-              className="text-muted-foreground hover:text-destructive transition-colors text-xs"
+              className="text-neutral-600 hover:text-error-500 hover:bg-neutral-100 transition-colors text-xs"
             >
               Delete
             </Button>
@@ -111,7 +111,7 @@ export const IdeaNode = ({ data }) => {
       <Handle
         type="source"
         position={Position.Bottom}
-        className="!bg-primary !w-3 !h-3"
+        className="!bg-primary-500 !w-3 !h-3"
       />
     </div>
   );

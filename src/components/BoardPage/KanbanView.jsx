@@ -11,7 +11,7 @@ export const KanbanView = ({
   canEdit,
 }) => {
   return (
-    <div className="h-full w-full bg-muted/40 pt-14">
+    <div className="h-full w-full bg-neutral-100/40 pt-14">
       <KanbanBoard
         ideas={ideas}
         onOpenComments={onOpenComments}

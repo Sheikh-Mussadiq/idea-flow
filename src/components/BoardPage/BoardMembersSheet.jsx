@@ -65,7 +65,7 @@ function InviteForm({ activeBoard, setBoards, currentUser }) {
       </div>
       <div className="flex items-center gap-2">
         <select
-          className="h-8 rounded-full border border-border/60 bg-background px-2 text-[11px] capitalize flex-1"
+          className="h-8 rounded-full border border-neutral-200/60 bg-neutral-50 px-2 text-[11px] capitalize flex-1"
           value={role}
           onChange={(e) => setRole(e.target.value)}
         >
@@ -113,24 +113,24 @@ export function BoardMembersSheet({
               {(activeBoard.members || []).map((member) => (
                 <div
                   key={member.id}
-                  className="flex items-center justify-between gap-3 rounded-lg border border-border/60 bg-card/80 px-3 py-2"
+                  className="flex items-center justify-between gap-3 rounded-lg border border-neutral-200/60 bg-white px-3 py-2"
                 >
                   <div className="flex items-center gap-2">
-                    <Avatar className="h-7 w-7 border border-border/60">
-                      <AvatarFallback className="bg-primary/10 text-primary text-xs font-medium">
+                    <Avatar className="h-7 w-7 border border-neutral-200/60">
+                      <AvatarFallback className="bg-primary-500/10 text-primary-500 text-xs font-medium">
                         {member.avatar || member.name.charAt(0)}
                       </AvatarFallback>
                     </Avatar>
                     <div>
                       <div className="text-xs font-medium">{member.name}</div>
-                      <div className="text-[11px] text-muted-foreground">
+                      <div className="text-[11px] text-neutral-500">
                         {member.email}
                       </div>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
                     <select
-                      className="h-7 rounded-full border border-border/60 bg-background px-2 text-[11px] capitalize"
+                      className="h-7 rounded-full border border-neutral-200/60 bg-neutral-50 px-2 text-[11px] capitalize"
                       value={member.role}
                       disabled={!isAdmin}
                       onChange={(e) => {
@@ -169,7 +169,7 @@ export function BoardMembersSheet({
                       variant="ghost"
                       size="sm"
                       disabled={!isAdmin || member.id === currentUser.id}
-                      className="h-7 px-2 text-[11px] text-muted-foreground hover:text-destructive"
+                      className="h-7 px-2 text-[11px] text-neutral-500 hover:text-error-500"
                       onClick={() => {
                         setBoards((prev) =>
                           prev.map((board) =>
@@ -215,23 +215,23 @@ export function BoardMembersSheet({
             <div className="font-medium">Pending invites</div>
             <div className="space-y-2">
               {(activeBoard.invites || []).length === 0 && (
-                <div className="text-[11px] text-muted-foreground">
+                <div className="text-[11px] text-neutral-500">
                   No invites yet.
                 </div>
               )}
               {(activeBoard.invites || []).map((invite) => (
                 <div
                   key={invite.id}
-                  className="flex items-center justify-between gap-3 rounded-lg border border-border/60 bg-card/80 px-3 py-2"
+                  className="flex items-center justify-between gap-3 rounded-lg border border-neutral-200/60 bg-white px-3 py-2"
                 >
                   <div>
                     <div className="text-xs font-medium">{invite.email}</div>
-                    <div className="text-[11px] text-muted-foreground">
+                    <div className="text-[11px] text-neutral-500">
                       {invite.role} • Invited by {invite.invitedBy}
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-[11px] capitalize text-muted-foreground">
+                    <span className="text-[11px] capitalize text-neutral-500">
                       {invite.status}
                     </span>
                     {invite.status === "pending" && (

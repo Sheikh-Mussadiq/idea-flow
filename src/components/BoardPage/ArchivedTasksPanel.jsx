@@ -4,7 +4,7 @@ import { Badge } from "../ui/badge";
 export const ArchivedTasksPanel = ({ ideas, onRestoreTask }) => {
   if (ideas.length === 0) {
     return (
-      <div className="flex h-full flex-col items-center justify-center text-xs text-muted-foreground">
+      <div className="flex h-full flex-col items-center justify-center text-xs text-neutral-500">
         <p className="mb-1 font-medium">No archived tasks</p>
         <p className="text-[11px]">
           Archive tasks from the task modal to see them here.
@@ -18,14 +18,14 @@ export const ArchivedTasksPanel = ({ ideas, onRestoreTask }) => {
       {ideas.map((idea) => (
         <div
           key={idea.id}
-          className="rounded-xl border border-border/60 bg-card/80 px-3 py-3 shadow-sm flex flex-col gap-2"
+          className="rounded-xl border border-neutral-200/60 bg-white px-3 py-3 shadow-sm flex flex-col gap-2"
         >
           <div className="flex items-start justify-between gap-2">
             <div>
-              <h3 className="text-sm font-semibold text-foreground line-clamp-1">
+              <h3 className="text-sm font-semibold text-neutral-900 line-clamp-1">
                 {idea.title}
               </h3>
-              <p className="mt-1 text-[11px] text-muted-foreground line-clamp-2">
+              <p className="mt-1 text-[11px] text-neutral-600 line-clamp-2">
                 {idea.description}
               </p>
             </div>
@@ -39,51 +39,51 @@ export const ArchivedTasksPanel = ({ ideas, onRestoreTask }) => {
                 </Badge>
               )}
               {idea.kanbanStatus && (
-                <span className="rounded-full bg-muted/80 px-2 py-0.5 text-[10px] text-muted-foreground">
+                <span className="rounded-full bg-neutral-100 px-2 py-0.5 text-[10px] text-neutral-600">
                   {idea.kanbanStatus}
                 </span>
               )}
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
+          <div className="flex flex-wrap items-center gap-2 text-[11px] text-neutral-500">
             {idea.priority && (
-              <span className="inline-flex items-center gap-1 rounded-full bg-muted/80 px-2 py-0.5">
+              <span className="inline-flex items-center gap-1 rounded-full bg-neutral-100 px-2 py-0.5">
                 <span
                   className={`h-2 w-2 rounded-full ${
                     idea.priority === "low"
-                      ? "bg-emerald-500"
+                      ? "bg-success-500"
                       : idea.priority === "medium"
-                      ? "bg-amber-400"
-                      : "bg-red-500"
+                      ? "bg-warning-500"
+                      : "bg-error-500"
                   }`}
                 />
                 <span className="capitalize">{idea.priority}</span>
               </span>
             )}
             {idea.dueDate && (
-              <span className="rounded-full bg-muted/80 px-2 py-0.5">
+              <span className="rounded-full bg-neutral-100 px-2 py-0.5">
                 Due {idea.dueDate}
               </span>
             )}
             {idea.labels.slice(0, 2).map((label) => (
               <span
                 key={label.id}
-                className="rounded-full px-2 py-0.5 text-[10px] text-background"
+                className="rounded-full px-2 py-0.5 text-[10px] text-white"
                 style={{ backgroundColor: label.color }}
               >
                 {label.name}
               </span>
             ))}
             {idea.labels.length > 2 && (
-              <span className="text-[10px] text-muted-foreground">
+              <span className="text-[10px] text-neutral-500">
                 +{idea.labels.length - 2} more
               </span>
             )}
           </div>
 
           <div className="mt-1 flex items-center justify-between gap-2">
-            <span className="text-[11px] text-muted-foreground">
+            <span className="text-[11px] text-neutral-500">
               Archived at{" "}
               {idea.archivedAt
                 ? new Date(idea.archivedAt).toLocaleString()

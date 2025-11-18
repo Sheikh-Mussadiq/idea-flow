@@ -22,14 +22,15 @@ export const FlowView = ({
       nodeOrigin={[0.5, 0]}
       className="transition-all duration-500"
     >
-      <Background color="hsl(var(--muted-foreground))" gap={16} />
+      <Background color="#e4e4e7" gap={16} />
       <Controls />
       <MiniMap
         nodeColor={(node) => {
-          if (node.type === "inputNode") return "hsl(var(--primary))";
-          return "hsl(var(--card))";
+          if (node.type === "inputNode") return "#5865FF"; // primary-500
+          if (node.data?.type === "ai") return "#A9BAFF"; // primary-300
+          return "#A1A1AA"; // neutral-400 for manual and other nodes
         }}
-        className="!bg-card !border-border"
+        className="!bg-white !border-neutral-200"
       />
     </ReactFlow>
   );

@@ -753,7 +753,8 @@ export const FlowContent = ({
     handleDeleteIdea,
     handleAddSubIdea,
     handleSendToKanban,
-    handleOpenTask
+    handleOpenTask,
+    !isViewer
   );
 
   const selectedIdea = ideas.find((idea) => idea.id === selectedIdeaId);
