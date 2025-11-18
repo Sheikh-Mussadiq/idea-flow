@@ -1,8 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ChevronDown, Filter, LayoutTemplate, Search } from "lucide-react";
 
 import { FlowContent } from "./FlowContent.jsx";
 import { ArchivedTasksPanel } from "./ArchivedTasksPanel.jsx";
+import { BoardMembersSheet } from "./BoardMembersSheet.jsx";
+import { BoardHeader } from "./BoardHeader.jsx";
+import { BoardFiltersSheet } from "./BoardFiltersSheet.jsx";
+import { BoardTopBar } from "./BoardTopBar.jsx";
 import { Button } from "../ui/button";
 import {
   DropdownMenu,
@@ -38,6 +41,31 @@ import {
   SheetTitle,
   SheetDescription,
 } from "../ui/sheet";
+import { Avatar, AvatarFallback } from "../ui/avatar";
+
+const defaultMembers = [
+  {
+    id: "1",
+    name: "Alex Morgan",
+    email: "alex@example.com",
+    avatar: "A",
+    role: "admin",
+  },
+  {
+    id: "2",
+    name: "Maria Chen",
+    email: "maria@example.com",
+    avatar: "M",
+    role: "editor",
+  },
+  {
+    id: "3",
+    name: "David Kim",
+    email: "david@example.com",
+    avatar: "D",
+    role: "viewer",
+  },
+];
 
 const createEmptyBoard = (name, color, icon) => ({
   id: crypto.randomUUID(),
@@ -53,6 +81,10 @@ const createEmptyBoard = (name, color, icon) => ({
     icon,
     defaultLabels: [],
   },
+  members: defaultMembers.map((member) => ({ ...member })),
+  invites: [],
+  activity: [],
+  isArchived: false,
 });
 
 export const IdeaBoardLayout = () => {
@@ -62,6 +94,8 @@ export const IdeaBoardLayout = () => {
   ]);
 
   const [activeBoardId, setActiveBoardId] = useState(() => boards[0]?.id);
+
+  const [currentUserId, setCurrentUserId] = useState(defaultMembers[0].id);
 
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -83,11 +117,29 @@ export const IdeaBoardLayout = () => {
   });
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isArchivedOpen, setIsArchivedOpen] = useState(false);
+  const [isMembersOpen, setIsMembersOpen] = useState(false);
 
   const activeBoard = useMemo(
     () => boards.find((b) => b.id === activeBoardId) ?? boards[0] ?? null,
     [boards, activeBoardId]
   );
+
+  const currentUser = useMemo(
+    () =>
+      defaultMembers.find((m) => m.id === currentUserId) ?? defaultMembers[0],
+    [currentUserId]
+  );
+
+  const currentMemberRole = useMemo(() => {
+    if (!activeBoard) return "viewer";
+    const member = (activeBoard.members || []).find(
+      (m) => m.id === currentUser.id
+    );
+    return member?.role || "viewer";
+  }, [activeBoard, currentUser.id]);
+
+  const isAdmin = currentMemberRole === "admin";
+  const isViewer = currentMemberRole === "viewer";
 
   const availableLabels = useMemo(() => {
     if (!activeBoard) return [];
@@ -152,7 +204,7 @@ export const IdeaBoardLayout = () => {
   };
 
   const handleDuplicateBoard = () => {
-    if (!activeBoard) return;
+    if (!activeBoard || !isAdmin) return;
     const copy = {
       ...activeBoard,
       id: crypto.randomUUID(),
@@ -165,6 +217,10 @@ export const IdeaBoardLayout = () => {
           value.map((c) => ({ ...c })),
         ])
       ),
+      members: (activeBoard.members || []).map((member) => ({ ...member })),
+      invites: (activeBoard.invites || []).map((invite) => ({ ...invite })),
+      activity: (activeBoard.activity || []).slice(),
+      isArchived: false,
     };
 
     setBoards((prev) => [...prev, copy]);
@@ -172,7 +228,7 @@ export const IdeaBoardLayout = () => {
   };
 
   const handleDeleteBoard = () => {
-    if (!activeBoard) return;
+    if (!activeBoard || !isAdmin) return;
 
     setBoards((prev) => {
       const filtered = prev.filter((b) => b.id !== activeBoard.id);
@@ -191,12 +247,75 @@ export const IdeaBoardLayout = () => {
   };
 
   const handleRenameActiveBoard = () => {
-    if (!activeBoard || !draftBoardName.trim()) return;
+    if (!activeBoard || !draftBoardName.trim() || !isAdmin) return;
+    const previousName = activeBoard.name;
     const nextName = draftBoardName.trim();
     setBoards((prev) =>
-      prev.map((b) => (b.id === activeBoard.id ? { ...b, name: nextName } : b))
+      prev.map((b) =>
+        b.id === activeBoard.id
+          ? {
+              ...b,
+              name: nextName,
+              activity: [
+                {
+                  id: Date.now().toString(),
+                  timestamp: Date.now(),
+                  user: currentUser.name,
+                  action: `Renamed board from "${previousName}" to "${nextName}"`,
+                },
+                ...(b.activity || []),
+              ],
+            }
+          : b
+      )
     );
     setIsSettingsOpen(false);
+  };
+
+  const handleArchiveBoard = () => {
+    if (!activeBoard || !isAdmin || activeBoard.isArchived) return;
+    setBoards((prev) =>
+      prev.map((board) =>
+        board.id === activeBoard.id
+          ? {
+              ...board,
+              isArchived: true,
+              activity: [
+                {
+                  id: Date.now().toString(),
+                  timestamp: Date.now(),
+                  user: currentUser.name,
+                  action: "Archived board",
+                },
+                ...(board.activity || []),
+              ],
+            }
+          : board
+      )
+    );
+  };
+
+  const handleRestoreBoard = () => {
+    if (!activeBoard || !isAdmin || !activeBoard.isArchived) return;
+    setBoards((prev) =>
+      prev.map((board) =>
+        board.id === activeBoard.id
+          ? {
+              ...board,
+              isArchived: false,
+              activity: [
+                {
+                  id: Date.now().toString(),
+                  timestamp: Date.now(),
+                  user: currentUser.name,
+                  action: "Restored board",
+                },
+                ...(board.activity || []),
+              ],
+            }
+          : board
+      )
+    );
   };
 
   const handleUpdateIdeas = (updater) => {
@@ -353,275 +472,39 @@ export const IdeaBoardLayout = () => {
 
   return (
     <div className="relative h-full w-full bg-background">
-      <div className="absolute left-4 top-4 z-20 flex items-center gap-2">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="outline"
-              size="sm"
-              className="flex items-center gap-2 rounded-full border-border/70 bg-card/90 px-3 text-xs shadow-soft"
-            >
-              <span
-                className={`h-2.5 w-2.5 rounded-full ${
-                  activeBoard.color ? "" : "bg-primary"
-                }`}
-                style={
-                  activeBoard.color
-                    ? { backgroundColor: activeBoard.color }
-                    : undefined
-                }
-              />
-              <span className="flex items.center gap-1">
-                <LayoutTemplate className="h-3 w-3 text-muted-foreground" />
-                <span className="max-w-[140px] truncate">
-                  {activeBoard.name}
-                </span>
-              </span>
-              <ChevronDown className="h-3 w-3 text-muted-foreground" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="start" className="min-w-[220px]">
-            <DropdownMenuLabel className="text-xs text-muted-foreground">
-              Workspaces
-            </DropdownMenuLabel>
-            {boards.map((board) => (
-              <DropdownMenuItem
-                key={board.id}
-                className={`flex items-center gap-2 text-xs ${
-                  board.id === activeBoard.id ? "bg-accent/60" : ""
-                }`}
-                onClick={() => handleSelectBoard(board.id)}
-              >
-                <span
-                  className="h-2.5 w-2.5 rounded-full"
-                  style={
-                    board.color ? { backgroundColor: board.color } : undefined
-                  }
-                />
-                <span className="truncate">{board.name}</span>
-              </DropdownMenuItem>
-            ))}
+      <BoardHeader
+        boards={boards}
+        activeBoard={activeBoard}
+        isAdmin={isAdmin}
+        onSelectBoard={handleSelectBoard}
+        onOpenCreateBoard={() => {
+          setDraftBoardName("");
+          setDraftBoardDescription("");
+          setIsCreateOpen(true);
+        }}
+        onOpenSettings={() => {
+          setDraftBoardName(activeBoard.name);
+          setDraftBoardDescription(activeBoard.settings?.description ?? "");
+          setIsSettingsOpen(true);
+        }}
+        onDuplicateBoard={handleDuplicateBoard}
+        onDeleteBoard={() => setIsDeleteConfirmOpen(true)}
+        onOpenMembers={() => setIsMembersOpen(true)}
+      />
 
-            <DropdownMenuSeparator />
-
-            <DropdownMenuItem
-              className="text-xs"
-              onClick={() => {
-                setDraftBoardName("");
-                setDraftBoardDescription("");
-                setIsCreateOpen(true);
-              }}
-            >
-              + Create New Board
-            </DropdownMenuItem>
-
-            <DropdownMenuSeparator />
-
-            <DropdownMenuItem
-              className="text-xs"
-              onClick={() => {
-                setDraftBoardName(activeBoard.name);
-                setDraftBoardDescription(
-                  activeBoard.settings?.description ?? ""
-                );
-                setIsSettingsOpen(true);
-              }}
-            >
-              Board Settings
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              className="text-xs"
-              onClick={handleDuplicateBoard}
-            >
-              Duplicate Board
-            </DropdownMenuItem>
-            <DropdownMenuItem
-              className="text-xs text-red-500 focus:text-red-500"
-              onClick={() => setIsDeleteConfirmOpen(true)}
-            >
-              Delete Board
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-
-      <div className="absolute right-4 top-4 z-20 flex items-center gap-2">
-        <div className="flex items-center gap-2 rounded-full border border-border/70 bg-card/90 px-3 py-1 shadow-soft">
-          <Search className="h-3.5 w-3.5 text-muted-foreground" />
-          <Input
-            ref={searchInputRef}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search tasks..."
-            className="h-7 w-40 border-0 bg-transparent px-0 text-xs focus-visible:ring-0 focus-visible:ring-offset-0"
-          />
-          <span className="text-[10px] text-muted-foreground">
-            {searchCount} results
-          </span>
-        </div>
-        <Button
-          variant="outline"
-          size="sm"
-          className="rounded-full border-border/70 bg-card/90 px-2 text-xs shadow-soft flex items-center gap-1"
-          onClick={() => setIsFilterOpen(true)}
-        >
-          <Filter className="h-3 w-3" />
-          Filter
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          className="rounded-full border-border/70 bg-card/90 px-2 text-xs shadow-soft"
-          onClick={() => setIsArchivedOpen(true)}
-        >
-          Archived Tasks ({archivedIdeas.length})
-        </Button>
-      </div>
-
-      {(filters.priorities.length > 0 ||
-        filters.labelIds.length > 0 ||
-        filters.assigneeIds.length > 0 ||
-        filters.dueDate !== null ||
-        filters.statuses.length > 0 ||
-        filters.types.length > 0) && (
-        <div className="absolute right-4 top-14 z-20 flex flex-wrap gap-2">
-          {filters.priorities.map((p) => (
-            <Button
-              key={`priority-${p}`}
-              type="button"
-              size="sm"
-              variant="outline"
-              className="h-6 rounded-full px-2 text-[10px] flex items-center gap-1"
-              onClick={() =>
-                setFilters((prev) => ({
-                  ...prev,
-                  priorities: prev.priorities.filter((x) => x !== p),
-                }))
-              }
-            >
-              <span className="font-medium">Priority:</span>
-              <span className="capitalize">{p}</span>
-              <span className="text-xs">×</span>
-            </Button>
-          ))}
-
-          {filters.statuses.map((status) => (
-            <Button
-              key={`status-${status}`}
-              type="button"
-              size="sm"
-              variant="outline"
-              className="h-6 rounded-full px-2 text-[10px] flex items-center gap-1"
-              onClick={() =>
-                setFilters((prev) => ({
-                  ...prev,
-                  statuses: prev.statuses.filter((s) => s !== status),
-                }))
-              }
-            >
-              <span className="font-medium">Status:</span>
-              <span>{status}</span>
-              <span className="text-xs">×</span>
-            </Button>
-          ))}
-
-          {filters.types.map((t) => (
-            <Button
-              key={`type-${t}`}
-              type="button"
-              size="sm"
-              variant="outline"
-              className="h-6 rounded-full px-2 text-[10px] flex items-center gap-1"
-              onClick={() =>
-                setFilters((prev) => ({
-                  ...prev,
-                  types: prev.types.filter((x) => x !== t),
-                }))
-              }
-            >
-              <span className="font-medium">Type:</span>
-              <span>{t === "ai" ? "AI" : "Manual"}</span>
-              <span className="text-xs">×</span>
-            </Button>
-          ))}
-
-          {filters.labelIds.map((id) => {
-            const label = availableLabels.find((l) => l.id === id);
-            if (!label) return null;
-            return (
-              <Button
-                key={`label-${id}`}
-                type="button"
-                size="sm"
-                variant="outline"
-                className="h-6 rounded-full px-2 text-[10px] flex items-center gap-1"
-                onClick={() =>
-                  setFilters((prev) => ({
-                    ...prev,
-                    labelIds: prev.labelIds.filter((x) => x !== id),
-                  }))
-                }
-              >
-                <span className="font-medium">Label:</span>
-                <span>{label.name}</span>
-                <span className="text-xs">×</span>
-              </Button>
-            );
-          })}
-
-          {filters.assigneeIds.map((id) => {
-            const member = availableAssignees.find((m) => m.id === id);
-            if (!member) return null;
-            return (
-              <Button
-                key={`assignee-${id}`}
-                type="button"
-                size="sm"
-                variant="outline"
-                className="h-6 rounded-full px-2 text-[10px] flex items-center gap-1"
-                onClick={() =>
-                  setFilters((prev) => ({
-                    ...prev,
-                    assigneeIds: prev.assigneeIds.filter((x) => x !== id),
-                  }))
-                }
-              >
-                <span className="font-medium">Assigned:</span>
-                <span>{member.name}</span>
-                <span className="text-xs">×</span>
-              </Button>
-            );
-          })}
-
-          {filters.dueDate && (
-            <Button
-              key="dueDate"
-              type="button"
-              size="sm"
-              variant="outline"
-              className="h-6 rounded-full px-2 text-[10px] flex items-center gap-1"
-              onClick={() =>
-                setFilters((prev) => ({
-                  ...prev,
-                  dueDate: null,
-                }))
-              }
-            >
-              <span className="font-medium">Due:</span>
-              <span>
-                {filters.dueDate === "overdue"
-                  ? "Overdue"
-                  : filters.dueDate === "today"
-                  ? "Today"
-                  : filters.dueDate === "week"
-                  ? "This week"
-                  : "No date"}
-              </span>
-              <span className="text-xs">×</span>
-            </Button>
-          )}
-        </div>
-      )}
+      <BoardTopBar
+        currentUser={currentUser}
+        currentMemberRole={currentMemberRole}
+        defaultMembers={defaultMembers}
+        onChangeUser={setCurrentUserId}
+        searchQuery={searchQuery}
+        onChangeSearch={setSearchQuery}
+        searchInputRef={searchInputRef}
+        searchCount={searchCount}
+        onOpenFilters={() => setIsFilterOpen(true)}
+        onOpenArchived={() => setIsArchivedOpen(true)}
+        archivedCount={archivedIdeas.length}
+      />
 
       <div className="h-full w-full">
         <FlowContent
@@ -629,244 +512,20 @@ export const IdeaBoardLayout = () => {
           comments={activeBoard.comments}
           onUpdateIdeas={handleUpdateIdeas}
           onUpdateComments={handleUpdateComments}
+          teamMembers={activeBoard.members || []}
+          currentUser={currentUser}
+          currentRole={currentMemberRole}
         />
       </div>
 
-      <Sheet open={isFilterOpen} onOpenChange={setIsFilterOpen}>
-        <SheetContent side="right" className="w-full sm:max-w-xs">
-          <SheetHeader>
-            <SheetTitle>Filters</SheetTitle>
-            <SheetDescription className="text-xs">
-              Narrow down tasks by priority, status, and type. (Labels,
-              assignees, and due date can be added here next.)
-            </SheetDescription>
-          </SheetHeader>
-          <div className="mt-4 space-y-4 text-xs">
-            <div className="space-y-2">
-              <div className="font-medium">Priority</div>
-              <div className="flex flex-wrap gap-2">
-                {["low", "medium", "high"].map((p) => {
-                  const active = filters.priorities.includes(p);
-                  return (
-                    <Button
-                      key={p}
-                      type="button"
-                      size="sm"
-                      variant={active ? "default" : "outline"}
-                      className="h-7 rounded-full px-2 text-[11px] flex items-center gap-1"
-                      onClick={() => {
-                        setFilters((prev) => ({
-                          ...prev,
-                          priorities: active
-                            ? prev.priorities.filter((x) => x !== p)
-                            : [...prev.priorities, p],
-                        }));
-                      }}
-                    >
-                      <span
-                        className="h-2 w-2 rounded-full"
-                        style={{
-                          backgroundColor:
-                            p === "low"
-                              ? "#22c55e"
-                              : p === "medium"
-                              ? "#eab308"
-                              : "#ef4444",
-                        }}
-                      />
-                      <span className="capitalize">{p}</span>
-                    </Button>
-                  );
-                })}
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <div className="font-medium">Status</div>
-              <div className="flex flex-wrap gap-2">
-                {["Backlog", "In Progress", "Review", "Done"].map((status) => {
-                  const active = filters.statuses.includes(status);
-                  return (
-                    <Button
-                      key={status}
-                      type="button"
-                      size="sm"
-                      variant={active ? "default" : "outline"}
-                      className="h-7 rounded-full px-2 text-[11px]"
-                      onClick={() => {
-                        setFilters((prev) => ({
-                          ...prev,
-                          statuses: active
-                            ? prev.statuses.filter((s) => s !== status)
-                            : [...prev.statuses, status],
-                        }));
-                      }}
-                    >
-                      {status}
-                    </Button>
-                  );
-                })}
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <div className="font-medium">Labels</div>
-              <div className="flex flex-wrap gap-2">
-                {availableLabels.length === 0 && (
-                  <span className="text-[11px] text-muted-foreground">
-                    No labels yet
-                  </span>
-                )}
-                {availableLabels.map((label) => {
-                  const active = filters.labelIds.includes(label.id);
-                  return (
-                    <Button
-                      key={label.id}
-                      type="button"
-                      size="sm"
-                      variant={active ? "default" : "outline"}
-                      className="h-7 rounded-full px-2 text-[11px] flex items-center gap-1"
-                      onClick={() => {
-                        setFilters((prev) => ({
-                          ...prev,
-                          labelIds: active
-                            ? prev.labelIds.filter((id) => id !== label.id)
-                            : [...prev.labelIds, label.id],
-                        }));
-                      }}
-                    >
-                      <span
-                        className="h-2 w-2 rounded-full"
-                        style={{ backgroundColor: label.color }}
-                      />
-                      <span>{label.name}</span>
-                    </Button>
-                  );
-                })}
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <div className="font-medium">Assigned to</div>
-              <div className="flex flex-wrap gap-2">
-                {availableAssignees.length === 0 && (
-                  <span className="text-[11px] text-muted-foreground">
-                    No assignments yet
-                  </span>
-                )}
-                {availableAssignees.map((member) => {
-                  const active = filters.assigneeIds.includes(member.id);
-                  return (
-                    <Button
-                      key={member.id}
-                      type="button"
-                      size="sm"
-                      variant={active ? "default" : "outline"}
-                      className="h-7 rounded-full px-2 text-[11px] flex items-center gap-1"
-                      onClick={() => {
-                        setFilters((prev) => ({
-                          ...prev,
-                          assigneeIds: active
-                            ? prev.assigneeIds.filter((id) => id !== member.id)
-                            : [...prev.assigneeIds, member.id],
-                        }));
-                      }}
-                    >
-                      <span className="flex h-4 w-4 items-center justify-center rounded-full bg-muted text-[9px] font-medium">
-                        {member.avatar || member.name.charAt(0)}
-                      </span>
-                      <span>{member.name}</span>
-                    </Button>
-                  );
-                })}
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <div className="font-medium">Due date</div>
-              <div className="flex flex-wrap gap-2">
-                {["overdue", "today", "week", "none"].map((option) => {
-                  const active = filters.dueDate === option;
-                  const label =
-                    option === "overdue"
-                      ? "Overdue"
-                      : option === "today"
-                      ? "Due today"
-                      : option === "week"
-                      ? "Due this week"
-                      : "No due date";
-                  return (
-                    <Button
-                      key={option}
-                      type="button"
-                      size="sm"
-                      variant={active ? "default" : "outline"}
-                      className="h-7 rounded-full px-2 text-[11px]"
-                      onClick={() => {
-                        setFilters((prev) => ({
-                          ...prev,
-                          dueDate: active ? null : option,
-                        }));
-                      }}
-                    >
-                      {label}
-                    </Button>
-                  );
-                })}
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <div className="font-medium">Task type</div>
-              <div className="flex flex-wrap gap-2">
-                {["ai", "manual"].map((t) => {
-                  const active = filters.types.includes(t);
-                  return (
-                    <Button
-                      key={t}
-                      type="button"
-                      size="sm"
-                      variant={active ? "default" : "outline"}
-                      className="h-7 rounded-full px-2 text-[11px]"
-                      onClick={() => {
-                        setFilters((prev) => ({
-                          ...prev,
-                          types: active
-                            ? prev.types.filter((x) => x !== t)
-                            : [...prev.types, t],
-                        }));
-                      }}
-                    >
-                      {t === "ai" ? "AI-generated" : "Manual"}
-                    </Button>
-                  );
-                })}
-              </div>
-            </div>
-
-            <div className="pt-2">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="w-full text-[11px]"
-                onClick={() => {
-                  setFilters({
-                    priorities: [],
-                    labelIds: [],
-                    assigneeIds: [],
-                    dueDate: null,
-                    statuses: [],
-                    types: [],
-                  });
-                }}
-              >
-                Clear all filters
-              </Button>
-            </div>
-          </div>
-        </SheetContent>
-      </Sheet>
+      <BoardFiltersSheet
+        open={isFilterOpen}
+        onOpenChange={setIsFilterOpen}
+        filters={filters}
+        setFilters={setFilters}
+        availableLabels={availableLabels}
+        availableAssignees={availableAssignees}
+      />
 
       <Sheet open={isArchivedOpen} onOpenChange={setIsArchivedOpen}>
         <SheetContent side="right" className="w-full sm:max-w-sm">

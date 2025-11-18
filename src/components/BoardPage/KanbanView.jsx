@@ -1,11 +1,5 @@
 import { KanbanBoard } from "./KanbanBoard.jsx";
 
-const teamMembers = [
-  { id: "1", name: "Alex Morgan", avatar: "A" },
-  { id: "2", name: "Maria Chen", avatar: "M" },
-  { id: "3", name: "David Kim", avatar: "D" },
-];
-
 export const KanbanView = ({
   ideas,
   onOpenComments,
@@ -13,6 +7,8 @@ export const KanbanView = ({
   onViewInFlow,
   onAssign,
   onOpenTask,
+  teamMembers,
+  canEdit,
 }) => {
   return (
     <div className="h-full w-full bg-muted/40 pt-14">
@@ -24,6 +20,7 @@ export const KanbanView = ({
         teamMembers={teamMembers}
         onAssign={onAssign}
         onOpenTask={onOpenTask}
+        canEdit={canEdit}
       />
     </div>
   );

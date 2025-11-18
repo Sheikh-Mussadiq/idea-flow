@@ -25,6 +25,7 @@ export const TaskModal = ({
   onDeleteComment,
   onUpdateComment,
   onArchiveTask,
+  canEdit,
 }) => {
   const [localTitle, setLocalTitle] = useState("");
   const [localDescription, setLocalDescription] = useState("");
@@ -79,7 +80,8 @@ export const TaskModal = ({
                 className="w-full bg-transparent text-xl font-semibold text-foreground outline-none border-none"
                 value={localTitle}
                 onChange={(e) => setLocalTitle(e.target.value)}
-                onBlur={handleSaveTitle}
+                onBlur={canEdit ? handleSaveTitle : undefined}
+                disabled={!canEdit}
                 placeholder="Task title"
               />
               <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
@@ -125,6 +127,7 @@ export const TaskModal = ({
                 variant="outline"
                 size="sm"
                 className="h-7 px-3 text-[11px] text-muted-foreground hover:text-destructive border-border/60"
+                disabled={!canEdit}
                 onClick={() => {
                   onArchiveTask(idea.id);
                   onClose();
@@ -153,7 +156,8 @@ export const TaskModal = ({
                   className="w-full min-h-[96px] rounded-xl border border-border/60 bg-background px-3 py-2 text-sm text-foreground outline-none resize-y"
                   value={localDescription}
                   onChange={(e) => setLocalDescription(e.target.value)}
-                  onBlur={handleSaveDescription}
+                  onBlur={canEdit ? handleSaveDescription : undefined}
+                  disabled={!canEdit}
                   placeholder="Add more details, notes, or context..."
                 />
               </div>
@@ -179,6 +183,7 @@ export const TaskModal = ({
                         type="checkbox"
                         checked={subtask.completed}
                         onChange={() => onToggleSubtask(idea.id, subtask.id)}
+                        disabled={!canEdit}
                       />
                       <span
                         className={`flex-1 truncate ${
@@ -192,6 +197,7 @@ export const TaskModal = ({
                       <button
                         className="text-xs text-muted-foreground hover:text-destructive"
                         onClick={() => onRemoveSubtask(idea.id, subtask.id)}
+                        disabled={!canEdit}
                       >
                         ✕
                       </button>
@@ -211,6 +217,7 @@ export const TaskModal = ({
                         setNewSubtask("");
                       }
                     }}
+                    disabled={!canEdit}
                   />
                   <Button
                     type="button"
@@ -221,6 +228,7 @@ export const TaskModal = ({
                       onAddSubtask(idea.id, newSubtask);
                       setNewSubtask("");
                     }}
+                    disabled={!canEdit}
                   >
                     Add
                   </Button>
@@ -258,6 +266,7 @@ export const TaskModal = ({
                       });
                       e.target.value = "";
                     }}
+                    disabled={!canEdit}
                   />
                   <div className="flex items-center gap-2">
                     <input
@@ -266,6 +275,7 @@ export const TaskModal = ({
                       placeholder="Paste link URL..."
                       value={newLink}
                       onChange={(e) => setNewLink(e.target.value)}
+                      disabled={!canEdit}
                     />
                     <Button
                       type="button"
@@ -282,6 +292,7 @@ export const TaskModal = ({
                         });
                         setNewLink("");
                       }}
+                      disabled={!canEdit}
                     >
                       Add link
                     </Button>
@@ -316,6 +327,7 @@ export const TaskModal = ({
                             size="icon"
                             className="h-6 w-6 text-muted-foreground hover:text-primary"
                             onClick={() => window.open(att.url, "_blank")}
+                            disabled={!canEdit}
                           >
                             <Paperclip className="h-3 w-3" />
                           </Button>
@@ -325,6 +337,7 @@ export const TaskModal = ({
                             size="icon"
                             className="h-6 w-6 text-muted-foreground hover:text-destructive"
                             onClick={() => onRemoveAttachment(idea.id, att.id)}
+                            disabled={!canEdit}
                           >
                             ✕
                           </Button>
@@ -465,6 +478,7 @@ export const TaskModal = ({
                       className="px-2 py-1 rounded-full text-[11px] text-background"
                       style={{ backgroundColor: label.color }}
                       onClick={() => onRemoveLabel(idea.id, label.id)}
+                      disabled={!canEdit}
                     >
                       {label.name}
                     </button>
@@ -494,6 +508,7 @@ export const TaskModal = ({
                           color: preset.color,
                         })
                       }
+                      disabled={!canEdit}
                     >
                       {preset.name}
                     </button>
@@ -541,6 +556,7 @@ export const TaskModal = ({
                                     );
                                   }
                                 }}
+                                disabled={!canEdit}
                               >
                                 Edit
                               </button>
@@ -548,6 +564,7 @@ export const TaskModal = ({
                                 onClick={() =>
                                   onDeleteComment(idea.id, comment.id)
                                 }
+                                disabled={!canEdit}
                               >
                                 Delete
                               </button>
@@ -581,6 +598,7 @@ export const TaskModal = ({
                         }
                       }
                     }}
+                    disabled={!canEdit}
                   />
                   <Button
                     type="button"
@@ -593,6 +611,7 @@ export const TaskModal = ({
                         setNewComment("");
                       }
                     }}
+                    disabled={!canEdit}
                   >
                     Add
                   </Button>
@@ -627,6 +646,7 @@ export const TaskModal = ({
                         // Stub: no-op in prototype
                         console.log("AI action triggered:", label);
                       }}
+                      disabled={!canEdit}
                     >
                       {label}
                     </Button>

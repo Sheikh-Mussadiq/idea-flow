@@ -1,6 +1,12 @@
 import ReactFlow, { Background, Controls, MiniMap } from "reactflow";
 
-export const FlowView = ({ nodes, edges, nodeTypes, onNodesChange }) => {
+export const FlowView = ({
+  nodes,
+  edges,
+  nodeTypes,
+  onNodesChange,
+  canEdit,
+}) => {
   return (
     <ReactFlow
       nodes={nodes}
@@ -11,8 +17,8 @@ export const FlowView = ({ nodes, edges, nodeTypes, onNodesChange }) => {
       minZoom={0.4}
       maxZoom={1.5}
       defaultViewport={{ x: 0, y: 0, zoom: 0.7 }}
-      nodesDraggable={true}
-      onNodesChange={onNodesChange}
+      nodesDraggable={canEdit}
+      onNodesChange={canEdit ? onNodesChange : undefined}
       nodeOrigin={[0.5, 0]}
       className="transition-all duration-500"
     >

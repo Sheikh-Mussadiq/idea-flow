@@ -11,11 +11,13 @@ export const CommentPanel = ({
   assignedTo,
   comments,
   onAddComment,
+  canComment,
 }) => {
   const [newComment, setNewComment] = useState("");
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    if (!canComment) return;
     if (newComment.trim()) {
       onAddComment(newComment);
       setNewComment("");
@@ -124,11 +126,12 @@ export const CommentPanel = ({
               onChange={(e) => setNewComment(e.target.value)}
               placeholder="Add a comment…"
               className="flex-1 h-12 rounded-xl bg-background border-border/50"
+              disabled={!canComment}
             />
             <Button
               type="submit"
               size="icon"
-              disabled={!newComment.trim()}
+              disabled={!canComment || !newComment.trim()}
               className="h-12 w-12 rounded-xl"
             >
               <Send className="h-4 w-4" />

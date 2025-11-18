@@ -26,8 +26,10 @@ export const KanbanBoard = ({
   teamMembers,
   onAssign,
   onOpenTask,
+  canEdit,
 }) => {
   const handleDragEnd = (result) => {
+    if (!canEdit) return;
     const { destination, source, draggableId } = result;
 
     if (!destination) return;
@@ -91,6 +93,7 @@ export const KanbanBoard = ({
                         key={idea.id}
                         draggableId={idea.id}
                         index={index}
+                        isDragDisabled={!canEdit}
                       >
                         {(dragProvided, dragSnapshot) => (
                           <div

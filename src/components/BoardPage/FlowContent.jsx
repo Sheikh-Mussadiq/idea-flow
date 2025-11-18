@@ -73,6 +73,9 @@ export const FlowContent = ({
   comments,
   onUpdateIdeas,
   onUpdateComments,
+  teamMembers,
+  currentUser,
+  currentRole,
 }) => {
   const [viewMode, setViewMode] = useState("flow");
   const [mode, setMode] = useState("ai");
@@ -84,7 +87,8 @@ export const FlowContent = ({
 
   const { fitView, getNodes } = useReactFlow();
 
-  const currentUserName = "You";
+  const currentUserName = currentUser?.name || "You";
+  const isViewer = currentRole === "viewer";
 
   const logActivity = useCallback(
     (ideaId, user, action) => {
@@ -107,10 +111,11 @@ export const FlowContent = ({
         )
       );
     },
-    [onUpdateIdeas]
+    [isViewer, onUpdateIdeas]
   );
 
   const handleGenerate = useCallback(async () => {
+    if (isViewer) return;
     if (!prompt.trim()) return;
 
     setIsGenerating(true);
@@ -136,9 +141,10 @@ export const FlowContent = ({
     toast.success("Ideas generated successfully!");
 
     setTimeout(() => fitView({ padding: 0.2, duration: 800 }), 100);
-  }, [fitView, onUpdateIdeas, prompt]);
+  }, [fitView, isViewer, onUpdateIdeas, prompt]);
 
   const handleRegenerate = useCallback(async () => {
+    if (isViewer) return;
     const aiIdeas = ideas.filter((idea) => idea.type === "ai");
     if (aiIdeas.length === 0) return;
 
@@ -166,9 +172,10 @@ export const FlowContent = ({
     toast.success("AI ideas regenerated!");
 
     setTimeout(() => fitView({ padding: 0.2, duration: 800 }), 100);
-  }, [fitView, ideas, onUpdateIdeas]);
+  }, [fitView, ideas, isViewer, onUpdateIdeas]);
 
   const handleAddManualIdea = useCallback(() => {
+    if (isViewer) return;
     if (!manualIdea.trim()) return;
 
     const title = manualIdea.split(" ").slice(0, 8).join(" ");
@@ -194,18 +201,20 @@ export const FlowContent = ({
     toast.success("Idea added!");
 
     setTimeout(() => fitView({ padding: 0.2, duration: 800 }), 100);
-  }, [fitView, manualIdea, onUpdateIdeas]);
+  }, [fitView, isViewer, manualIdea, onUpdateIdeas]);
 
   const handleClearManualIdeas = useCallback(() => {
+    if (isViewer) return;
     onUpdateIdeas((prevIdeas) =>
       prevIdeas.filter((idea) => idea.type === "ai")
     );
     setManualIdea("");
     toast.success("Manual ideas cleared!");
-  }, [onUpdateIdeas]);
+  }, [isViewer, onUpdateIdeas]);
 
   const handleDeleteIdea = useCallback(
     (id) => {
+      if (isViewer) return;
       onUpdateIdeas((prevIdeas) => {
         const toDelete = new Set();
 
@@ -229,6 +238,7 @@ export const FlowContent = ({
 
   const handleSendToKanban = useCallback(
     (id) => {
+      if (isViewer) return;
       onUpdateIdeas((prevIdeas) =>
         prevIdeas.map((idea) => {
           if (idea.id !== id) return idea;
@@ -242,6 +252,7 @@ export const FlowContent = ({
 
   const handleAssign = useCallback(
     (id, member) => {
+      if (isViewer) return;
       onUpdateIdeas((prevIdeas) =>
         prevIdeas.map((idea) =>
           idea.id === id
@@ -258,6 +269,7 @@ export const FlowContent = ({
 
   const handleAddSubIdea = useCallback(
     (parentId) => {
+      if (isViewer) return;
       const description = window.prompt("Describe your sub-idea:");
       if (!description || !description.trim()) return;
 
@@ -291,6 +303,7 @@ export const FlowContent = ({
 
   const handleMoveCard = useCallback(
     (id, status) => {
+      if (isViewer) return;
       onUpdateIdeas((prevIdeas) =>
         prevIdeas.map((idea) =>
           idea.id === id
@@ -303,7 +316,7 @@ export const FlowContent = ({
       );
       logActivity(id, currentUserName, `Moved card to ${status}`);
     },
-    [logActivity, onUpdateIdeas]
+    [isViewer, logActivity, onUpdateIdeas]
   );
 
   const handleViewInFlow = useCallback(
@@ -327,6 +340,7 @@ export const FlowContent = ({
 
   const handleUpdateTitle = useCallback(
     (id, title) => {
+      if (isViewer) return;
       onUpdateIdeas((prevIdeas) =>
         prevIdeas.map((idea) =>
           idea.id === id
@@ -339,11 +353,12 @@ export const FlowContent = ({
       );
       logActivity(id, currentUserName, "Title updated");
     },
-    [currentUserName, logActivity, onUpdateIdeas]
+    [currentUserName, isViewer, logActivity, onUpdateIdeas]
   );
 
   const handleAddAttachment = useCallback(
     (id, attachment) => {
+      if (isViewer) return;
       onUpdateIdeas((prevIdeas) =>
         prevIdeas.map((idea) =>
           idea.id === id
@@ -365,6 +380,7 @@ export const FlowContent = ({
 
   const handleRemoveAttachment = useCallback(
     (id, attachmentId) => {
+      if (isViewer) return;
       onUpdateIdeas((prevIdeas) => {
         let removedName = null;
         const updated = prevIdeas.map((idea) => {
@@ -393,6 +409,7 @@ export const FlowContent = ({
 
   const handleArchiveTask = useCallback(
     (id) => {
+      if (isViewer) return;
       onUpdateIdeas((prevIdeas) =>
         prevIdeas.map((idea) =>
           idea.id === id
@@ -412,6 +429,7 @@ export const FlowContent = ({
 
   const handleAddLabel = useCallback(
     (id, label) => {
+      if (isViewer) return;
       onUpdateIdeas((prevIdeas) =>
         prevIdeas.map((idea) =>
           idea.id === id
@@ -431,6 +449,7 @@ export const FlowContent = ({
 
   const handleRemoveLabel = useCallback(
     (id, labelId) => {
+      if (isViewer) return;
       onUpdateIdeas((prevIdeas) => {
         let removedName = null;
         const updated = prevIdeas.map((idea) => {
@@ -455,6 +474,7 @@ export const FlowContent = ({
 
   const handleUpdateDescription = useCallback(
     (id, description) => {
+      if (isViewer) return;
       onUpdateIdeas((prevIdeas) =>
         prevIdeas.map((idea) =>
           idea.id === id
@@ -472,6 +492,7 @@ export const FlowContent = ({
 
   const handleAddComment = useCallback(
     (text) => {
+      if (isViewer) return;
       if (!selectedIdeaId) return;
 
       const newComment = {
@@ -490,11 +511,12 @@ export const FlowContent = ({
 
       logActivity(selectedIdeaId, currentUserName, "Added a comment");
     },
-    [currentUserName, logActivity, onUpdateComments, selectedIdeaId]
+    [currentUserName, isViewer, logActivity, onUpdateComments, selectedIdeaId]
   );
 
   const handleDeleteComment = useCallback(
     (ideaId, commentId) => {
+      if (isViewer) return;
       onUpdateComments((prevComments) => {
         const ideaComments = prevComments[ideaId] || [];
         const updated = ideaComments.filter((c) => c.id !== commentId);
@@ -505,11 +527,12 @@ export const FlowContent = ({
       });
       logActivity(ideaId, currentUserName, "Deleted a comment");
     },
-    [currentUserName, logActivity, onUpdateComments]
+    [currentUserName, isViewer, logActivity, onUpdateComments]
   );
 
   const handleAddCommentToIdea = useCallback(
     (ideaId, text) => {
+      if (isViewer) return;
       if (!text.trim()) return;
 
       const newComment = {
@@ -533,6 +556,7 @@ export const FlowContent = ({
 
   const handleUpdateComment = useCallback(
     (ideaId, commentId, text) => {
+      if (isViewer) return;
       onUpdateComments((prevComments) => {
         const ideaComments = prevComments[ideaId] || [];
         const updated = ideaComments.map((c) =>
@@ -555,6 +579,7 @@ export const FlowContent = ({
 
   const handleDueDateChange = useCallback(
     (id, date) => {
+      if (isViewer) return;
       onUpdateIdeas((prevIdeas) =>
         prevIdeas.map((idea) =>
           idea.id === id
@@ -584,6 +609,7 @@ export const FlowContent = ({
 
   const handlePriorityChange = useCallback(
     (id, priority) => {
+      if (isViewer) return;
       onUpdateIdeas((prevIdeas) =>
         prevIdeas.map((idea) =>
           idea.id === id
@@ -606,6 +632,7 @@ export const FlowContent = ({
 
   const handleAddSubtask = useCallback(
     (id, text) => {
+      if (isViewer) return;
       if (!text.trim()) return;
 
       onUpdateIdeas((prevIdeas) =>
@@ -633,6 +660,7 @@ export const FlowContent = ({
 
   const handleToggleSubtask = useCallback(
     (id, subtaskId) => {
+      if (isViewer) return;
       onUpdateIdeas((prevIdeas) => {
         let toggledText = null;
 
@@ -660,6 +688,7 @@ export const FlowContent = ({
 
   const handleRemoveSubtask = useCallback(
     (id, subtaskId) => {
+      if (isViewer) return;
       onUpdateIdeas((prevIdeas) => {
         let removedText = null;
 
@@ -701,6 +730,7 @@ export const FlowContent = ({
       onClearManual: handleClearManualIdeas,
       isGenerating,
       hasIdeas: ideas.length > 0,
+      canEdit: !isViewer,
     }),
     [
       handleAddManualIdea,
@@ -712,6 +742,7 @@ export const FlowContent = ({
       manualIdea,
       mode,
       prompt,
+      isViewer,
     ]
   );
 
@@ -741,6 +772,7 @@ export const FlowContent = ({
           edges={edges}
           nodeTypes={nodeTypes}
           onNodesChange={handleNodesChange}
+          canEdit={!isViewer}
         />
       )}
 
@@ -752,6 +784,7 @@ export const FlowContent = ({
           onViewInFlow={handleViewInFlow}
           onAssign={handleAssign}
           onOpenTask={handleOpenTask}
+          canEdit={!isViewer}
         />
       )}
 
@@ -762,6 +795,7 @@ export const FlowContent = ({
         assignedTo={selectedIdea?.assignedTo}
         comments={selectedIdeaId ? comments[selectedIdeaId] || [] : []}
         onAddComment={handleAddComment}
+        canComment={!isViewer}
       />
 
       <TaskModal
@@ -786,6 +820,7 @@ export const FlowContent = ({
         onDeleteComment={handleDeleteComment}
         onUpdateComment={handleUpdateComment}
         onArchiveTask={handleArchiveTask}
+        canEdit={!isViewer}
       />
     </>
   );
