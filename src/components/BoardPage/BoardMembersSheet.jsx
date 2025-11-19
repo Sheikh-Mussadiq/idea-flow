@@ -65,7 +65,7 @@ function InviteForm({ activeBoard, setBoards, currentUser }) {
       </div>
       <div className="flex items-center gap-2">
         <select
-          className="h-8 rounded-full border border-neutral-200/60 bg-neutral-50 px-2 text-[11px] capitalize flex-1"
+          className="h-8 rounded-full border border-neutral-200/60 bg-neutral-50 px-2 text-xs capitalize flex-1"
           value={role}
           onChange={(e) => setRole(e.target.value)}
         >
@@ -76,7 +76,7 @@ function InviteForm({ activeBoard, setBoards, currentUser }) {
         <Button
           type="button"
           size="sm"
-          className="h-8 px-3 text-[11px]"
+          className="h-8 px-3 text-xs"
           disabled={!email.trim()}
           onClick={handleSend}
         >
@@ -123,14 +123,14 @@ export function BoardMembersSheet({
                     </Avatar>
                     <div>
                       <div className="text-xs font-medium">{member.name}</div>
-                      <div className="text-[11px] text-neutral-500">
+                      <div className="text-xs text-neutral-500">
                         {member.email}
                       </div>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
                     <select
-                      className="h-7 rounded-full border border-neutral-200/60 bg-neutral-50 px-2 text-[11px] capitalize"
+                      className="h-7 rounded-full border border-neutral-200/60 bg-neutral-50 px-2 text-xs capitalize"
                       value={member.role}
                       disabled={!isAdmin}
                       onChange={(e) => {
@@ -169,7 +169,7 @@ export function BoardMembersSheet({
                       variant="ghost"
                       size="sm"
                       disabled={!isAdmin || member.id === currentUser.id}
-                      className="h-7 px-2 text-[11px] text-neutral-500 hover:text-error-500"
+                      className="h-7 px-2 text-xs text-neutral-500 hover:text-error-500"
                       onClick={() => {
                         setBoards((prev) =>
                           prev.map((board) =>
@@ -215,9 +215,7 @@ export function BoardMembersSheet({
             <div className="font-medium">Pending invites</div>
             <div className="space-y-2">
               {(activeBoard.invites || []).length === 0 && (
-                <div className="text-[11px] text-neutral-500">
-                  No invites yet.
-                </div>
+                <div className="text-xs text-neutral-500">No invites yet.</div>
               )}
               {(activeBoard.invites || []).map((invite) => (
                 <div
@@ -226,12 +224,12 @@ export function BoardMembersSheet({
                 >
                   <div>
                     <div className="text-xs font-medium">{invite.email}</div>
-                    <div className="text-[11px] text-neutral-500">
+                    <div className="text-xs text-neutral-500">
                       {invite.role} • Invited by {invite.invitedBy}
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-[11px] capitalize text-neutral-500">
+                    <span className="text-xs capitalize text-neutral-500">
                       {invite.status}
                     </span>
                     {invite.status === "pending" && (
@@ -240,7 +238,7 @@ export function BoardMembersSheet({
                         size="sm"
                         variant="outline"
                         disabled={!isAdmin}
-                        className="h-7 px-2 text-[11px]"
+                        className="h-7 px-2 text-xs"
                         onClick={() => {
                           setBoards((prev) =>
                             prev.map((board) => {

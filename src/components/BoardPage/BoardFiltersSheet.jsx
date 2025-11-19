@@ -37,7 +37,7 @@ export function BoardFiltersSheet({
                     type="button"
                     size="sm"
                     variant={active ? "default" : "outline"}
-                    className="h-7 rounded-full px-2 text-[11px] flex items-center gap-1"
+                    className="h-7 rounded-full px-2 text-xs flex items-center gap-1"
                     onClick={() => {
                       setFilters((prev) => ({
                         ...prev,
@@ -76,7 +76,7 @@ export function BoardFiltersSheet({
                     type="button"
                     size="sm"
                     variant={active ? "default" : "outline"}
-                    className="h-7 rounded-full px-2 text-[11px]"
+                    className="h-7 rounded-full px-2 text-xs"
                     onClick={() => {
                       setFilters((prev) => ({
                         ...prev,
@@ -97,9 +97,7 @@ export function BoardFiltersSheet({
             <div className="font-medium">Labels</div>
             <div className="flex flex-wrap gap-2">
               {availableLabels.length === 0 && (
-                <span className="text-[11px] text-neutral-500">
-                  No labels yet
-                </span>
+                <span className="text-xs text-neutral-500">No labels yet</span>
               )}
               {availableLabels.map((label) => {
                 const active = filters.labelIds.includes(label.id);
@@ -109,7 +107,7 @@ export function BoardFiltersSheet({
                     type="button"
                     size="sm"
                     variant={active ? "default" : "outline"}
-                    className="h-7 rounded-full px-2 text-[11px] flex items-center gap-1"
+                    className="h-7 rounded-full px-2 text-xs flex items-center gap-1"
                     onClick={() => {
                       setFilters((prev) => ({
                         ...prev,
@@ -134,7 +132,7 @@ export function BoardFiltersSheet({
             <div className="font-medium">Assigned to</div>
             <div className="flex flex-wrap gap-2">
               {availableAssignees.length === 0 && (
-                <span className="text-[11px] text-neutral-500">
+                <span className="text-xs text-neutral-500">
                   No assignments yet
                 </span>
               )}
@@ -146,7 +144,7 @@ export function BoardFiltersSheet({
                     type="button"
                     size="sm"
                     variant={active ? "default" : "outline"}
-                    className="h-7 rounded-full px-2 text-[11px] flex items-center gap-1"
+                    className="h-7 rounded-full px-2 text-xs flex items-center gap-1"
                     onClick={() => {
                       setFilters((prev) => ({
                         ...prev,
@@ -185,7 +183,7 @@ export function BoardFiltersSheet({
                     type="button"
                     size="sm"
                     variant={active ? "default" : "outline"}
-                    className="h-7 rounded-full px-2 text-[11px]"
+                    className="h-7 rounded-full px-2 text-xs"
                     onClick={() => {
                       setFilters((prev) => ({
                         ...prev,
@@ -211,7 +209,7 @@ export function BoardFiltersSheet({
                     type="button"
                     size="sm"
                     variant={active ? "default" : "outline"}
-                    className="h-7 rounded-full px-2 text-[11px]"
+                    className="h-7 rounded-full px-2 text-xs"
                     onClick={() => {
                       setFilters((prev) => ({
                         ...prev,
@@ -233,7 +231,7 @@ export function BoardFiltersSheet({
               type="button"
               variant="outline"
               size="sm"
-              className="w-full text-[11px]"
+              className="w-full text-xs"
               onClick={() => {
                 setFilters({
                   priorities: [],

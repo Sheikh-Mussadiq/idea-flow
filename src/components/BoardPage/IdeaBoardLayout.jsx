@@ -3,9 +3,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { FlowContent } from "./FlowContent.jsx";
 import { ArchivedTasksPanel } from "./ArchivedTasksPanel.jsx";
 import { BoardMembersSheet } from "./BoardMembersSheet.jsx";
-import { BoardHeader } from "./BoardHeader.jsx";
+import { BoardHeader } from "./BoardTopBar.jsx";
 import { BoardFiltersSheet } from "./BoardFiltersSheet.jsx";
-import { BoardTopBar } from "./BoardTopBar.jsx";
 import { Button } from "../ui/button";
 import {
   DropdownMenu,
@@ -107,6 +106,7 @@ export const IdeaBoardLayout = ({ initialView = "flow" }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [searchCount, setSearchCount] = useState(0);
+  const [boardViewMode, setBoardViewMode] = useState(initialView);
   const [filters, setFilters] = useState({
     priorities: [],
     labelIds: [],
@@ -188,6 +188,10 @@ export const IdeaBoardLayout = ({ initialView = "flow" }) => {
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
   }, []);
+
+  useEffect(() => {
+    setBoardViewMode(initialView);
+  }, [initialView]);
 
   const handleSelectBoard = (id) => {
     setActiveBoardId(id);
@@ -471,7 +475,7 @@ export const IdeaBoardLayout = ({ initialView = "flow" }) => {
   };
 
   return (
-    <div className="relative h-full w-full bg-neutral-50">
+    <div className="flex flex-col h-full w-full bg-neutral-50 overflow-hidden">
       <BoardHeader
         boards={boards}
         activeBoard={activeBoard}
@@ -490,9 +494,6 @@ export const IdeaBoardLayout = ({ initialView = "flow" }) => {
         onDuplicateBoard={handleDuplicateBoard}
         onDeleteBoard={() => setIsDeleteConfirmOpen(true)}
         onOpenMembers={() => setIsMembersOpen(true)}
-      />
-
-      <BoardTopBar
         currentUser={currentUser}
         currentMemberRole={currentMemberRole}
         defaultMembers={defaultMembers}
@@ -504,9 +505,11 @@ export const IdeaBoardLayout = ({ initialView = "flow" }) => {
         onOpenFilters={() => setIsFilterOpen(true)}
         onOpenArchived={() => setIsArchivedOpen(true)}
         archivedCount={archivedIdeas.length}
+        viewMode={boardViewMode}
+        onChangeViewMode={setBoardViewMode}
       />
 
-      <div className="h-full w-full">
+      <div className="flex-1 w-full overflow-hidden">
         <FlowContent
           initialView={initialView}
           ideas={filteredIdeas}
@@ -516,6 +519,8 @@ export const IdeaBoardLayout = ({ initialView = "flow" }) => {
           teamMembers={activeBoard.members || []}
           currentUser={currentUser}
           currentRole={currentMemberRole}
+          viewMode={boardViewMode}
+          onChangeView={setBoardViewMode}
         />
       </div>
 

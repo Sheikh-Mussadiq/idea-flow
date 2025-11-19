@@ -126,7 +126,7 @@ export const TaskModal = ({
                 type="button"
                 variant="outline"
                 size="sm"
-                className="h-7 px-3 text-[11px] text-neutral-500 hover:text-error-500 border-neutral-200/60"
+                className="h-7 px-3 text-xs text-neutral-500 hover:text-error-500 border-neutral-200/60"
                 disabled={!canEdit}
                 onClick={() => {
                   onArchiveTask(idea.id);
@@ -240,11 +240,11 @@ export const TaskModal = ({
                   <Paperclip className="h-4 w-4" />
                   <span>Attachments</span>
                 </div>
-                <div className="flex flex-wrap gap-2 text-[11px]">
+                <div className="flex flex-wrap gap-2 text-xs">
                   <input
                     type="file"
                     multiple
-                    className="text-[11px]"
+                    className="text-xs"
                     onChange={(e) => {
                       if (!idea) return;
                       const files = e.target.files;
@@ -299,7 +299,7 @@ export const TaskModal = ({
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-[11px]">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                   {idea.attachments.map((att) => (
                     <div
                       key={att.id}
@@ -382,7 +382,7 @@ export const TaskModal = ({
                     <Button
                       variant="ghost"
                       size="sm"
-                      className="h-7 px-2 text-[11px] text-neutral-500 hover:text-primary-500"
+                      className="h-7 px-2 text-xs text-neutral-500 hover:text-primary-500"
                       onClick={() => setAssignOpen((v) => !v)}
                     >
                       Assign
@@ -392,7 +392,7 @@ export const TaskModal = ({
                         {teamMembers.map((member) => (
                           <button
                             key={member.id}
-                            className="w-full flex items-center gap-2 px-2 py-1.5 text-left text-[11px] text-neutral-900 hover:bg-neutral-100/60"
+                            className="w-full flex items-center gap-2 px-2 py-1.5 text-left text-xs text-neutral-900 hover:bg-neutral-100/60"
                             onClick={() => {
                               onAssign(idea.id, member);
                               setAssignOpen(false);
@@ -405,7 +405,7 @@ export const TaskModal = ({
                           </button>
                         ))}
                         <button
-                          className="w-full px-2 py-1.5 text-left text-[11px] text-neutral-500 hover:bg-neutral-100/60 border-t border-neutral-200/60 mt-1"
+                          className="w-full px-2 py-1.5 text-left text-xs text-neutral-500 hover:bg-neutral-100/60 border-t border-neutral-200/60 mt-1"
                           onClick={() => {
                             onAssign(idea.id, null);
                             setAssignOpen(false);
@@ -442,7 +442,7 @@ export const TaskModal = ({
                 <h3 className="text-xs font-semibold text-neutral-500">
                   Priority
                 </h3>
-                <div className="flex flex-wrap gap-2 text-[11px]">
+                <div className="flex flex-wrap gap-2 text-xs">
                   {["low", "medium", "high"].map((level) => (
                     <button
                       key={level}
@@ -469,11 +469,11 @@ export const TaskModal = ({
                 <h3 className="text-xs font-semibold text-neutral-500">
                   Labels
                 </h3>
-                <div className="flex flex-wrap gap-2 text-[11px]">
+                <div className="flex flex-wrap gap-2 text-xs">
                   {idea.labels.map((label) => (
                     <button
                       key={label.id}
-                      className="px-2 py-1 rounded-full text-[11px] text-white"
+                      className="px-2 py-1 rounded-full text-xs text-white"
                       style={{ backgroundColor: label.color }}
                       onClick={() => onRemoveLabel(idea.id, label.id)}
                       disabled={!canEdit}
@@ -487,7 +487,7 @@ export const TaskModal = ({
                     </span>
                   )}
                 </div>
-                <div className="flex flex-wrap gap-1 text-[11px]">
+                <div className="flex flex-wrap gap-1 text-xs">
                   {[
                     { name: "Design", color: "#f97316" },
                     { name: "Idea", color: "#3b82f6" },
@@ -497,7 +497,7 @@ export const TaskModal = ({
                   ].map((preset) => (
                     <button
                       key={preset.name}
-                      className="px-2 py-1 rounded-full text-[11px] text-white"
+                      className="px-2 py-1 rounded-full text-xs text-white"
                       style={{ backgroundColor: preset.color }}
                       onClick={() =>
                         onAddLabel(idea.id, {
@@ -535,11 +535,11 @@ export const TaskModal = ({
                               <span className="font-medium text-xs text-neutral-900">
                                 {comment.author}
                               </span>
-                              <span className="text-[11px] text-neutral-500">
+                              <span className="text-xs text-neutral-500">
                                 {comment.timestamp}
                               </span>
                             </div>
-                            <div className="flex items-center gap-1 text-[11px] text-neutral-500">
+                            <div className="flex items-center gap-1 text-xs text-neutral-500">
                               <button
                                 onClick={() => {
                                   const next = prompt(
@@ -620,11 +620,11 @@ export const TaskModal = ({
                 <h3 className="text-xs font-semibold text-neutral-500 flex items-center gap-1">
                   <Sparkles className="h-3 w-3" /> AI Assistant
                 </h3>
-                <p className="text-[11px] text-neutral-500">
+                <p className="text-xs text-neutral-500">
                   Prototype placeholder — hook this into your AI backend to
                   generate subtasks, rewrite descriptions, and more.
                 </p>
-                <div className="flex flex-wrap gap-2 text-[11px]">
+                <div className="flex flex-wrap gap-2 text-xs">
                   {[
                     "Generate Subtasks",
                     "Improve Description",
@@ -639,7 +639,7 @@ export const TaskModal = ({
                       type="button"
                       variant="outline"
                       size="sm"
-                      className="h-7 px-2 text-[11px]"
+                      className="h-7 px-2 text-xs"
                       onClick={() => {
                         // Stub: no-op in prototype
                         console.log("AI action triggered:", label);
@@ -658,7 +658,7 @@ export const TaskModal = ({
                     Activity
                   </h3>
                 </div>
-                <div className="max-h-48 overflow-y-auto space-y-1 text-[11px] text-neutral-500">
+                <div className="max-h-48 overflow-y-auto space-y-1 text-xs text-neutral-500">
                   {idea.activity.map((entry) => (
                     <div key={entry.id}>
                       [

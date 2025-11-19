@@ -1,101 +1,120 @@
-import { Filter, Search } from "lucide-react";
-import { Button } from "../ui/button";
-import { Input } from "../ui/input";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuTrigger,
-} from "../ui/dropdown-menu";
-import { Avatar, AvatarFallback } from "../ui/avatar";
+  Bell,
+  ChevronDown,
+  Filter,
+  MoreVertical,
+  Plus,
+  Search,
+  Star,
+  LayoutTemplate,
+  Table2,
+  List,
+  GitFork,
+} from "lucide-react";
+import { Button } from "../ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 
-export function BoardTopBar({
+export function BoardHeader({
+  activeBoard,
+  onOpenMembers,
   currentUser,
-  currentMemberRole,
-  defaultMembers,
-  onChangeUser,
   searchQuery,
   onChangeSearch,
-  searchInputRef,
-  searchCount,
-  onOpenFilters,
-  onOpenArchived,
-  archivedCount,
+  viewMode,
+  onChangeViewMode,
 }) {
+  if (!activeBoard) return null;
+
+  const viewTabs = [
+    { label: "Flow", value: "flow", icon: GitFork },
+    { label: "Kanban", value: "kanban", icon: LayoutTemplate },
+    { label: "Table", value: "table", icon: Table2 },
+    { label: "List", value: "list", icon: List },
+  ];
+
   return (
-    <div className="absolute right-4 top-4 z-20 flex items-center gap-2">
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
+    <div className="w-full bg-white border-b border-neutral-200 px-6 py-4">
+      {/* Top Row */}
+      <div className="flex items-center justify-between mb-6">
+        {/* Title Area */}
+        <div className="flex items-center gap-3">
+          <div className="h-8 w-8 rounded-lg bg-neutral-100 flex items-center justify-center text-xl">
+            {activeBoard.icon || "🐳"}
+          </div>
+          <h1 className="text-2xl font-bold text-neutral-900">
+            {activeBoard.name}
+          </h1>
+          <button className="text-neutral-400 hover:text-yellow-400 transition-colors">
+            <Star className="h-5 w-5" />
+          </button>
+        </div>
+
+        {/* Actions Area */}
+        <div className="flex items-center gap-4">
           <Button
-            variant="outline"
-            size="sm"
-            className="rounded-full border-neutral-200/70 bg-white/90 px-2 text-xs shadow-sm flex items-center gap-2"
+            size="icon"
+            className="h-9 w-9 rounded-full bg-primary-500 hover:bg-primary-600 text-white shadow-lg shadow-primary-500/20"
           >
-            <Avatar className="h-5 w-5 border border-neutral-200/60">
-              <AvatarFallback className="bg-primary-500/10 text-[10px] font-medium">
-                {currentUser.avatar}
-              </AvatarFallback>
-            </Avatar>
-            <span className="max-w-[120px] truncate">{currentUser.name}</span>
-            <span className="text-[10px] capitalize text-neutral-500">
-              {currentMemberRole}
-            </span>
+            <Plus className="h-5 w-5" />
           </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="min-w-[200px]">
-          <DropdownMenuLabel className="text-xs text-neutral-500">
-            Switch user
-          </DropdownMenuLabel>
-          {defaultMembers.map((user) => (
-            <DropdownMenuItem
-              key={user.id}
-              className="flex items-center gap-2 text-xs"
-              onClick={() => onChangeUser(user.id)}
-            >
-              <Avatar className="h-5 w-5 border border-neutral-200/60">
-                <AvatarFallback className="bg-primary-500/10 text-[10px] font-medium">
-                  {user.avatar}
-                </AvatarFallback>
+
+          <div className="flex -space-x-2">
+            {[1, 2, 3, 4, 5].map((i) => (
+              <Avatar key={i} className="h-8 w-8 border-2 border-white ring-1 ring-neutral-100">
+                <AvatarImage src={`https://i.pravatar.cc/150?u=${i}`} />
+                <AvatarFallback>U{i}</AvatarFallback>
               </Avatar>
-              <span className="flex-1 truncate">{user.name}</span>
-              <span className="text-[10px] capitalize text-neutral-500">
-                {user.role}
-              </span>
-            </DropdownMenuItem>
-          ))}
-        </DropdownMenuContent>
-      </DropdownMenu>
-      <div className="flex items-center gap-2 rounded-full border border-neutral-200/70 bg-white/90 px-3 py-1 shadow-sm">
-        <Search className="h-3.5 w-3.5 text-neutral-400" />
-        <Input
-          ref={searchInputRef}
-          value={searchQuery}
-          onChange={(e) => onChangeSearch(e.target.value)}
-          placeholder="Search tasks..."
-          className="h-7 w-40 border-0 bg-transparent px-0 text-xs focus-visible:ring-0 focus-visible:ring-offset-0"
-        />
-        <span className="text-[10px] text-neutral-500">
-          {searchCount} results
-        </span>
+            ))}
+          </div>
+
+          <div className="h-6 w-px bg-neutral-200 mx-1" />
+
+          <button className="text-neutral-400 hover:text-neutral-600 relative">
+            <Bell className="h-5 w-5" />
+            <span className="absolute top-0 right-0 h-2 w-2 bg-red-500 rounded-full border-2 border-white" />
+          </button>
+
+          <button className="text-neutral-400 hover:text-neutral-600">
+            <Search className="h-5 w-5" />
+          </button>
+
+          <button className="text-neutral-400 hover:text-neutral-600">
+            <MoreVertical className="h-5 w-5" />
+          </button>
+        </div>
       </div>
-      <Button
-        variant="outline"
-        size="sm"
-        className="rounded-full border-neutral-200/70 bg-white/90 px-2 text-xs shadow-sm flex items-center gap-1"
-        onClick={onOpenFilters}
-      >
-        <Filter className="h-3 w-3" />
-        Filter
-      </Button>
-      <Button
-        variant="outline"
-        size="sm"
-        className="rounded-full border-neutral-200/70 bg-white/90 px-2 text-xs shadow-sm"
-        onClick={onOpenArchived}
-      >
-        Archived Tasks ({archivedCount})
-      </Button>
+
+      {/* Bottom Row (Tabs & Filter) */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-6">
+          {viewTabs.map((tab) => {
+            const isActive = viewMode === tab.value;
+            return (
+              <button
+                key={tab.value}
+                onClick={() => onChangeViewMode?.(tab.value)}
+                className={`flex items-center gap-2 pb-3 text-sm font-medium border-b-2 transition-all ${
+                  isActive
+                    ? "border-primary-500 text-primary-600"
+                    : "border-transparent text-neutral-500 hover:text-neutral-700"
+                }`}
+              >
+                <tab.icon className="h-4 w-4" />
+                {tab.label}
+              </button>
+            );
+          })}
+        </div>
+
+        <Button
+          variant="ghost"
+          size="sm"
+          className="text-neutral-500 hover:text-neutral-900 gap-2"
+        >
+          <Filter className="h-4 w-4" />
+          Filter
+        </Button>
+      </div>
     </div>
   );
 }

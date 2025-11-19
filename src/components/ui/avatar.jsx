@@ -13,3 +13,11 @@ export const AvatarFallback = ({ className = "", children }) => (
     {children}
   </div>
 );
+
+export const AvatarImage = ({ src, alt = "", className = "" }) => (
+  <img
+    src={src}
+    alt={alt}
+    className={`aspect-square h-full w-full ${className}`}
+  />
+);

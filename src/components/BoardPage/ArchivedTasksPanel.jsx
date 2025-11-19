@@ -6,7 +6,7 @@ export const ArchivedTasksPanel = ({ ideas, onRestoreTask }) => {
     return (
       <div className="flex h-full flex-col items-center justify-center text-xs text-neutral-500">
         <p className="mb-1 font-medium">No archived tasks</p>
-        <p className="text-[11px]">
+        <p className="text-xs">
           Archive tasks from the task modal to see them here.
         </p>
       </div>
@@ -25,7 +25,7 @@ export const ArchivedTasksPanel = ({ ideas, onRestoreTask }) => {
               <h3 className="text-sm font-semibold text-neutral-900 line-clamp-1">
                 {idea.title}
               </h3>
-              <p className="mt-1 text-[11px] text-neutral-600 line-clamp-2">
+              <p className="mt-1 text-xs text-neutral-600 line-clamp-2">
                 {idea.description}
               </p>
             </div>
@@ -46,7 +46,7 @@ export const ArchivedTasksPanel = ({ ideas, onRestoreTask }) => {
             </div>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2 text-[11px] text-neutral-500">
+          <div className="flex flex-wrap items-center gap-2 text-xs text-neutral-500">
             {idea.priority && (
               <span className="inline-flex items-center gap-1 rounded-full bg-neutral-100 px-2 py-0.5">
                 <span
@@ -83,7 +83,7 @@ export const ArchivedTasksPanel = ({ ideas, onRestoreTask }) => {
           </div>
 
           <div className="mt-1 flex items-center justify-between gap-2">
-            <span className="text-[11px] text-neutral-500">
+            <span className="text-xs text-neutral-500">
               Archived at{" "}
               {idea.archivedAt
                 ? new Date(idea.archivedAt).toLocaleString()
@@ -93,7 +93,7 @@ export const ArchivedTasksPanel = ({ ideas, onRestoreTask }) => {
               type="button"
               size="sm"
               variant="outline"
-              className="h-7 px-2 text-[11px]"
+              className="h-7 px-2 text-xs"
               onClick={() => onRestoreTask(idea.id)}
             >
               Restore Task

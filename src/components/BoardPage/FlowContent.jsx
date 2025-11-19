@@ -2,9 +2,10 @@ import { useState, useCallback, useMemo } from "react";
 import { useReactFlow } from "reactflow";
 import { CommentPanel } from "./CommentPanel.jsx";
 import { TaskModal } from "./TaskModal.jsx";
-import { FlowToolbar } from "./FlowToolbar.jsx";
 import { FlowView } from "./FlowView.jsx";
 import { KanbanView } from "./KanbanView.jsx";
+import { TableView } from "./TableView.jsx";
+import { ListView } from "./ListView.jsx";
 import { useIdeaFlowLayout } from "./hooks/useIdeaFlowLayout.js";
 import { toast } from "sonner";
 
@@ -77,8 +78,12 @@ export const FlowContent = ({
   currentUser,
   currentRole,
   initialView = "flow",
+  viewMode: controlledViewMode,
+  onChangeView,
 }) => {
-  const [viewMode, setViewMode] = useState(initialView);
+  const [uncontrolledViewMode, setUncontrolledViewMode] = useState(initialView);
+  const viewMode = controlledViewMode ?? uncontrolledViewMode;
+  const handleChangeView = onChangeView ?? setUncontrolledViewMode;
   const [mode, setMode] = useState("ai");
   const [prompt, setPrompt] = useState("");
   const [manualIdea, setManualIdea] = useState("");
@@ -135,6 +140,7 @@ export const FlowContent = ({
       labels: [],
       activity: [],
       parentId: undefined,
+      showInFlow: true,
     }));
 
     onUpdateIdeas(() => newIdeas);
@@ -165,6 +171,7 @@ export const FlowContent = ({
       labels: [],
       activity: [],
       parentId: undefined,
+      showInFlow: true,
     }));
 
     const manualIdeas = ideas.filter((idea) => idea.type === "manual");
@@ -195,6 +202,7 @@ export const FlowContent = ({
       activity: [],
       parentId: undefined,
       isArchived: false,
+      showInFlow: true,
     };
 
     onUpdateIdeas((prevIdeas) => [...prevIdeas, newIdea]);
@@ -322,7 +330,7 @@ export const FlowContent = ({
 
   const handleViewInFlow = useCallback(
     (ideaId) => {
-      setViewMode("flow");
+      handleChangeView("flow");
 
       setTimeout(() => {
         const allNodes = getNodes();
@@ -764,10 +772,39 @@ export const FlowContent = ({
     ? comments[selectedTaskId] || []
     : [];
 
+  const handleAddTask = useCallback(
+    (status = "Backlog") => {
+      if (isViewer) return;
+      const title = "New Task";
+      const newIdea = {
+        id: Date.now().toString(),
+        title,
+        description: "",
+        type: "manual",
+        kanbanStatus: status,
+        assignedTo: undefined,
+        dueDate: undefined,
+        priority: null,
+        subtasks: [],
+        attachments: [],
+        labels: [],
+        activity: [],
+        parentId: undefined,
+        isArchived: false,
+        showInFlow: false,
+      };
+
+      onUpdateIdeas((prevIdeas) => [...prevIdeas, newIdea]);
+      toast.success("Task added!");
+      
+      // Log activity
+      logActivity(newIdea.id, currentUserName, `Created task in ${status}`);
+    },
+    [currentUserName, isViewer, logActivity, onUpdateIdeas]
+  );
+
   return (
     <>
-      <FlowToolbar viewMode={viewMode} onChangeView={setViewMode} />
-
       {viewMode === "flow" && (
         <FlowView
           nodes={nodes}
@@ -786,7 +823,18 @@ export const FlowContent = ({
           onViewInFlow={handleViewInFlow}
           onAssign={handleAssign}
           onOpenTask={handleOpenTask}
+          onAddTask={handleAddTask}
+          onReorderIdeas={onUpdateIdeas}
           canEdit={!isViewer}
+        />
+      )}
+
+      {viewMode === "table" && <TableView />}
+      {viewMode === "list" && (
+        <ListView 
+          ideas={ideas} 
+          onAddTask={handleAddTask}
+          onOpenTask={handleOpenTask}
         />
       )}
 

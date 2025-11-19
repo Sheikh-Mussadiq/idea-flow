@@ -26,7 +26,8 @@ export const useIdeaFlowLayout = (
   const draggedNodesRef = useRef(new Set());
 
   useEffect(() => {
-    const currentIdeaIds = new Set(ideas.map((idea) => idea.id));
+    const flowIdeas = ideas.filter(idea => idea.showInFlow !== false);
+    const currentIdeaIds = new Set(flowIdeas.map((idea) => idea.id));
     draggedNodesRef.current.forEach((id) => {
       if (!currentIdeaIds.has(id)) {
         draggedNodesRef.current.delete(id);
@@ -39,7 +40,7 @@ export const useIdeaFlowLayout = (
       );
       const horizontalSpacing = 420;
       const verticalOffset = 260;
-      const totalIdeas = ideas.length;
+      const totalIdeas = flowIdeas.length;
       const startX =
         totalIdeas > 0 ? -((totalIdeas - 1) * horizontalSpacing) / 2 : 0;
 
@@ -51,7 +52,7 @@ export const useIdeaFlowLayout = (
         draggable: false,
       };
 
-      const ideaNodes = ideas.map((idea, index) => {
+      const ideaNodes = flowIdeas.map((idea, index) => {
         const fallbackPosition = {
           x: startX + index * horizontalSpacing,
           y: verticalOffset,
