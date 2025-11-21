@@ -16,8 +16,18 @@ import {
 } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
-import { mockBoards, mockAIFlows, mockCards, boardCategories } from "../data/mockData.js";
+import { mockAIFlows, mockCards, boardCategories } from "../data/mockData.js";
 import { ThemeToggle } from "../components/ThemeToggle";
+import { useBoard } from "../context/BoardContext";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "../components/ui/dropdown-menu";
+import { MoreHorizontal, Trash2, Archive as ArchiveIcon, Copy, Share2, Settings as SettingsIcon } from "lucide-react";
+import { toast } from "sonner";
 
 const PRIMARY_NAV = [
   { id: "home", icon: Home, label: "Home", to: "/" },
@@ -34,6 +44,8 @@ export const AppSidebar = () => {
   });
   const [previewPrimary, setPreviewPrimary] = useState(activePrimary);
   const [isExpanded, setIsExpanded] = useState(false);
+  
+  const { boards, selectBoard, activeBoardId, archiveBoard, deleteBoard, duplicateBoard, toggleFavorite } = useBoard();
 
   const ITEMS_WITH_CONTENT = ["tasks", "ai-flow"];
 
@@ -165,25 +177,58 @@ export const AppSidebar = () => {
                     </div>
                     <ChevronDown className="h-3 w-3 text-neutral-400" />
                   </div>
-                  {mockBoards.filter(board => board.isFavorite).map((board) => {
+                  {boards.filter(board => board.isFavorite && !board.isArchived).map((board) => {
                     const boardCards = mockCards.filter(card => card.boardId === board.id);
+                    const isActive = board.id === activeBoardId;
                     
                     return (
-                      <button
+                      <div
                         key={board.id}
-                        className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm font-medium text-neutral-600 hover:bg-white hover:shadow-sm hover:text-neutral-900 transition-all"
+                        className={`group w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                          isActive 
+                            ? "bg-white dark:bg-neutral-800 shadow-sm text-neutral-900 dark:text-white" 
+                            : "text-neutral-600 dark:text-neutral-400 hover:bg-white/50 dark:hover:bg-neutral-800/50 hover:text-neutral-900 dark:hover:text-neutral-200"
+                        }`}
                       >
-                        <div className="flex items-center gap-3">
-                          <Star className="h-4 w-4 text-orange-400 fill-orange-400" />
-                          <span className="text-base">{board.icon}</span>
+                        <button
+                          onClick={() => selectBoard(board.id)}
+                          className="flex-1 flex items-center gap-3 min-w-0 text-left"
+                        >
+                          <Star className="h-4 w-4 text-orange-400 fill-orange-400 shrink-0" />
+                          <span className="text-base shrink-0">{board.icon}</span>
                           <span className="truncate">{board.name}</span>
+                        </button>
+                        
+                        <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                          {boardCards.length > 0 && (
+                            <span className="text-[10px] font-medium text-neutral-400">
+                              {boardCards.length}
+                            </span>
+                          )}
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <button className="p-1 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded">
+                                <MoreHorizontal className="h-3 w-3 text-neutral-400" />
+                              </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-48 dark:bg-neutral-900 dark:border-neutral-700">
+                              <DropdownMenuItem onClick={() => toggleFavorite(board.id)}>
+                                <Star className="mr-2 h-4 w-4" />
+                                <span>Unfavorite</span>
+                              </DropdownMenuItem>
+                              <DropdownMenuSeparator className="dark:bg-neutral-700" />
+                              <DropdownMenuItem onClick={() => duplicateBoard(board.id)}>
+                                <Copy className="mr-2 h-4 w-4" />
+                                <span>Duplicate</span>
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => archiveBoard(board.id)}>
+                                <ArchiveIcon className="mr-2 h-4 w-4" />
+                                <span>Archive</span>
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </div>
-                        {boardCards.length > 0 && (
-                          <span className="text-[10px] font-medium text-neutral-400">
-                            {boardCards.length}
-                          </span>
-                        )}
-                      </button>
+                      </div>
                     );
                   })}
                 </div>
@@ -198,7 +243,7 @@ export const AppSidebar = () => {
                       <Plus className="h-3 w-3 text-neutral-400" />
                     </button>
                   </div>
-                  {mockBoards.map((board, index) => {
+                  {boards.map((board, index) => {
                     const boardCards = mockCards.filter(card => card.boardId === board.id);
                     const isActive = index === 0; // First board is active for demo
                     
@@ -234,7 +279,7 @@ export const AppSidebar = () => {
                     <ChevronDown className="h-3 w-3 text-neutral-400" />
                   </div>
                   {boardCategories.map((category) => {
-                    const categoryBoards = mockBoards.filter(board => board.category === category.name);
+                    const categoryBoards = boards.filter(board => board.category === category.name);
                     
                     return (
                       <button

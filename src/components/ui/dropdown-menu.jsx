@@ -39,9 +39,12 @@ export const DropdownMenuContent = ({
 }) => {
   const ctx = useContext(DropdownMenuContext);
   if (!ctx || !ctx.open) return null;
+  
+  const alignmentClass = align === "end" ? "right-0" : "left-0";
+  
   return (
     <div
-      className={`absolute z-50 mt-1 min-w-[10rem] rounded-md border border-neutral-200/60 bg-white p-1 shadow-md ${className}`}
+      className={`absolute z-50 mt-1 min-w-[10rem] rounded-md border border-neutral-200/60 dark:border-neutral-700 bg-white dark:bg-neutral-900 p-1 shadow-md ${alignmentClass} ${className}`}
       {...props}
     />
   );

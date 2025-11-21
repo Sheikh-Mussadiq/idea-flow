@@ -41,7 +41,8 @@ import {
   SheetDescription,
 } from "../ui/sheet";
 import { Avatar, AvatarFallback } from "../ui/avatar";
-import { mockUsers, mockLabels, mockBoards, mockCards, mockAIFlows } from "../../data/mockData.js";
+import { mockUsers, mockLabels } from "../../data/mockData.js";
+import { useBoard } from "../../context/BoardContext";
 
 const defaultMembers = mockUsers.map(user => ({
   id: user.id,
@@ -72,31 +73,20 @@ const createEmptyBoard = (name, color, icon) => ({
 });
 
 export const IdeaBoardLayout = ({ initialView = "flow" }) => {
-  // Initialize boards with mock data
-  const [boards, setBoards] = useState(() => {
-    return mockBoards.map(board => {
-      // Get cards for this board
-      const boardCards = mockCards.filter(card => card.boardId === board.id);
-      
-      // Get AI flow ideas for this board
-      const boardFlow = mockAIFlows.find(flow => flow.boardId === board.id);
-      const flowIdeas = boardFlow ? boardFlow.ideas : [];
-      
-      // Combine cards and AI flow ideas
-      const allIdeas = [...boardCards, ...flowIdeas];
-      
-      return {
-        ...board,
-        ideas: allIdeas,
-        comments: {},
-        invites: [],
-        activity: [],
-        isArchived: false,
-      };
-    });
-  });
+  const { 
+    boards, 
+    activeBoard, 
+    activeBoardId, 
+    selectBoard, 
+    createBoard, 
+    updateBoard, 
+    deleteBoard, 
+    archiveBoard, 
+    duplicateBoard 
+  } = useBoard();
 
-  const [activeBoardId, setActiveBoardId] = useState(() => boards[0]?.id);
+  // Local UI state
+  const [isMembersOpen, setIsMembersOpen] = useState(false);
 
   const [currentUserId, setCurrentUserId] = useState(defaultMembers[0].id);
 
@@ -121,12 +111,7 @@ export const IdeaBoardLayout = ({ initialView = "flow" }) => {
   });
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isArchivedOpen, setIsArchivedOpen] = useState(false);
-  const [isMembersOpen, setIsMembersOpen] = useState(false);
 
-  const activeBoard = useMemo(
-    () => boards.find((b) => b.id === activeBoardId) ?? boards[0] ?? null,
-    [boards, activeBoardId]
-  );
 
   const currentUser = useMemo(
     () =>
@@ -203,128 +188,28 @@ export const IdeaBoardLayout = ({ initialView = "flow" }) => {
 
   const handleCreateBoard = () => {
     if (!draftBoardName.trim()) return;
-    const newBoard = createEmptyBoard(draftBoardName.trim());
-    setBoards((prev) => [...prev, newBoard]);
-    setActiveBoardId(newBoard.id);
+    createBoard(draftBoardName.trim(), draftBoardDescription);
     setDraftBoardName("");
     setDraftBoardDescription("");
     setIsCreateOpen(false);
   };
 
-  const handleDuplicateBoard = () => {
-    if (!activeBoard || !isAdmin) return;
-    const copy = {
-      ...activeBoard,
-      id: crypto.randomUUID(),
-      name: `${activeBoard.name} Copy`,
-      createdAt: Date.now(),
-      ideas: activeBoard.ideas.map((idea) => ({ ...idea })),
-      comments: Object.fromEntries(
-        Object.entries(activeBoard.comments).map(([key, value]) => [
-          key,
-          value.map((c) => ({ ...c })),
-        ])
-      ),
-      members: (activeBoard.members || []).map((member) => ({ ...member })),
-      invites: (activeBoard.invites || []).map((invite) => ({ ...invite })),
-      activity: (activeBoard.activity || []).slice(),
-      isArchived: false,
-    };
 
-    setBoards((prev) => [...prev, copy]);
-    setActiveBoardId(copy.id);
-  };
 
-  const handleDeleteBoard = () => {
-    if (!activeBoard || !isAdmin) return;
 
-    setBoards((prev) => {
-      const filtered = prev.filter((b) => b.id !== activeBoard.id);
-      if (!filtered.length) {
-        const fallback = createEmptyBoard("Main Content Board");
-        setActiveBoardId(fallback.id);
-        return [fallback];
-      }
-      const nextActive =
-        filtered.find((b) => b.id === activeBoardId) ?? filtered[0];
-      setActiveBoardId(nextActive.id);
-      return filtered;
-    });
-
-    setIsDeleteConfirmOpen(false);
-  };
 
   const handleRenameActiveBoard = () => {
     if (!activeBoard || !draftBoardName.trim() || !isAdmin) return;
-    const previousName = activeBoard.name;
-    const nextName = draftBoardName.trim();
-    setBoards((prev) =>
-      prev.map((b) =>
-        b.id === activeBoard.id
-          ? {
-              ...b,
-              name: nextName,
-              activity: [
-                {
-                  id: Date.now().toString(),
-                  timestamp: Date.now(),
-                  user: currentUser.name,
-                  action: `Renamed board from "${previousName}" to "${nextName}"`,
-                },
-                ...(b.activity || []),
-              ],
-            }
-          : b
-      )
-    );
+    updateBoard(activeBoard.id, { 
+      name: draftBoardName.trim(),
+      settings: { ...activeBoard.settings, description: draftBoardDescription }
+    });
     setIsSettingsOpen(false);
   };
 
-  const handleArchiveBoard = () => {
-    if (!activeBoard || !isAdmin || activeBoard.isArchived) return;
-    setBoards((prev) =>
-      prev.map((board) =>
-        board.id === activeBoard.id
-          ? {
-              ...board,
-              isArchived: true,
-              activity: [
-                {
-                  id: Date.now().toString(),
-                  timestamp: Date.now(),
-                  user: currentUser.name,
-                  action: "Archived board",
-                },
-                ...(board.activity || []),
-              ],
-            }
-          : board
-      )
-    );
-  };
 
-  const handleRestoreBoard = () => {
-    if (!activeBoard || !isAdmin || !activeBoard.isArchived) return;
-    setBoards((prev) =>
-      prev.map((board) =>
-        board.id === activeBoard.id
-          ? {
-              ...board,
-              isArchived: false,
-              activity: [
-                {
-                  id: Date.now().toString(),
-                  timestamp: Date.now(),
-                  user: currentUser.name,
-                  action: "Restored board",
-                },
-                ...(board.activity || []),
-              ],
-            }
-          : board
-      )
-    );
-  };
+
+
 
   const handleUpdateIdeas = (updater) => {
     if (!activeBoard) return;
@@ -495,7 +380,8 @@ export const IdeaBoardLayout = ({ initialView = "flow" }) => {
           setDraftBoardDescription(activeBoard.settings?.description ?? "");
           setIsSettingsOpen(true);
         }}
-        onDuplicateBoard={handleDuplicateBoard}
+        onDuplicateBoard={() => duplicateBoard(activeBoard.id)}
+        onArchiveBoard={() => archiveBoard(activeBoard.id)}
         onDeleteBoard={() => setIsDeleteConfirmOpen(true)}
         onOpenMembers={() => setIsMembersOpen(true)}
         currentUser={currentUser}
@@ -653,10 +539,13 @@ export const IdeaBoardLayout = ({ initialView = "flow" }) => {
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              className="bg-red-500 text-white hover:bg-red-600"
-              onClick={handleDeleteBoard}
+              className="bg-red-600 hover:bg-red-700 text-white border-0"
+              onClick={() => {
+                deleteBoard(activeBoard.id);
+                setIsDeleteConfirmOpen(false);
+              }}
             >
-              Delete
+              Delete Board
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

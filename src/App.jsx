@@ -9,11 +9,13 @@ import NotFound from "./pages/NotFound.jsx";
 
 import { NotificationsProvider } from "./context/NotificationsContext";
 import { ThemeProvider } from "./context/ThemeContext";
+import { BoardProvider } from "./context/BoardContext";
 
 const App = () => (
   <ThemeProvider>
     <NotificationsProvider>
-      <TooltipProvider>
+      <BoardProvider>
+        <TooltipProvider>
       <Toaster />
       <Sonner />
       <BrowserRouter>
@@ -27,7 +29,8 @@ const App = () => (
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
-      </TooltipProvider>
+        </TooltipProvider>
+      </BoardProvider>
     </NotificationsProvider>
   </ThemeProvider>
 );

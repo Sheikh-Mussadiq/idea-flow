@@ -128,6 +128,7 @@ export const mockBoards = [
     members: [mockUsers[0], mockUsers[1], mockUsers[2]],
     isFavorite: true,
     category: "Marketing",
+    isArchived: false,
     settings: {
       themeColor: "#6366f1",
       defaultLabels: mockLabels,
@@ -143,6 +144,7 @@ export const mockBoards = [
     members: [mockUsers[0], mockUsers[2], mockUsers[3]],
     isFavorite: true,
     category: "Product",
+    isArchived: false,
     settings: {
       themeColor: "#22c55e",
       defaultLabels: mockLabels,
@@ -158,6 +160,7 @@ export const mockBoards = [
     members: [mockUsers[1], mockUsers[2]],
     isFavorite: false,
     category: "Design",
+    isArchived: false,
     settings: {
       themeColor: "#8b5cf6",
       defaultLabels: mockLabels,
@@ -436,5 +439,57 @@ export const mockNotifications = [
     boardId: "board-3",
     createdAt: Date.now() - 1000 * 60 * 60 * 48, // 2 days ago
     read: true,
+  },
+];
+
+// Mock board activity data
+export const mockBoardActivity = [
+  {
+    id: "act1",
+    type: "task_created",
+    user: { name: "Sarah Johnson", avatar: "SJ" },
+    action: "created task",
+    target: "Implement dark mode",
+    timestamp: "2 minutes ago",
+    icon: "plus",
+  },
+  {
+    id: "act2",
+    type: "task_moved",
+    user: { name: "Mike Chen", avatar: "MC" },
+    action: "moved",
+    target: "User authentication flow",
+    details: "from In Progress to Done",
+    timestamp: "15 minutes ago",
+    icon: "move",
+  },
+  {
+    id: "act3",
+    type: "comment_added",
+    user: { name: "Emma Davis", avatar: "ED" },
+    action: "commented on",
+    target: "API integration",
+    timestamp: "1 hour ago",
+    icon: "message",
+  },
+  {
+    id: "act4",
+    type: "member_added",
+    user: { name: "Tom Wilson", avatar: "TW" },
+    action: "added",
+    target: "Alex Rodriguez",
+    details: "to the board",
+    timestamp: "2 hours ago",
+    icon: "user-plus",
+  },
+  {
+    id: "act5",
+    type: "task_assigned",
+    user: { name: "Sarah Johnson", avatar: "SJ" },
+    action: "assigned",
+    target: "Database optimization",
+    details: "to Mike Chen",
+    timestamp: "3 hours ago",
+    icon: "user-check",
   },
 ];

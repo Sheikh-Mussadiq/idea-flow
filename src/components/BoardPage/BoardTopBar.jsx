@@ -1,22 +1,31 @@
 import {
-  Bell,
-  ChevronDown,
-  Filter,
-  MoreVertical,
-  Plus,
-  Search,
   Star,
+  Search,
+  MoreVertical,
+  Filter,
   LayoutTemplate,
   Table2,
   List,
   GitFork,
+  Plus,
 } from "lucide-react";
 import { Button } from "../ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { NotificationBell } from "../Notifications/NotificationBell";
+import { BoardActionsMenu } from "./BoardActionsMenu";
+import { BoardActivityPanel } from "./BoardActivityPanel";
+import { BoardSettingsModal } from "./BoardSettingsModal";
+import { ShareBoardModal } from "./ShareBoardModal";
+import { toast } from "sonner";
+import { useState } from "react";
 
 export function BoardHeader({
   activeBoard,
+  onOpenCreateBoard,
+  onOpenSettings,
+  onDuplicateBoard,
+  onDeleteBoard,
+  onArchiveBoard,
   onOpenMembers,
   onOpenFilters,
   currentUser,
@@ -26,6 +35,10 @@ export function BoardHeader({
   onChangeViewMode,
   filters,
 }) {
+  const [isActivityOpen, setIsActivityOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isShareOpen, setIsShareOpen] = useState(false);
+  
   if (!activeBoard) return null;
 
   const viewTabs = [
@@ -74,13 +87,48 @@ export function BoardHeader({
 
           <NotificationBell />
 
-          <button className="text-neutral-400 hover:text-neutral-600">
+          <button className="text-neutral-400 dark:text-neutral-500 hover:text-neutral-600 dark:hover:text-neutral-300 transition-colors">
             <Search className="h-5 w-5" />
           </button>
 
-          <button className="text-neutral-400 hover:text-neutral-600">
-            <MoreVertical className="h-5 w-5" />
-          </button>
+          <BoardActionsMenu
+            trigger={
+              <button className="text-neutral-400 dark:text-neutral-500 hover:text-neutral-600 dark:hover:text-neutral-300 transition-colors">
+                <MoreVertical className="h-5 w-5" />
+              </button>
+            }
+            onViewActivity={() => {
+              setIsActivityOpen(true);
+            }}
+            onDuplicate={() => {
+              onDuplicateBoard?.();
+              toast.success(`Board "${activeBoard.name}" duplicated successfully!`);
+            }}
+            onArchive={() => {
+              if (window.confirm(`Are you sure you want to archive "${activeBoard.name}"?`)) {
+                onArchiveBoard?.();
+                toast.success(`Board "${activeBoard.name}" archived`);
+              }
+            }}
+            onDelete={() => {
+              onDeleteBoard?.();
+            }}
+            onExport={() => {
+              toast.success("Board exported as JSON");
+              // Mock export
+              const data = JSON.stringify({ board: activeBoard, timestamp: new Date().toISOString() }, null, 2);
+              console.log("Exported data:", data);
+            }}
+            onSettings={() => {
+              setIsSettingsOpen(true);
+            }}
+            onShare={() => {
+              setIsShareOpen(true);
+            }}
+            onSaveAsTemplate={() => {
+              toast.success(`Board saved as template: "${activeBoard.name} Template"`);
+            }}
+          />
         </div>
       </div>
 
@@ -132,6 +180,26 @@ export function BoardHeader({
           })()}
         </Button>
       </div>
+      
+      {/* Activity Panel */}
+      <BoardActivityPanel 
+        isOpen={isActivityOpen} 
+        onClose={() => setIsActivityOpen(false)} 
+      />
+      
+      {/* Settings Modal */}
+      <BoardSettingsModal 
+        isOpen={isSettingsOpen} 
+        onClose={() => setIsSettingsOpen(false)}
+        board={activeBoard}
+      />
+
+      {/* Share Modal */}
+      <ShareBoardModal
+        isOpen={isShareOpen}
+        onClose={() => setIsShareOpen(false)}
+        board={activeBoard}
+      />
     </div>
   );
 }
