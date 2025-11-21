@@ -36,18 +36,18 @@ export function BoardHeader({
   ];
 
   return (
-    <div className="w-full bg-white border-b border-neutral-200 px-6 py-4">
+    <div className="w-full bg-white dark:bg-neutral-950 px-6 pt-8 pb-2">
       {/* Top Row */}
       <div className="flex items-center justify-between mb-6">
         {/* Title Area */}
         <div className="flex items-center gap-3">
-          <div className="h-8 w-8 rounded-lg bg-neutral-100 flex items-center justify-center text-xl">
+          <div className="h-8 w-8 rounded-lg bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center text-xl">
             {activeBoard.icon || "🐳"}
           </div>
-          <h1 className="text-2xl font-bold text-neutral-900">
+          <h1 className="text-2xl font-bold text-neutral-900 dark:text-white">
             {activeBoard.name}
           </h1>
-          <button className="text-neutral-400 hover:text-yellow-400 transition-colors">
+          <button className="text-neutral-400 dark:text-neutral-500 hover:text-yellow-400 transition-colors">
             <Star className="h-5 w-5" />
           </button>
         </div>

@@ -17,6 +17,7 @@ import {
 import { Button } from "../components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
 import { mockBoards, mockAIFlows, mockCards, boardCategories } from "../data/mockData.js";
+import { ThemeToggle } from "../components/ThemeToggle";
 
 const PRIMARY_NAV = [
   { id: "home", icon: Home, label: "Home", to: "/" },
@@ -60,89 +61,94 @@ export const AppSidebar = () => {
 
   return (
     <aside 
-      className="h-full bg-neutral-50 flex shrink-0 transition-all duration-300 ease-in-out"
-      style={{ width: isExpanded ? '332px' : '72px' }}
+      className="h-full bg-white dark:bg-neutral-950 flex shrink-0 transition-all duration-300 ease-in-out p-2"
+      style={{ width: isExpanded ? '348px' : '96px' }}
       onMouseLeave={() => setIsExpanded(false)}
     >
-      {/* Primary Sidebar (Icons) */}
-      <div 
-        className="w-[72px] h-full bg-white border-r border-neutral-200 flex flex-col items-center py-6 shrink-0"
-      >
-        {/* Logo */}
-        <div className="mb-8">
-          <div className="h-10 w-10 rounded-xl bg-primary-100 text-primary-600 flex items-center justify-center">
-            <Sparkles className="h-6 w-6" />
-          </div>
-        </div>
 
-        {/* Main Nav Icons */}
-        <nav className="flex-1 w-full flex flex-col items-center gap-4 px-2">
-          {PRIMARY_NAV.map((item) => (
-            <button
-              key={item.id}
-              onClick={() => setActivePrimary(item.id)}
-              onMouseEnter={() => handleItemHover(item.id)}
-              className={`group relative w-12 h-12 rounded-2xl flex flex-col items-center justify-center gap-1 transition-all duration-200 ${
-                activePrimary === item.id
-                  ? "bg-white text-primary-600 shadow-lg shadow-primary-500/10 ring-1 ring-neutral-200"
-                  : "text-neutral-400 hover:text-neutral-600 hover:bg-neutral-50"
-              }`}
-            >
-              <item.icon
-                className={`h-5 w-5 ${
-                  activePrimary === item.id ? "fill-current" : ""
+      {/* Rounded Container for both sidebars */}
+      <div className="bg-primary-100 dark:bg-neutral-900 rounded-2xl p-2 flex h-full transition-all duration-300 ease-in-out" style={{ width: isExpanded ? '324px' : '80px' }}>
+        {/* Primary Sidebar (Icons) */}
+        <div 
+          className="w-[64px] h-full rounded-xl flex flex-col items-center shrink-0"
+        >
+          {/* Logo */}
+          <div className="mb-8">
+            <div className="h-10 w-10 rounded-xl bg-primary-100 dark:bg-neutral-700 text-primary-900 dark:text-white flex items-center justify-center">
+              <Sparkles className="h-6 w-6" />
+            </div>
+          </div>
+
+          {/* Main Nav Icons */}
+          <nav className="flex-1 w-full flex flex-col items-center gap-4 px-2">
+            {PRIMARY_NAV.map((item) => (
+              <button
+                key={item.id}
+                onClick={() => setActivePrimary(item.id)}
+                onMouseEnter={() => handleItemHover(item.id)}
+                className={`group relative w-12 h-12 rounded-xl flex flex-col items-center justify-center gap-1 transition-all duration-200 ${
+                  activePrimary === item.id
+                    ? "bg-primary-900 dark:bg-white text-white dark:text-neutral-900 shadow-md"
+                    : "text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-50 dark:hover:bg-neutral-700"
                 }`}
-              />
-              <span className="text-[10px] font-medium">{item.label}</span>
-              
-              {/* Active Indicator */}
-              {activePrimary === item.id && (
-                <div className="absolute -right-[13px] top-1/2 -translate-y-1/2 w-1.5 h-8 bg-primary-500 rounded-l-full" />
-              )}
-            </button>
-          ))}
-        </nav>
+              >
+                <item.icon
+                  className={`h-5 w-5 ${
+                    activePrimary === item.id ? "fill-current" : ""
+                  }`}
+                />
+                <span className="text-[10px] font-medium">{item.label}</span>
+              </button>
+            ))}
+          </nav>
 
-        {/* Bottom Actions */}
-        <div className="flex flex-col items-center gap-4 mb-4">
-          <button 
-            onMouseEnter={() => setIsExpanded(false)}
-            className="w-10 h-10 rounded-xl flex items-center justify-center text-neutral-400 hover:text-neutral-600 hover:bg-neutral-50 transition-colors"
-          >
-            <HelpCircle className="h-5 w-5" />
-          </button>
-          <button 
-            onMouseEnter={() => setIsExpanded(false)}
-            className="w-10 h-10 rounded-xl flex items-center justify-center text-neutral-400 hover:text-neutral-600 hover:bg-neutral-50 transition-colors"
-          >
-            <Settings className="h-5 w-5" />
-          </button>
-          <div onMouseEnter={() => setIsExpanded(false)}>
-            <Avatar className="h-9 w-9 border border-neutral-200 cursor-pointer hover:ring-2 hover:ring-primary-100 transition-all">
-                <AvatarImage src="https://github.com/shadcn.png" />
-                <AvatarFallback>JD</AvatarFallback>
-            </Avatar>
+          {/* Bottom Actions */}
+          <div className="flex flex-col items-center gap-4 mb-4">
+            <button 
+              onMouseEnter={() => setIsExpanded(false)}
+              className="w-10 h-10 rounded-xl flex items-center justify-center text-neutral-400 dark:text-neutral-500 hover:text-neutral-600 dark:hover:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-700 transition-colors"
+            >
+              <HelpCircle className="h-5 w-5" />
+            </button>
+            <button 
+              onMouseEnter={() => setIsExpanded(false)}
+              className="w-10 h-10 rounded-xl flex items-center justify-center text-neutral-400 dark:text-neutral-500 hover:text-neutral-600 dark:hover:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-700 transition-colors"
+            >
+              <Settings className="h-5 w-5" />
+            </button>
+            
+            {/* Theme Toggle */}
+            <div onMouseEnter={() => setIsExpanded(false)} className="scale-75">
+              <ThemeToggle />
+            </div>
+            
+            <div onMouseEnter={() => setIsExpanded(false)}>
+              <Avatar className="h-9 w-9 border border-neutral-200 dark:border-neutral-700 cursor-pointer hover:ring-2 hover:ring-primary-100 dark:hover:ring-neutral-700 transition-all">
+                  <AvatarImage src="https://github.com/shadcn.png" />
+                  <AvatarFallback>JD</AvatarFallback>
+              </Avatar>
+            </div>
           </div>
         </div>
-      </div>
 
-      {/* Secondary Sidebar (Contextual) */}
-      <div 
-        className="h-full bg-neutral-50/95 border-r border-neutral-200 flex flex-col overflow-hidden transition-all duration-300 ease-in-out"
-        style={{ 
-          width: isExpanded ? '260px' : '0px',
-          opacity: isExpanded ? 1 : 0
-        }}
-      >
-        <div className="w-[260px] flex flex-col h-full">
+        {/* Secondary Sidebar (Contextual) */}
+        <div 
+          className="h-full bg-white dark:bg-neutral-800 rounded-xl flex flex-col overflow-hidden transition-all duration-300 ease-in-out"
+          style={{ 
+            width: isExpanded ? '244px' : '0px',
+            opacity: isExpanded ? 1 : 0,
+            // marginLeft: isExpanded ? '8px' : '0px'
+          }}
+        >
+        <div className="w-full flex flex-col h-full">
           {/* Search */}
-          <div className="h-16 flex items-center px-4 border-b border-neutral-100/50 shrink-0">
+          <div className="h-16 flex items-center px-4 border-b border-neutral-100/50 dark:border-neutral-700/50 shrink-0">
             <div className="relative w-full">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400 dark:text-neutral-500" />
               <input
                 type="text"
                 placeholder="Search..."
-                className="w-full h-9 rounded-xl bg-white border border-transparent focus:border-primary-200 pl-9 pr-4 text-sm text-neutral-700 placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary-50 transition-all shadow-sm"
+                className="w-full h-9 rounded-xl bg-white dark:bg-neutral-900 border border-transparent focus:border-primary-200 dark:focus:border-neutral-600 pl-9 pr-4 text-sm text-neutral-700 dark:text-neutral-200 placeholder:text-neutral-400 dark:placeholder:text-neutral-500 focus:outline-none focus:ring-2 focus:ring-primary-50 dark:focus:ring-neutral-700 transition-all shadow-sm"
               />
             </div>
           </div>
@@ -345,6 +351,7 @@ export const AppSidebar = () => {
               {/* Decorative background elements */}
               <div className="absolute top-0 right-0 -mt-4 -mr-4 w-20 h-20 bg-primary-100/50 rounded-full blur-2xl group-hover:bg-primary-100/80 transition-all"></div>
               <div className="absolute bottom-0 left-0 -mb-4 -ml-4 w-16 h-16 bg-purple-100/50 rounded-full blur-xl group-hover:bg-purple-100/80 transition-all"></div>
+            </div>
             </div>
           </div>
         </div>

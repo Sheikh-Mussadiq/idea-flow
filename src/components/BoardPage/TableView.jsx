@@ -2,7 +2,7 @@ import { Table2 } from "lucide-react";
 
 export const TableView = () => {
   return (
-    <div className="h-full w-full flex flex-col items-center justify-center text-neutral-400 bg-neutral-50">
+    <div className="h-full w-full flex flex-col items-center justify-center text-neutral-400">
       <div className="h-16 w-16 rounded-full bg-neutral-100 flex items-center justify-center mb-4">
         <Table2 className="h-8 w-8 text-neutral-300" />
       </div>

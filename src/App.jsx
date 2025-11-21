@@ -8,25 +8,28 @@ import SettingsPage from "./pages/SettingsPage.jsx";
 import NotFound from "./pages/NotFound.jsx";
 
 import { NotificationsProvider } from "./context/NotificationsContext";
+import { ThemeProvider } from "./context/ThemeContext";
 
 const App = () => (
-  <NotificationsProvider>
-    <TooltipProvider>
-    <Toaster />
-    <Sonner />
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<BoardPage initialView="flow" />} />
-        <Route path="/flow" element={<BoardPage initialView="flow" />} />
-        <Route path="/tasks" element={<BoardPage initialView="kanban" />} />
-        <Route path="/analytics" element={<AnalyticsPage />} />
-        <Route path="/settings" element={<SettingsPage />} />
-        {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-    </BrowserRouter>
-    </TooltipProvider>
-  </NotificationsProvider>
+  <ThemeProvider>
+    <NotificationsProvider>
+      <TooltipProvider>
+      <Toaster />
+      <Sonner />
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<BoardPage initialView="flow" />} />
+          <Route path="/flow" element={<BoardPage initialView="flow" />} />
+          <Route path="/tasks" element={<BoardPage initialView="kanban" />} />
+          <Route path="/analytics" element={<AnalyticsPage />} />
+          <Route path="/settings" element={<SettingsPage />} />
+          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </BrowserRouter>
+      </TooltipProvider>
+    </NotificationsProvider>
+  </ThemeProvider>
 );
 
 export default App;

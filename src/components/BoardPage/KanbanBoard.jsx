@@ -112,7 +112,7 @@ export const KanbanBoard = ({
   const activeIdea = activeId ? ideas.find((i) => i.id === activeId) : null;
 
   return (
-    <div className="h-full w-full overflow-x-auto overflow-y-hidden bg-neutral-50 p-6">
+    <div className="h-full w-full overflow-x-auto overflow-y-hidden bg-white dark:bg-neutral-950 px-6 pb-6 pt-4">
       <DndContext
         sensors={sensors}
         collisionDetection={closestCorners}

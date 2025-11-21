@@ -1,4 +1,5 @@
 export default {
+  darkMode: 'class',
   content: ["./index.html", "./src/**/*.{js,jsx,ts,tsx}"],
   theme: {
     extend: {
@@ -32,6 +33,13 @@ export default {
           800: "#1f2937",
           900: "#111827",
           950: "#030712",
+        },
+        // Dark mode specific colors
+        dark: {
+          bg: "#0a0a0a",
+          surface: "#18181b",
+          border: "#27272a",
+          text: "#fafafa",
         },
         success: {
           50: "#f0fdf4",
