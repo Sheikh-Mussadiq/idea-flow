@@ -183,7 +183,8 @@ export const mockCards = [
     id: "card-1",
     boardId: "board-1",
     title: "Blog Post: 10 Marketing Trends for 2024",
-    description: "Write comprehensive blog post covering emerging marketing trends",
+    description:
+      "Write comprehensive blog post covering emerging marketing trends",
     type: "manual",
     kanbanStatus: "In Progress",
     priority: "high",
@@ -214,7 +215,9 @@ export const mockCards = [
     createdAt: Date.now() - 5 * 24 * 60 * 60 * 1000,
     showInFlow: false,
     members: [mockUsers[0], mockUsers[1]],
-    attachments: [{ name: "campaign-brief.pdf" }],
+    attachments: [
+      { id: "att-1", name: "campaign-brief.pdf", type: "file", size: 2048000 },
+    ],
     subtasks: [],
   },
   {
@@ -248,7 +251,14 @@ export const mockCards = [
     createdAt: Date.now() - 10 * 24 * 60 * 60 * 1000,
     showInFlow: false,
     members: [mockUsers[2]],
-    attachments: [{ name: "landing-page-mockup.fig" }],
+    attachments: [
+      {
+        id: "att-2",
+        name: "landing-page-mockup.fig",
+        type: "file",
+        size: 5242880,
+      },
+    ],
     subtasks: [],
   },
   {
@@ -322,7 +332,8 @@ export const mockAIFlows = [
       {
         id: "ai-idea-1",
         title: "Interactive Product Demos",
-        description: "Create engaging video demonstrations showing product features in real-world scenarios.",
+        description:
+          "Create engaging video demonstrations showing product features in real-world scenarios.",
         type: "ai",
         showInFlow: true,
         boardId: "board-1",
@@ -331,7 +342,8 @@ export const mockAIFlows = [
       {
         id: "ai-idea-2",
         title: "Customer Success Stories",
-        description: "Share authentic testimonials and case studies from satisfied customers.",
+        description:
+          "Share authentic testimonials and case studies from satisfied customers.",
         type: "ai",
         showInFlow: true,
         boardId: "board-1",
@@ -340,7 +352,8 @@ export const mockAIFlows = [
       {
         id: "ai-idea-3",
         title: "Educational Content Series",
-        description: "Develop tutorial-style posts teaching valuable skills related to your product.",
+        description:
+          "Develop tutorial-style posts teaching valuable skills related to your product.",
         type: "ai",
         showInFlow: true,
         boardId: "board-1",
@@ -360,7 +373,8 @@ export const mockAIFlows = [
       {
         id: "ai-idea-4",
         title: "Launch Event Planning",
-        description: "Organize virtual launch event with live demos and Q&A sessions.",
+        description:
+          "Organize virtual launch event with live demos and Q&A sessions.",
         type: "ai",
         showInFlow: true,
         boardId: "board-2",
@@ -369,7 +383,8 @@ export const mockAIFlows = [
       {
         id: "ai-idea-5",
         title: "Influencer Partnership Program",
-        description: "Partner with industry influencers for product reviews and demonstrations.",
+        description:
+          "Partner with industry influencers for product reviews and demonstrations.",
         type: "ai",
         showInFlow: true,
         boardId: "board-2",
@@ -389,7 +404,8 @@ export const mockAIFlows = [
       {
         id: "ai-idea-6",
         title: "Advanced Data Table Component",
-        description: "Build flexible data table with sorting, filtering, and pagination.",
+        description:
+          "Build flexible data table with sorting, filtering, and pagination.",
         type: "ai",
         showInFlow: true,
         boardId: "board-3",

@@ -44,7 +44,7 @@ import { Avatar, AvatarFallback } from "../ui/avatar";
 import { mockUsers, mockLabels } from "../../data/mockData.js";
 import { useBoard } from "../../context/BoardContext";
 
-const defaultMembers = mockUsers.map(user => ({
+const defaultMembers = mockUsers.map((user) => ({
   id: user.id,
   name: user.name,
   email: user.email,
@@ -73,16 +73,17 @@ const createEmptyBoard = (name, color, icon) => ({
 });
 
 export const IdeaBoardLayout = ({ initialView = "flow" }) => {
-  const { 
-    boards, 
-    activeBoard, 
-    activeBoardId, 
-    selectBoard, 
-    createBoard, 
-    updateBoard, 
-    deleteBoard, 
-    archiveBoard, 
-    duplicateBoard 
+  const {
+    boards,
+    setBoards,
+    activeBoard,
+    activeBoardId,
+    selectBoard,
+    createBoard,
+    updateBoard,
+    deleteBoard,
+    archiveBoard,
+    duplicateBoard,
   } = useBoard();
 
   // Local UI state
@@ -111,7 +112,6 @@ export const IdeaBoardLayout = ({ initialView = "flow" }) => {
   });
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isArchivedOpen, setIsArchivedOpen] = useState(false);
-
 
   const currentUser = useMemo(
     () =>
@@ -183,7 +183,7 @@ export const IdeaBoardLayout = ({ initialView = "flow" }) => {
   }, [initialView]);
 
   const handleSelectBoard = (id) => {
-    setActiveBoardId(id);
+    selectBoard(id);
   };
 
   const handleCreateBoard = () => {
@@ -194,22 +194,14 @@ export const IdeaBoardLayout = ({ initialView = "flow" }) => {
     setIsCreateOpen(false);
   };
 
-
-
-
-
   const handleRenameActiveBoard = () => {
     if (!activeBoard || !draftBoardName.trim() || !isAdmin) return;
-    updateBoard(activeBoard.id, { 
+    updateBoard(activeBoard.id, {
       name: draftBoardName.trim(),
-      settings: { ...activeBoard.settings, description: draftBoardDescription }
+      settings: { ...activeBoard.settings, description: draftBoardDescription },
     });
     setIsSettingsOpen(false);
   };
-
-
-
-
 
   const handleUpdateIdeas = (updater) => {
     if (!activeBoard) return;
@@ -218,7 +210,7 @@ export const IdeaBoardLayout = ({ initialView = "flow" }) => {
         board.id === activeBoard.id
           ? {
               ...board,
-              ideas: updater(board.ideas),
+              ideas: updater(board.ideas || []),
             }
           : board
       )
@@ -325,7 +317,7 @@ export const IdeaBoardLayout = ({ initialView = "flow" }) => {
         board.id === activeBoard.id
           ? {
               ...board,
-              comments: updater(board.comments),
+              comments: updater(board.comments || {}),
             }
           : board
       )
@@ -347,7 +339,7 @@ export const IdeaBoardLayout = ({ initialView = "flow" }) => {
     setBoards((prev) =>
       prev.map((board) => {
         if (board.id !== activeBoard.id) return board;
-        const ideas = board.ideas.map((idea) => {
+        const ideas = (board.ideas || []).map((idea) => {
           if (idea.id !== id) return idea;
           const nextStatus =
             idea.previousKanbanStatus ?? idea.kanbanStatus ?? "Backlog";

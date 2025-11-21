@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useLayoutEffect, useState } from "react";
 import { TaskModalHeader } from "./TaskModal/TaskModalHeader";
 import { TaskModalSidebar } from "./TaskModal/TaskModalSidebar";
 import { TaskModalTabs } from "./TaskModal/TaskModalTabs";
@@ -44,7 +44,7 @@ export const TaskModal = ({
     }
   }, [idea]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (isOpen) {
       setIsClosing(false);
       // Prevent body scroll when modal is open
@@ -64,7 +64,6 @@ export const TaskModal = ({
   const handleClose = () => {
     setIsClosing(true);
     setTimeout(() => {
-      setIsClosing(false);
       onClose();
     }, 300); // Match animation duration
   };
@@ -155,7 +154,7 @@ export const TaskModal = ({
 
       {/* Modal Panel */}
       <div
-        className={`fixed top-4 right-4 bottom-4 z-50 w-full max-w-4xl bg-white dark:bg-neutral-900 shadow-2xl flex flex-col rounded-2xl border border-neutral-200 dark:border-neutral-700 transition-transform duration-300 ease-out ${
+        className={`fixed top-4 right-4 bottom-4 z-50 w-full max-w-3xl h-full bg-white dark:bg-neutral-900 shadow-2xl flex flex-col rounded-2xl border border-neutral-200 dark:border-neutral-700 transition-transform duration-300 ease-out ${
           isClosing ? "animate-slide-out-right" : "animate-slide-in-right"
         }`}
         onClick={(e) => e.stopPropagation()}
