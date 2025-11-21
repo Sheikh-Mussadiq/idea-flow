@@ -6,6 +6,7 @@ import { SubtasksTab } from "./TaskModal/SubtasksTab";
 import { CommentsTab } from "./TaskModal/CommentsTab";
 import { ActivitiesTab } from "./TaskModal/ActivitiesTab";
 import { TeamTab } from "./TaskModal/TeamTab";
+import { useNotifications } from "../../context/NotificationsContext";
 
 export const TaskModal = ({
   isOpen,
@@ -31,6 +32,7 @@ export const TaskModal = ({
   onArchiveTask,
   canEdit,
 }) => {
+  const { addNotification } = useNotifications();
   const [activeTab, setActiveTab] = useState("subtasks");
   const [isClosing, setIsClosing] = useState(false);
   const [localDescription, setLocalDescription] = useState("");
@@ -75,11 +77,62 @@ export const TaskModal = ({
   const handleStatusChange = () => {
     // This would open a status picker - simplified for now
     console.log("Status change clicked");
+    // Mock notification
+    addNotification({
+      userId: "current-user",
+      message: `Status updated for '${idea.title}'`,
+      type: "activity",
+      taskId: idea.id,
+      boardId: idea.boardId,
+    });
   };
 
   const handleAddMember = () => {
     // This would open a member picker - using existing onAssign logic
     console.log("Add member clicked");
+    // Mock notification
+    addNotification({
+      userId: "current-user",
+      message: `You were assigned to '${idea.title}'`,
+      type: "assignment",
+      taskId: idea.id,
+      boardId: idea.boardId,
+    });
+  };
+
+  const handleDueDateChange = (date) => {
+    onChangeDueDate?.(idea.id, date);
+    addNotification({
+      userId: "current-user",
+      message: `Due date changed to ${date} for '${idea.title}'`,
+      type: "due",
+      taskId: idea.id,
+      boardId: idea.boardId,
+    });
+  };
+
+  const handleAddComment = (text) => {
+    onAddCommentToIdea?.(idea.id, text);
+    
+    // Check for mentions
+    if (text.includes("@")) {
+      addNotification({
+        userId: "current-user",
+        message: `You were mentioned in a comment on '${idea.title}'`,
+        type: "mention",
+        taskId: idea.id,
+        boardId: idea.boardId,
+      });
+    } else {
+      // Notify participants
+      addNotification({
+        userId: "current-user",
+        message: `New comment on '${idea.title}'`,
+        type: "general",
+        taskId: idea.id,
+        boardId: idea.boardId,
+      });
+    }
   };
 
   // Map idea data to sidebar props
@@ -127,7 +180,7 @@ export const TaskModal = ({
             description={localDescription}
             attachments={attachments}
             onStatusChange={handleStatusChange}
-            onDueDateChange={(date) => onChangeDueDate?.(idea.id, date)}
+            onDueDateChange={handleDueDateChange}
             onAddMember={handleAddMember}
             onDescriptionChange={handleDescriptionSave}
             onRemoveAttachment={(attId) => onRemoveAttachment?.(idea.id, attId)}
@@ -149,7 +202,7 @@ export const TaskModal = ({
             {activeTab === "comments" && (
               <CommentsTab
                 comments={comments || []}
-                onAdd={(text) => onAddCommentToIdea?.(idea.id, text)}
+                onAdd={handleAddComment}
                 onUpdate={(commentId, text) =>
                   onUpdateComment?.(idea.id, commentId, text)
                 }

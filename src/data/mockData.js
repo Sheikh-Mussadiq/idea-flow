@@ -395,3 +395,46 @@ export const mockAIFlows = [
     ],
   },
 ];
+
+// Mock Notifications
+export const mockNotifications = [
+  {
+    id: "notif-1",
+    userId: "user-1",
+    message: "Alex Morgan assigned you to 'Landing Page Design'",
+    type: "assignment",
+    taskId: "card-4",
+    boardId: "board-2",
+    createdAt: Date.now() - 1000 * 60 * 30, // 30 mins ago
+    read: false,
+  },
+  {
+    id: "notif-2",
+    userId: "user-1",
+    message: "Maria Chen mentioned you in 'Social Media Campaign'",
+    type: "mention",
+    taskId: "card-2",
+    boardId: "board-1",
+    createdAt: Date.now() - 1000 * 60 * 60 * 2, // 2 hours ago
+    read: false,
+  },
+  {
+    id: "notif-3",
+    userId: "user-1",
+    message: "Due date approaching for 'Product Demo Video'",
+    type: "due",
+    taskId: "card-5",
+    boardId: "board-2",
+    createdAt: Date.now() - 1000 * 60 * 60 * 24, // 1 day ago
+    read: true,
+  },
+  {
+    id: "notif-4",
+    userId: "user-1",
+    message: "David Kim invited you to 'Design System' board",
+    type: "invite",
+    boardId: "board-3",
+    createdAt: Date.now() - 1000 * 60 * 60 * 48, // 2 days ago
+    read: true,
+  },
+];

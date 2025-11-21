@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { NavLink, useLocation } from "react-router-dom";
-import { motion, AnimatePresence } from "framer-motion";
 import {
   Home,
   Sparkles,
@@ -61,12 +60,13 @@ export const AppSidebar = () => {
 
   return (
     <aside 
-      className="w-[72px] h-full bg-neutral-50 z-50 relative"
+      className="h-full bg-neutral-50 flex shrink-0 transition-all duration-300 ease-in-out"
+      style={{ width: isExpanded ? '332px' : '72px' }}
       onMouseLeave={() => setIsExpanded(false)}
     >
       {/* Primary Sidebar (Icons) */}
       <div 
-        className="w-full h-full bg-white border-r border-neutral-200 flex flex-col items-center py-6 z-20 relative"
+        className="w-[72px] h-full bg-white border-r border-neutral-200 flex flex-col items-center py-6 shrink-0"
       >
         {/* Logo */}
         <div className="mb-8">
@@ -127,14 +127,12 @@ export const AppSidebar = () => {
       </div>
 
       {/* Secondary Sidebar (Contextual) */}
-      <motion.div 
-        initial={{ width: 0, opacity: 0 }}
-        animate={{ 
-          width: isExpanded ? 260 : 0, 
-          opacity: isExpanded ? 1 : 0 
+      <div 
+        className="h-full bg-neutral-50/95 border-r border-neutral-200 flex flex-col overflow-hidden transition-all duration-300 ease-in-out"
+        style={{ 
+          width: isExpanded ? '260px' : '0px',
+          opacity: isExpanded ? 1 : 0
         }}
-        transition={{ duration: 0.3, ease: "easeInOut" }}
-        className="absolute left-[72px] top-0 h-full bg-neutral-50/95 backdrop-blur-sm border-r border-neutral-200 flex flex-col overflow-hidden shadow-2xl z-10"
       >
         <div className="w-[260px] flex flex-col h-full">
           {/* Search */}
@@ -350,7 +348,7 @@ export const AppSidebar = () => {
             </div>
           </div>
         </div>
-      </motion.div>
+      </div>
     </aside>
   );
 };

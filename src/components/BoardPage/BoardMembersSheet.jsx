@@ -9,8 +9,10 @@ import {
 import { Avatar, AvatarFallback } from "../ui/avatar";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
+import { useNotifications } from "../../context/NotificationsContext";
 
 function InviteForm({ activeBoard, setBoards, currentUser }) {
+  const { addNotification } = useNotifications();
   const [email, setEmail] = useState("");
   const [role, setRole] = useState("viewer");
 
@@ -47,6 +49,14 @@ function InviteForm({ activeBoard, setBoards, currentUser }) {
           : board
       )
     );
+
+    // Mock notification to the invited user (simulated)
+    addNotification({
+      userId: "invited-user",
+      message: `${currentUser.name} invited you to board '${activeBoard.name}'`,
+      type: "invite",
+      boardId: activeBoard.id,
+    });
 
     setEmail("");
     setRole("viewer");

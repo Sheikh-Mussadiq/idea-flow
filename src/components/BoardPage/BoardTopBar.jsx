@@ -13,15 +13,18 @@ import {
 } from "lucide-react";
 import { Button } from "../ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+import { NotificationBell } from "../Notifications/NotificationBell";
 
 export function BoardHeader({
   activeBoard,
   onOpenMembers,
+  onOpenFilters,
   currentUser,
   searchQuery,
   onChangeSearch,
   viewMode,
   onChangeViewMode,
+  filters,
 }) {
   if (!activeBoard) return null;
 
@@ -69,10 +72,7 @@ export function BoardHeader({
 
           <div className="h-6 w-px bg-neutral-200 mx-1" />
 
-          <button className="text-neutral-400 hover:text-neutral-600 relative">
-            <Bell className="h-5 w-5" />
-            <span className="absolute top-0 right-0 h-2 w-2 bg-red-500 rounded-full border-2 border-white" />
-          </button>
+          <NotificationBell />
 
           <button className="text-neutral-400 hover:text-neutral-600">
             <Search className="h-5 w-5" />
@@ -106,13 +106,30 @@ export function BoardHeader({
           })}
         </div>
 
+
         <Button
           variant="ghost"
           size="sm"
-          className="text-neutral-500 hover:text-neutral-900 gap-2"
+          className="text-neutral-500 hover:text-neutral-900 gap-2 relative"
+          onClick={onOpenFilters}
         >
           <Filter className="h-4 w-4" />
           Filter
+          {(() => {
+            const activeFilterCount =
+              filters.priorities.length +
+              filters.labelIds.length +
+              filters.assigneeIds.length +
+              filters.statuses.length +
+              filters.types.length +
+              (filters.dueDate ? 1 : 0);
+            
+            return activeFilterCount > 0 ? (
+              <span className="absolute -top-1 -right-1 h-4 w-4 bg-primary-900 text-white text-[10px] font-medium rounded-full flex items-center justify-center">
+                {activeFilterCount}
+              </span>
+            ) : null;
+          })()}
         </Button>
       </div>
     </div>

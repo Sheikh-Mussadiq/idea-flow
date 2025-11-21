@@ -355,7 +355,7 @@ export const IdeaBoardLayout = ({ initialView = "flow" }) => {
 
       if (
         filters.labelIds.length &&
-        !idea.labels.some((l) => filters.labelIds.includes(l.id))
+        !(idea.labels || []).some((l) => filters.labelIds.includes(l.id))
       ) {
         return false;
       }
@@ -413,11 +413,11 @@ export const IdeaBoardLayout = ({ initialView = "flow" }) => {
 
       const commentsForIdea = activeBoard.comments[idea.id] || [];
 
-      if (idea.title.toLowerCase().includes(q)) return true;
-      if (idea.description.toLowerCase().includes(q)) return true;
-      if (idea.labels.some((l) => l.name.toLowerCase().includes(q)))
+      if (idea.title?.toLowerCase().includes(q)) return true;
+      if (idea.description?.toLowerCase().includes(q)) return true;
+      if ((idea.labels || []).some((l) => l.name.toLowerCase().includes(q)))
         return true;
-      if (idea.subtasks.some((s) => s.text.toLowerCase().includes(q)))
+      if ((idea.subtasks || []).some((s) => s.text.toLowerCase().includes(q)))
         return true;
       if (idea.assignedTo && idea.assignedTo.name.toLowerCase().includes(q))
         return true;
@@ -511,6 +511,7 @@ export const IdeaBoardLayout = ({ initialView = "flow" }) => {
         archivedCount={archivedIdeas.length}
         viewMode={boardViewMode}
         onChangeViewMode={setBoardViewMode}
+        filters={filters}
       />
 
       <div className="flex-1 w-full overflow-hidden">

@@ -9,6 +9,7 @@ import { ListView } from "./ListView.jsx";
 import { useIdeaFlowLayout } from "./hooks/useIdeaFlowLayout.js";
 import { toast } from "sonner";
 import { mockAIIdeas } from "../../data/mockData.js";
+import { useNotifications } from "../../context/NotificationsContext";
 
 export const FlowContent = ({
   ideas,
@@ -22,6 +23,7 @@ export const FlowContent = ({
   viewMode: controlledViewMode,
   onChangeView,
 }) => {
+  const { addNotification } = useNotifications();
   const [uncontrolledViewMode, setUncontrolledViewMode] = useState(initialView);
   const viewMode = controlledViewMode ?? uncontrolledViewMode;
   const handleChangeView = onChangeView ?? setUncontrolledViewMode;
@@ -209,8 +211,17 @@ export const FlowContent = ({
             : idea
         )
       );
+      
+      if (member) {
+        addNotification({
+          userId: member.id,
+          message: `You were assigned to a task`,
+          type: "assignment",
+          taskId: id,
+        });
+      }
     },
-    [onUpdateIdeas]
+    [isViewer, onUpdateIdeas, addNotification]
   );
 
   const handleAddSubIdea = useCallback(
@@ -261,8 +272,19 @@ export const FlowContent = ({
         )
       );
       logActivity(id, currentUserName, `Moved card to ${status}`);
+      
+      // Notify assignee if exists
+      const idea = ideas.find(i => i.id === id);
+      if (idea && idea.assignedTo) {
+        addNotification({
+          userId: idea.assignedTo.id,
+          message: `Task '${idea.title}' moved to ${status}`,
+          type: "activity",
+          taskId: id,
+        });
+      }
     },
-    [isViewer, logActivity, onUpdateIdeas]
+    [isViewer, logActivity, onUpdateIdeas, ideas, currentUserName, addNotification]
   );
 
   const handleViewInFlow = useCallback(

@@ -7,8 +7,11 @@ import AnalyticsPage from "./pages/AnalyticsPage.jsx";
 import SettingsPage from "./pages/SettingsPage.jsx";
 import NotFound from "./pages/NotFound.jsx";
 
+import { NotificationsProvider } from "./context/NotificationsContext";
+
 const App = () => (
-  <TooltipProvider>
+  <NotificationsProvider>
+    <TooltipProvider>
     <Toaster />
     <Sonner />
     <BrowserRouter>
@@ -22,7 +25,8 @@ const App = () => (
         <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>
-  </TooltipProvider>
+    </TooltipProvider>
+  </NotificationsProvider>
 );
 
 export default App;

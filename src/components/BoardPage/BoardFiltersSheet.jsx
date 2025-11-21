@@ -15,29 +15,52 @@ export function BoardFiltersSheet({
   availableLabels,
   availableAssignees,
 }) {
+  const FilterSection = ({ title, children }) => (
+    <div className="space-y-3">
+      <div className="text-sm font-semibold text-neutral-900">{title}</div>
+      {children}
+    </div>
+  );
+
+  const FilterButton = ({ active, onClick, children, icon }) => (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`
+        h-8 px-3 rounded-lg text-xs font-medium transition-all duration-200
+        flex items-center gap-1.5
+        ${
+          active
+            ? "bg-primary-900 text-white shadow-sm"
+            : "bg-neutral-50 text-neutral-700 hover:bg-neutral-100 border border-neutral-200"
+        }
+      `}
+    >
+      {icon}
+      {children}
+    </button>
+  );
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-full sm:max-w-xs">
+      <SheetContent side="right" className="w-full sm:max-w-sm">
         <SheetHeader>
-          <SheetTitle>Filters</SheetTitle>
-          <SheetDescription className="text-xs">
-            Narrow down tasks by priority, status, and type. (Labels, assignees,
-            and due date can be added here next.)
+          <SheetTitle className="text-neutral-900">Filters</SheetTitle>
+          <SheetDescription className="text-xs text-neutral-500">
+            Refine your view by selecting filters below
           </SheetDescription>
         </SheetHeader>
-        <div className="mt-4 space-y-4 text-xs">
-          <div className="space-y-2">
-            <div className="font-medium">Priority</div>
+
+        <div className="mt-6 space-y-6">
+          {/* Priority */}
+          <FilterSection title="Priority">
             <div className="flex flex-wrap gap-2">
               {["low", "medium", "high"].map((p) => {
                 const active = filters.priorities.includes(p);
                 return (
-                  <Button
+                  <FilterButton
                     key={p}
-                    type="button"
-                    size="sm"
-                    variant={active ? "default" : "outline"}
-                    className="h-7 rounded-full px-2 text-xs flex items-center gap-1"
+                    active={active}
                     onClick={() => {
                       setFilters((prev) => ({
                         ...prev,
@@ -46,37 +69,36 @@ export function BoardFiltersSheet({
                           : [...prev.priorities, p],
                       }));
                     }}
+                    icon={
+                      <span
+                        className="h-2 w-2 rounded-full"
+                        style={{
+                          backgroundColor:
+                            p === "low"
+                              ? "#22c55e"
+                              : p === "medium"
+                              ? "#eab308"
+                              : "#ef4444",
+                        }}
+                      />
+                    }
                   >
-                    <span
-                      className="h-2 w-2 rounded-full"
-                      style={{
-                        backgroundColor:
-                          p === "low"
-                            ? "#22c55e"
-                            : p === "medium"
-                            ? "#eab308"
-                            : "#ef4444",
-                      }}
-                    />
                     <span className="capitalize">{p}</span>
-                  </Button>
+                  </FilterButton>
                 );
               })}
             </div>
-          </div>
+          </FilterSection>
 
-          <div className="space-y-2">
-            <div className="font-medium">Status</div>
+          {/* Status */}
+          <FilterSection title="Status">
             <div className="flex flex-wrap gap-2">
               {["Backlog", "In Progress", "Review", "Done"].map((status) => {
                 const active = filters.statuses.includes(status);
                 return (
-                  <Button
+                  <FilterButton
                     key={status}
-                    type="button"
-                    size="sm"
-                    variant={active ? "default" : "outline"}
-                    className="h-7 rounded-full px-2 text-xs"
+                    active={active}
                     onClick={() => {
                       setFilters((prev) => ({
                         ...prev,
@@ -87,27 +109,24 @@ export function BoardFiltersSheet({
                     }}
                   >
                     {status}
-                  </Button>
+                  </FilterButton>
                 );
               })}
             </div>
-          </div>
+          </FilterSection>
 
-          <div className="space-y-2">
-            <div className="font-medium">Labels</div>
+          {/* Labels */}
+          <FilterSection title="Labels">
             <div className="flex flex-wrap gap-2">
               {availableLabels.length === 0 && (
-                <span className="text-xs text-neutral-500">No labels yet</span>
+                <span className="text-xs text-neutral-400">No labels yet</span>
               )}
               {availableLabels.map((label) => {
                 const active = filters.labelIds.includes(label.id);
                 return (
-                  <Button
+                  <FilterButton
                     key={label.id}
-                    type="button"
-                    size="sm"
-                    variant={active ? "default" : "outline"}
-                    className="h-7 rounded-full px-2 text-xs flex items-center gap-1"
+                    active={active}
                     onClick={() => {
                       setFilters((prev) => ({
                         ...prev,
@@ -116,35 +135,34 @@ export function BoardFiltersSheet({
                           : [...prev.labelIds, label.id],
                       }));
                     }}
+                    icon={
+                      <span
+                        className="h-2 w-2 rounded-full"
+                        style={{ backgroundColor: label.color }}
+                      />
+                    }
                   >
-                    <span
-                      className="h-2 w-2 rounded-full"
-                      style={{ backgroundColor: label.color }}
-                    />
-                    <span>{label.name}</span>
-                  </Button>
+                    {label.name}
+                  </FilterButton>
                 );
               })}
             </div>
-          </div>
+          </FilterSection>
 
-          <div className="space-y-2">
-            <div className="font-medium">Assigned to</div>
+          {/* Assigned to */}
+          <FilterSection title="Assigned to">
             <div className="flex flex-wrap gap-2">
               {availableAssignees.length === 0 && (
-                <span className="text-xs text-neutral-500">
+                <span className="text-xs text-neutral-400">
                   No assignments yet
                 </span>
               )}
               {availableAssignees.map((member) => {
                 const active = filters.assigneeIds.includes(member.id);
                 return (
-                  <Button
+                  <FilterButton
                     key={member.id}
-                    type="button"
-                    size="sm"
-                    variant={active ? "default" : "outline"}
-                    className="h-7 rounded-full px-2 text-xs flex items-center gap-1"
+                    active={active}
                     onClick={() => {
                       setFilters((prev) => ({
                         ...prev,
@@ -153,19 +171,21 @@ export function BoardFiltersSheet({
                           : [...prev.assigneeIds, member.id],
                       }));
                     }}
+                    icon={
+                      <span className={`flex h-4 w-4 items-center justify-center rounded-full text-[9px] font-medium ${active ? 'bg-white/20 text-white' : 'bg-neutral-200 text-neutral-600'}`}>
+                        {member.avatar || member.name.charAt(0)}
+                      </span>
+                    }
                   >
-                    <span className="flex h-4 w-4 items-center justify-center rounded-full bg-neutral-100 text-[9px] font-medium">
-                      {member.avatar || member.name.charAt(0)}
-                    </span>
-                    <span>{member.name}</span>
-                  </Button>
+                    {member.name}
+                  </FilterButton>
                 );
               })}
             </div>
-          </div>
+          </FilterSection>
 
-          <div className="space-y-2">
-            <div className="font-medium">Due date</div>
+          {/* Due date */}
+          <FilterSection title="Due date">
             <div className="flex flex-wrap gap-2">
               {["overdue", "today", "week", "none"].map((option) => {
                 const active = filters.dueDate === option;
@@ -178,12 +198,9 @@ export function BoardFiltersSheet({
                     ? "Due this week"
                     : "No due date";
                 return (
-                  <Button
+                  <FilterButton
                     key={option}
-                    type="button"
-                    size="sm"
-                    variant={active ? "default" : "outline"}
-                    className="h-7 rounded-full px-2 text-xs"
+                    active={active}
                     onClick={() => {
                       setFilters((prev) => ({
                         ...prev,
@@ -192,24 +209,21 @@ export function BoardFiltersSheet({
                     }}
                   >
                     {label}
-                  </Button>
+                  </FilterButton>
                 );
               })}
             </div>
-          </div>
+          </FilterSection>
 
-          <div className="space-y-2">
-            <div className="font-medium">Task type</div>
+          {/* Task type */}
+          <FilterSection title="Task type">
             <div className="flex flex-wrap gap-2">
               {["ai", "manual"].map((t) => {
                 const active = filters.types.includes(t);
                 return (
-                  <Button
+                  <FilterButton
                     key={t}
-                    type="button"
-                    size="sm"
-                    variant={active ? "default" : "outline"}
-                    className="h-7 rounded-full px-2 text-xs"
+                    active={active}
                     onClick={() => {
                       setFilters((prev) => ({
                         ...prev,
@@ -220,18 +234,19 @@ export function BoardFiltersSheet({
                     }}
                   >
                     {t === "ai" ? "AI-generated" : "Manual"}
-                  </Button>
+                  </FilterButton>
                 );
               })}
             </div>
-          </div>
+          </FilterSection>
 
-          <div className="pt-2">
+          {/* Clear all button */}
+          <div className="pt-4 border-t border-neutral-100">
             <Button
               type="button"
               variant="outline"
               size="sm"
-              className="w-full text-xs"
+              className="w-full text-xs font-medium text-neutral-600 hover:text-neutral-900 hover:bg-neutral-50"
               onClick={() => {
                 setFilters({
                   priorities: [],
