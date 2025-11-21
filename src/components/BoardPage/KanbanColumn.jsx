@@ -13,7 +13,7 @@ export const KanbanColumn = ({ id, title, ideas, onOpenTask, onAddTask }) => {
   });
 
   return (
-    <div className="flex-shrink-0 w-[300px] flex flex-col h-full max-h-full bg-primary-100 dark:bg-neutral-800 rounded-2xl p-3">
+    <div className="flex-shrink-0 w-[300px] flex flex-col h-full max-h-full bg-primary-100 dark:bg-neutral-900 rounded-2xl p-3">
       {/* Column Header */}
       <div className="flex items-center justify-between px-2 mb-3 pt-1">
         <div className="flex items-center gap-2.5">
