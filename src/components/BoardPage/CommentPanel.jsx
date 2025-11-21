@@ -3,16 +3,19 @@ import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Avatar, AvatarFallback } from "../ui/avatar";
 import { useState } from "react";
+import { useNotifications } from "../../context/NotificationsContext";
 
 export const CommentPanel = ({
   isOpen,
   onClose,
   ideaTitle,
+  ideaId,
   assignedTo,
   comments,
   onAddComment,
   canComment,
 }) => {
+  const { addNotification } = useNotifications();
   const [newComment, setNewComment] = useState("");
 
   const handleSubmit = (e) => {
@@ -20,6 +23,26 @@ export const CommentPanel = ({
     if (!canComment) return;
     if (newComment.trim()) {
       onAddComment(newComment);
+      
+      // Trigger notifications
+      if (newComment.includes("@")) {
+        // Mention notification
+        addNotification({
+          userId: "current-user",
+          message: `You were mentioned in a comment on '${ideaTitle}'`,
+          type: "mention",
+          taskId: ideaId,
+        });
+      } else {
+        // General comment notification
+        addNotification({
+          userId: "current-user",
+          message: `New comment on '${ideaTitle}'`,
+          type: "activity",
+          taskId: ideaId,
+        });
+      }
+      
       setNewComment("");
     }
   };

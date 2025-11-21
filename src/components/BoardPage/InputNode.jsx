@@ -34,7 +34,7 @@ export const InputNode = ({ data }) => {
 
   return (
     <div 
-      className="bg-white rounded-2xl shadow-xl py-4 px-8 border border-neutral-200/60 min-w-[600px]"
+      className="bg-white dark:bg-neutral-900 rounded-2xl shadow-xl py-4 px-8 border border-neutral-200/60 dark:border-neutral-700/60 min-w-[600px]"
       onClick={(e) => e.stopPropagation()}
     >
       {/* Mode Toggle */}
@@ -44,7 +44,7 @@ export const InputNode = ({ data }) => {
           className={`px-6 py-2.5 rounded-full text-sm font-medium transition-all duration-300 ${
             data.mode === "ai"
               ? "bg-primary-500 text-white shadow-md"
-              : "bg-neutral-100 text-neutral-600 hover:bg-neutral-200"
+              : "bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-700"
           }`}
         >
           <Sparkles className="inline h-4 w-4 mr-1.5" />
@@ -55,7 +55,7 @@ export const InputNode = ({ data }) => {
           className={`px-6 py-2.5 rounded-full text-sm font-medium transition-all duration-300 ${
             data.mode === "manual"
               ? "bg-primary-500 text-white shadow-md"
-              : "bg-neutral-100 text-neutral-600 hover:bg-neutral-200"
+              : "bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-700"
           }`}
         >
           <Plus className="inline h-4 w-4 mr-1.5" />
@@ -71,7 +71,7 @@ export const InputNode = ({ data }) => {
             onMouseDown={(e) => e.stopPropagation()}
             onPointerDown={(e) => e.stopPropagation()}
             placeholder="Describe what kind of content ideas you want…"
-            className="w-full h-24 px-4 py-3 text-base rounded-xl border border-neutral-200 bg-neutral-50 resize-none focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent nopan nowheel nodrag"
+            className="w-full h-24 px-4 py-3 text-base rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 dark:text-white resize-none focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent nopan nowheel nodrag"
             rows={3}
           />
           <div className="flex gap-3">
@@ -102,7 +102,7 @@ export const InputNode = ({ data }) => {
             onMouseDown={(e) => e.stopPropagation()}
             onPointerDown={(e) => e.stopPropagation()}
             placeholder="Write your idea…"
-            className="w-full h-24 px-4 py-3 text-base rounded-xl border border-neutral-200 bg-neutral-50 resize-none focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent nopan nowheel nodrag"
+            className="w-full h-24 px-4 py-3 text-base rounded-xl border border-neutral-200 dark:border-neutral-700 bg-neutral-50 dark:bg-neutral-800 dark:text-white resize-none focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent nopan nowheel nodrag"
             rows={3}
           />
           <div className="flex gap-3">

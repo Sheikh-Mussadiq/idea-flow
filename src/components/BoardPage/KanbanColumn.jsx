@@ -40,7 +40,7 @@ export const KanbanColumn = ({ id, title, ideas, onOpenTask, onAddTask }) => {
           items={ideas.map((idea) => idea.id)}
           strategy={verticalListSortingStrategy}
         >
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-1">
             {ideas.map((idea) => (
               <KanbanCard
                 key={idea.id}

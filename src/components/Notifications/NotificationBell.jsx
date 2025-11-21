@@ -34,7 +34,7 @@ export const NotificationBell = () => {
     <div className="relative" ref={dropdownRef}>
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className={`relative text-neutral-400 hover:text-neutral-600 transition-colors p-1 rounded-full hover:bg-neutral-100 ${
+        className={`relative text-neutral-400 dark:text-neutral-500 hover:text-neutral-600 dark:hover:text-neutral-300 transition-colors p-1 rounded-full hover:bg-neutral-100 dark:hover:bg-neutral-800 ${
           isShaking ? "animate-shake" : ""
         }`}
       >

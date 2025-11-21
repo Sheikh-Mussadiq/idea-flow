@@ -31,8 +31,8 @@ export function BoardFiltersSheet({
         flex items-center gap-1.5
         ${
           active
-            ? "bg-primary-900 text-white shadow-sm"
-            : "bg-neutral-50 text-neutral-700 hover:bg-neutral-100 border border-neutral-200"
+            ? "bg-primary-900 dark:bg-white text-white dark:text-neutral-900 shadow-sm"
+            : "bg-neutral-50 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-100 dark:hover:bg-neutral-700 border border-neutral-200 dark:border-neutral-700"
         }
       `}
     >

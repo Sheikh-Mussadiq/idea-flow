@@ -795,6 +795,7 @@ export const FlowContent = ({
         isOpen={!!selectedIdeaId}
         onClose={() => setSelectedIdeaId(null)}
         ideaTitle={selectedIdea?.title || ""}
+        ideaId={selectedIdeaId}
         assignedTo={selectedIdea?.assignedTo}
         comments={selectedIdeaId ? comments[selectedIdeaId] || [] : []}
         onAddComment={handleAddComment}

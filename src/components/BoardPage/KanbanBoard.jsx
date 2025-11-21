@@ -112,7 +112,7 @@ export const KanbanBoard = ({
   const activeIdea = activeId ? ideas.find((i) => i.id === activeId) : null;
 
   return (
-    <div className="h-full w-full overflow-x-auto overflow-y-hidden bg-white dark:bg-neutral-950 px-6 pb-6 pt-4">
+    <div className="h-full w-full overflow-x-auto overflow-y-hidden bg-white dark:bg-neutral-950 px-6 pb-2 pt-4 mb-6">
       <DndContext
         sensors={sensors}
         collisionDetection={closestCorners}
@@ -120,7 +120,7 @@ export const KanbanBoard = ({
         onDragOver={handleDragOver}
         onDragEnd={handleDragEnd}
       >
-        <div className="flex h-full gap-6">
+        <div className="flex h-full gap-2">
           {columns.map((column) => (
             <KanbanColumn
               key={column.id}

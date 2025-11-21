@@ -8,7 +8,7 @@ export const KanbanCardContent = ({ idea, onClick, style, className, ...props })
     <div
       style={style}
       onClick={onClick}
-      className={`group relative bg-white rounded-xl p-4 shadow-sm border border-neutral-200/60 hover:shadow-[0_4px_12px_-2px_rgba(0,0,0,0.08)] hover:border-neutral-300/80 transition-all duration-200 cursor-pointer touch-none ${className}`}
+      className={`group relative bg-white dark:bg-neutral-900 rounded-xl p-4 shadow-sm border border-neutral-200/60 dark:border-neutral-700/60 hover:shadow-[0_4px_12px_-2px_rgba(0,0,0,0.08)] dark:hover:shadow-[0_4px_12px_-2px_rgba(0,0,0,0.3)] hover:border-neutral-300/80 dark:hover:border-neutral-600/80 transition-all duration-200 cursor-pointer touch-none ${className}`}
       {...props}
     >
       {/* Image / Cover */}
@@ -51,27 +51,27 @@ export const KanbanCardContent = ({ idea, onClick, style, className, ...props })
 
       {/* Title */}
       <div className="flex items-start justify-between gap-2 mb-1.5">
-        <h3 className="text-[15px] font-medium text-neutral-800 leading-snug group-hover:text-primary-600 transition-colors">
+        <h3 className="text-[15px] font-medium text-neutral-800 dark:text-neutral-100 leading-snug group-hover:text-primary-600 dark:group-hover:text-white transition-colors">
           {idea.title}
         </h3>
-        <button className="opacity-0 group-hover:opacity-100 text-neutral-400 hover:text-neutral-600 transition-all p-1 hover:bg-neutral-100 rounded">
+        <button className="opacity-0 group-hover:opacity-100 text-neutral-400 dark:text-neutral-500 hover:text-neutral-600 dark:hover:text-neutral-300 transition-all p-1 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded">
           <MoreHorizontal className="h-4 w-4" />
         </button>
       </div>
 
       {/* Description Preview */}
       {idea.description && (
-        <p className="text-xs text-neutral-500 line-clamp-2 mb-3 leading-relaxed">
+        <p className="text-xs text-neutral-500 dark:text-neutral-400 line-clamp-2 mb-3 leading-relaxed">
           {idea.description}
         </p>
       )}
 
       {/* Footer */}
       <div className="flex items-center justify-between pt-3 mt-1">
-        <div className="flex items-center gap-3 text-neutral-400">
+        <div className="flex items-center gap-3 text-neutral-400 dark:text-neutral-500">
           {(idea.commentsCount > 0 ||
             (idea.comments && Object.keys(idea.comments).length > 0)) && (
-            <div className="flex items-center gap-1 text-xs font-medium hover:text-neutral-600 transition-colors">
+            <div className="flex items-center gap-1 text-xs font-medium hover:text-neutral-600 dark:hover:text-neutral-300 transition-colors">
               <MessageSquare className="h-3.5 w-3.5" />
               <span>
                 {idea.commentsCount ||
@@ -80,7 +80,7 @@ export const KanbanCardContent = ({ idea, onClick, style, className, ...props })
             </div>
           )}
           {idea.attachments?.length > 0 && (
-            <div className="flex items-center gap-1 text-xs font-medium hover:text-neutral-600 transition-colors">
+            <div className="flex items-center gap-1 text-xs font-medium hover:text-neutral-600 dark:hover:text-neutral-300 transition-colors">
               <Paperclip className="h-3.5 w-3.5" />
               <span>{idea.attachments.length}</span>
             </div>
@@ -90,8 +90,8 @@ export const KanbanCardContent = ({ idea, onClick, style, className, ...props })
         {/* Assignees */}
         <div className="flex -space-x-2">
           {idea.assignedTo ? (
-            <Avatar className="h-6 w-6 border-[1.5px] border-white ring-1 ring-neutral-100">
-              <AvatarFallback className="text-[9px] bg-primary-50 text-primary-600 font-semibold">
+            <Avatar className="h-6 w-6 border-[1.5px] border-white dark:border-neutral-900 ring-1 ring-neutral-100 dark:ring-neutral-700">
+              <AvatarFallback className="text-[9px] bg-primary-50 dark:bg-neutral-700 text-primary-600 dark:text-neutral-200 font-semibold">
                 {idea.assignedTo.avatar || idea.assignedTo.name[0]}
               </AvatarFallback>
             </Avatar>
@@ -99,10 +99,10 @@ export const KanbanCardContent = ({ idea, onClick, style, className, ...props })
             idea.members?.map((member, i) => (
               <Avatar
                 key={i}
-                className="h-6 w-6 border-[1.5px] border-white ring-1 ring-neutral-100"
+                className="h-6 w-6 border-[1.5px] border-white dark:border-neutral-900 ring-1 ring-neutral-100 dark:ring-neutral-700"
               >
                 <AvatarImage src={member.avatarUrl} />
-                <AvatarFallback className="text-[9px] bg-neutral-100 text-neutral-500 font-semibold">
+                <AvatarFallback className="text-[9px] bg-neutral-100 dark:bg-neutral-700 text-neutral-500 dark:text-neutral-300 font-semibold">
                   {member.name[0]}
                 </AvatarFallback>
               </Avatar>
@@ -140,7 +140,7 @@ export const KanbanCard = ({ idea, onClick }) => {
       <div
         ref={setNodeRef}
         style={style}
-        className="opacity-30 bg-neutral-50 rounded-xl p-4 border border-dashed border-neutral-300 h-[100px]"
+        className="opacity-30 bg-neutral-50 dark:bg-neutral-800 rounded-xl p-4 border border-dashed border-neutral-300 dark:border-neutral-600 h-[100px]"
       />
     );
   }
