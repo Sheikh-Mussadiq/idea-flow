@@ -8,66 +8,7 @@ import { TableView } from "./TableView.jsx";
 import { ListView } from "./ListView.jsx";
 import { useIdeaFlowLayout } from "./hooks/useIdeaFlowLayout.js";
 import { toast } from "sonner";
-
-const mockAIIdeas = [
-  {
-    title: "Interactive Product Demos",
-    description:
-      "Create engaging video demonstrations showing product features in real-world scenarios. Focus on problem-solving aspects and user benefits.",
-  },
-  {
-    title: "Customer Success Stories",
-    description:
-      "Share authentic testimonials and case studies from satisfied customers. Include metrics and specific outcomes achieved.",
-  },
-  {
-    title: "Educational Content Series",
-    description:
-      "Develop a series of tutorial-style posts teaching valuable skills related to your product. Build authority and trust.",
-  },
-  {
-    title: "Behind-the-Scenes Content",
-    description:
-      "Give followers a peek into your company culture, team members, and day-to-day operations. Humanize your brand.",
-  },
-  {
-    title: "Industry Trend Analysis",
-    description:
-      "Share insights on current trends affecting your industry. Position your brand as a thought leader.",
-  },
-  {
-    title: "User-Generated Content Campaigns",
-    description:
-      "Encourage customers to share their experiences. Feature their content to build community and social proof.",
-  },
-];
-
-const mockComments = {
-  1: [
-    {
-      id: "c1",
-      author: "Maria Chen",
-      avatar: "MC",
-      text: "This is a great direction! We should focus on mobile-first demos.",
-      timestamp: "2 hours ago",
-      reactions: { thumbsUp: 5, heart: 2 },
-    },
-    {
-      id: "c2",
-      author: "Tom Wilson",
-      avatar: "TW",
-      text: "Agreed! Can we also add some metrics about engagement?",
-      timestamp: "1 hour ago",
-      reactions: { thumbsUp: 3, heart: 1 },
-    },
-  ],
-};
-
-const teamMembers = [
-  { id: "1", name: "Alex Morgan", avatar: "A" },
-  { id: "2", name: "Maria Chen", avatar: "M" },
-  { id: "3", name: "David Kim", avatar: "D" },
-];
+import { mockAIIdeas } from "../../data/mockData.js";
 
 export const FlowContent = ({
   ideas,
@@ -85,8 +26,6 @@ export const FlowContent = ({
   const viewMode = controlledViewMode ?? uncontrolledViewMode;
   const handleChangeView = onChangeView ?? setUncontrolledViewMode;
   const [mode, setMode] = useState("ai");
-  const [prompt, setPrompt] = useState("");
-  const [manualIdea, setManualIdea] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [selectedIdeaId, setSelectedIdeaId] = useState(null);
   const [selectedTaskId, setSelectedTaskId] = useState(null);
@@ -120,9 +59,9 @@ export const FlowContent = ({
     [isViewer, onUpdateIdeas]
   );
 
-  const handleGenerate = useCallback(async () => {
+  const handleGenerate = useCallback(async (promptValue) => {
     if (isViewer) return;
-    if (!prompt.trim()) return;
+    if (!promptValue || !promptValue.trim()) return;
 
     setIsGenerating(true);
     await new Promise((resolve) => setTimeout(resolve, 1500));
@@ -148,7 +87,7 @@ export const FlowContent = ({
     toast.success("Ideas generated successfully!");
 
     setTimeout(() => fitView({ padding: 0.2, duration: 800 }), 100);
-  }, [fitView, isViewer, onUpdateIdeas, prompt]);
+  }, [fitView, isViewer, onUpdateIdeas]);
 
   const handleRegenerate = useCallback(async () => {
     if (isViewer) return;
@@ -182,15 +121,15 @@ export const FlowContent = ({
     setTimeout(() => fitView({ padding: 0.2, duration: 800 }), 100);
   }, [fitView, ideas, isViewer, onUpdateIdeas]);
 
-  const handleAddManualIdea = useCallback(() => {
+  const handleAddManualIdea = useCallback((manualIdeaValue) => {
     if (isViewer) return;
-    if (!manualIdea.trim()) return;
+    if (!manualIdeaValue || !manualIdeaValue.trim()) return;
 
-    const title = manualIdea.split(" ").slice(0, 8).join(" ");
+    const title = manualIdeaValue.split(" ").slice(0, 8).join(" ");
     const newIdea = {
       id: Date.now().toString(),
-      title: title.length < manualIdea.length ? title + "..." : title,
-      description: manualIdea,
+      title: title.length < manualIdeaValue.length ? title + "..." : title,
+      description: manualIdeaValue,
       type: "manual",
       kanbanStatus: undefined,
       assignedTo: undefined,
@@ -206,18 +145,16 @@ export const FlowContent = ({
     };
 
     onUpdateIdeas((prevIdeas) => [...prevIdeas, newIdea]);
-    setManualIdea("");
     toast.success("Idea added!");
 
     setTimeout(() => fitView({ padding: 0.2, duration: 800 }), 100);
-  }, [fitView, isViewer, manualIdea, onUpdateIdeas]);
+  }, [fitView, isViewer, onUpdateIdeas]);
 
   const handleClearManualIdeas = useCallback(() => {
     if (isViewer) return;
     onUpdateIdeas((prevIdeas) =>
       prevIdeas.filter((idea) => idea.type === "ai")
     );
-    setManualIdea("");
     toast.success("Manual ideas cleared!");
   }, [isViewer, onUpdateIdeas]);
 
@@ -729,10 +666,6 @@ export const FlowContent = ({
     () => ({
       mode,
       onModeChange: setMode,
-      prompt,
-      onPromptChange: setPrompt,
-      manualIdea,
-      onManualIdeaChange: setManualIdea,
       onGenerate: handleGenerate,
       onAddManual: handleAddManualIdea,
       onRegenerate: handleRegenerate,
@@ -748,9 +681,7 @@ export const FlowContent = ({
       handleRegenerate,
       ideas.length,
       isGenerating,
-      manualIdea,
       mode,
-      prompt,
       isViewer,
     ]
   );

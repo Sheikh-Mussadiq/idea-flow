@@ -2,11 +2,20 @@ import { Handle, Position } from "reactflow";
 import { MessageSquare, Inbox } from "lucide-react";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 
 export const IdeaNode = ({ data }) => {
+  // Get comment count and commenters
+  const commentCount = data.comments?.length || 0;
+  const hasUnreadComments = data.hasUnreadComments || false;
+  
+  // Get unique commenters (limit to 3 for display)
+  const commenters = data.commenters || [];
+  const displayCommenters = commenters.slice(0, 3);
+
   return (
     <div
-      onClick={() => data.onOpenComments(data.id)}
+      onClick={() => data.onOpenTask?.(data.id)}
       className="group relative bg-white rounded-2xl p-6 shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer w-[320px] border border-neutral-200/60 animate-fade-in"
     >
       {/* Top Handle for connections */}
@@ -24,9 +33,65 @@ export const IdeaNode = ({ data }) => {
         {data.type === "ai" ? "AI" : "Manual"}
       </Badge>
 
+      {/* Comment Indicator - Top Right */}
+      {commentCount > 0 && (
+        <div
+          onClick={(e) => {
+            e.stopPropagation();
+            data.onOpenComments?.(data.id);
+          }}
+          className="absolute -top-2 -right-2 flex items-center gap-1.5 bg-white rounded-full shadow-lg border border-neutral-200/60 px-2 py-1.5 hover:shadow-xl transition-all cursor-pointer group/comment"
+        >
+          {/* Unread Indicator Dot */}
+          {hasUnreadComments && (
+            <div className="absolute -top-1 -right-1 h-3 w-3 bg-primary-500 rounded-full border-2 border-white animate-pulse" />
+          )}
+          
+          {/* Avatar Stack */}
+          <div className="flex -space-x-2">
+            {displayCommenters.map((commenter, index) => (
+              <Avatar key={index} className="h-6 w-6 border-2 border-white ring-1 ring-neutral-100">
+                <AvatarImage src={commenter.avatarUrl} />
+                <AvatarFallback className="text-[9px] bg-primary-50 text-primary-600 font-semibold">
+                  {commenter.name?.[0] || commenter.avatar || "?"}
+                </AvatarFallback>
+              </Avatar>
+            ))}
+            {commenters.length > 3 && (
+              <div className="h-6 w-6 rounded-full bg-neutral-100 border-2 border-white flex items-center justify-center">
+                <span className="text-[9px] font-semibold text-neutral-600">
+                  +{commenters.length - 3}
+                </span>
+              </div>
+            )}
+          </div>
+
+          {/* Comment Icon and Count */}
+          <div className="flex items-center gap-1 pl-1">
+            <MessageSquare className="h-3.5 w-3.5 text-neutral-500 group-hover/comment:text-primary-500 transition-colors" />
+            <span className="text-xs font-medium text-neutral-600 group-hover/comment:text-primary-600">
+              {commentCount}
+            </span>
+          </div>
+        </div>
+      )}
+
+      {/* Empty state comment button when no comments */}
+      {commentCount === 0 && (
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            data.onOpenComments?.(data.id);
+          }}
+          className="absolute -top-2 -right-2 h-8 w-8 bg-white rounded-full shadow-md border border-neutral-200/60 hover:shadow-lg hover:border-primary-300 transition-all flex items-center justify-center group/comment"
+        >
+          <MessageSquare className="h-4 w-4 text-neutral-400 group-hover/comment:text-primary-500 transition-colors" />
+        </button>
+      )}
+
       {/* Content */}
       <div className="space-y-3 mt-2">
-        <h3 className="text-lg font-semibold text-neutral-900 leading-snug">
+        <h3 className="text-lg font-semibold text-neutral-900 leading-snug pr-8">
           {data.title}
         </h3>
         {data.assignedTo && (
@@ -48,63 +113,48 @@ export const IdeaNode = ({ data }) => {
       </div>
 
       {/* Footer */}
-      <div className="flex items-center justify-between mt-4 pt-4 border-t border-neutral-200/60">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={(e) => {
-            e.stopPropagation();
-            data.onOpenComments(data.id);
-          }}
-          className="text-neutral-600 hover:text-primary-500 hover:bg-neutral-100 transition-colors -ml-2"
-        >
-          <MessageSquare className="h-4 w-4 mr-1.5" />
-          <span className="text-xs">Comment</span>
-        </Button>
+      <div className="flex items-center justify-end gap-1 mt-4 pt-4 border-t border-neutral-200/60">
+        {data.onSendToKanban && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-7 w-7 text-neutral-600 hover:text-primary-500 hover:bg-neutral-100"
+            onClick={(e) => {
+              e.stopPropagation();
+              data.onSendToKanban?.(data.id);
+            }}
+          >
+            <Inbox className="h-3.5 w-3.5" />
+          </Button>
+        )}
 
-        <div className="flex items-center gap-1">
-          {data.onSendToKanban && (
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-7 w-7 text-neutral-600 hover:text-primary-500 hover:bg-neutral-100"
-              onClick={(e) => {
-                e.stopPropagation();
-                data.onSendToKanban?.(data.id);
-              }}
-            >
-              <Inbox className="h-3.5 w-3.5" />
-            </Button>
-          )}
+        {data.onAddSubIdea && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={(e) => {
+              e.stopPropagation();
+              data.onAddSubIdea?.(data.id);
+            }}
+            className="text-neutral-600 hover:text-primary-500 hover:bg-neutral-100 transition-colors text-xs"
+          >
+            Sub-idea
+          </Button>
+        )}
 
-          {data.onAddSubIdea && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={(e) => {
-                e.stopPropagation();
-                data.onAddSubIdea?.(data.id);
-              }}
-              className="text-neutral-600 hover:text-primary-500 hover:bg-neutral-100 transition-colors text-xs"
-            >
-              Sub-idea
-            </Button>
-          )}
-
-          {data.type === "manual" && data.onDelete && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={(e) => {
-                e.stopPropagation();
-                data.onDelete(data.id);
-              }}
-              className="text-neutral-600 hover:text-error-500 hover:bg-neutral-100 transition-colors text-xs"
-            >
-              Delete
-            </Button>
-          )}
-        </div>
+        {data.type === "manual" && data.onDelete && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={(e) => {
+              e.stopPropagation();
+              data.onDelete(data.id);
+            }}
+            className="text-neutral-600 hover:text-error-500 hover:bg-neutral-100 transition-colors text-xs"
+          >
+            Delete
+          </Button>
+        )}
       </div>
 
       {/* Bottom handle for outgoing connections to sub-ideas */}

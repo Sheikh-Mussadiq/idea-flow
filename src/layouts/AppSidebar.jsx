@@ -17,27 +17,12 @@ import {
 } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
+import { mockBoards, mockAIFlows, mockCards, boardCategories } from "../data/mockData.js";
 
 const PRIMARY_NAV = [
   { id: "home", icon: Home, label: "Home", to: "/" },
   { id: "ai-flow", icon: Zap, label: "AI Flow", to: "/flow" },
   { id: "tasks", icon: LayoutDashboard, label: "Tasks", to: "/board" },
-];
-
-const PROJECTS = [
-  { id: 1, label: "Sales Forecast", count: 2, icon: Sparkles },
-  { id: 2, label: "Sentiment AI", count: 7, icon: Sparkles },
-  { id: 3, label: "Task Automate", count: 18, icon: Sparkles, active: true },
-  { id: 4, label: "Script AI", count: 3, icon: Sparkles },
-  { id: 5, label: "Lead Scoring", count: 15, icon: Sparkles },
-  { id: 6, label: "Heatmap AI", count: 4, icon: Sparkles },
-  { id: 7, label: "Social Boost", count: 9, icon: Sparkles },
-];
-
-const CATEGORIES = [
-  { id: 1, label: "Marketing AI" },
-  { id: 2, label: "Chatbots" },
-  { id: 3, label: "Finance AI" },
 ];
 
 export const AppSidebar = () => {
@@ -176,48 +161,64 @@ export const AppSidebar = () => {
                     </div>
                     <ChevronDown className="h-3 w-3 text-neutral-400" />
                   </div>
-                  <button className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-neutral-600 hover:bg-white hover:shadow-sm transition-all">
-                    <Star className="h-4 w-4 text-orange-400" />
-                    <span>AI Writer</span>
-                  </button>
-                  <button className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-neutral-600 hover:bg-white hover:shadow-sm transition-all">
-                    <Star className="h-4 w-4 text-blue-400" />
-                    <span>Data Insights</span>
-                  </button>
-                  <button className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-neutral-600 hover:bg-white hover:shadow-sm transition-all">
-                    <Star className="h-4 w-4 text-yellow-400" />
-                    <span>Predictive AI</span>
-                  </button>
+                  {mockBoards.filter(board => board.isFavorite).map((board) => {
+                    const boardCards = mockCards.filter(card => card.boardId === board.id);
+                    
+                    return (
+                      <button
+                        key={board.id}
+                        className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm font-medium text-neutral-600 hover:bg-white hover:shadow-sm hover:text-neutral-900 transition-all"
+                      >
+                        <div className="flex items-center gap-3">
+                          <Star className="h-4 w-4 text-orange-400 fill-orange-400" />
+                          <span className="text-base">{board.icon}</span>
+                          <span className="truncate">{board.name}</span>
+                        </div>
+                        {boardCards.length > 0 && (
+                          <span className="text-[10px] font-medium text-neutral-400">
+                            {boardCards.length}
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
                 </div>
 
-                {/* Projects */}
+                {/* Boards */}
                 <div className="space-y-1">
                   <div className="flex items-center justify-between px-2 mb-2">
                     <div className="text-[11px] font-bold text-neutral-400 uppercase tracking-wider">
-                      All Projects
+                      All Boards
                     </div>
-                    <ChevronDown className="h-3 w-3 text-neutral-400" />
-                  </div>
-                  {PROJECTS.map((item) => (
-                    <button
-                      key={item.id}
-                      className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-                        item.active
-                          ? "bg-white text-neutral-900 shadow-sm ring-1 ring-neutral-100"
-                          : "text-neutral-600 hover:bg-white hover:shadow-sm hover:text-neutral-900"
-                      }`}
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className={`h-1.5 w-1.5 rounded-full ${item.active ? "bg-primary-500" : "bg-neutral-300"}`} />
-                        <span className="truncate">{item.label}</span>
-                      </div>
-                      {item.count && (
-                        <span className="text-[10px] font-medium text-neutral-400">
-                          {item.count}
-                        </span>
-                      )}
+                    <button className="hover:bg-white rounded p-0.5 transition-colors">
+                      <Plus className="h-3 w-3 text-neutral-400" />
                     </button>
-                  ))}
+                  </div>
+                  {mockBoards.map((board, index) => {
+                    const boardCards = mockCards.filter(card => card.boardId === board.id);
+                    const isActive = index === 0; // First board is active for demo
+                    
+                    return (
+                      <button
+                        key={board.id}
+                        className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                          isActive
+                            ? "bg-white text-neutral-900 shadow-sm ring-1 ring-neutral-100"
+                            : "text-neutral-600 hover:bg-white hover:shadow-sm hover:text-neutral-900"
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <span className="text-base">{board.icon}</span>
+                          <span className="truncate">{board.name}</span>
+                        </div>
+                        {boardCards.length > 0 && (
+                          <span className="text-[10px] font-medium text-neutral-400">
+                            {boardCards.length}
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
                 </div>
 
                 {/* Categories */}
@@ -228,15 +229,29 @@ export const AppSidebar = () => {
                     </div>
                     <ChevronDown className="h-3 w-3 text-neutral-400" />
                   </div>
-                  {CATEGORIES.map((item) => (
-                    <button
-                      key={item.id}
-                      className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-neutral-600 hover:bg-white hover:shadow-sm transition-all"
-                    >
-                      <span className="text-primary-400">#</span>
-                      <span className="truncate">{item.label}</span>
-                    </button>
-                  ))}
+                  {boardCategories.map((category) => {
+                    const categoryBoards = mockBoards.filter(board => board.category === category.name);
+                    
+                    return (
+                      <button
+                        key={category.id}
+                        className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm font-medium text-neutral-600 hover:bg-white hover:shadow-sm transition-all"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div 
+                            className="h-2 w-2 rounded-full" 
+                            style={{ backgroundColor: category.color }}
+                          />
+                          <span className="truncate">{category.name}</span>
+                        </div>
+                        {categoryBoards.length > 0 && (
+                          <span className="text-[10px] font-medium text-neutral-400">
+                            {categoryBoards.length}
+                          </span>
+                        )}
+                      </button>
+                    );
+                  })}
                 </div>
 
                 {/* Archive */}
@@ -249,20 +264,62 @@ export const AppSidebar = () => {
               </>
             )}
 
+
             {previewPrimary === "ai-flow" && (
-              <div className="text-center py-8">
-                <div className="h-12 w-12 bg-primary-100 text-primary-600 rounded-xl flex items-center justify-center mx-auto mb-3">
-                  <Zap className="h-6 w-6" />
+              <>
+                {/* AI Flows */}
+                <div className="space-y-1">
+                  <div className="flex items-center justify-between px-2 mb-2">
+                    <div className="text-[11px] font-bold text-neutral-400 uppercase tracking-wider">
+                      AI Flows
+                    </div>
+                    <button className="hover:bg-white rounded p-0.5 transition-colors">
+                      <Plus className="h-3 w-3 text-neutral-400" />
+                    </button>
+                  </div>
+                  {mockAIFlows.map((flow, index) => {
+                    const isActive = index === 0; // First flow is active for demo
+                    
+                    return (
+                      <button
+                        key={flow.id}
+                        className={`w-full flex flex-col gap-1 px-3 py-2.5 rounded-lg text-sm transition-all ${
+                          isActive
+                            ? "bg-white shadow-sm ring-1 ring-neutral-100"
+                            : "hover:bg-white hover:shadow-sm"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between w-full">
+                          <div className="flex items-center gap-2">
+                            <Zap className="h-3.5 w-3.5 text-primary-500" />
+                            <span className="font-medium text-neutral-900 truncate">
+                              {flow.name}
+                            </span>
+                          </div>
+                          <span className="text-[10px] font-medium text-neutral-400">
+                            {flow.ideas.length}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-1.5 text-[10px] text-neutral-500">
+                          <div 
+                            className="h-2 w-2 rounded-full" 
+                            style={{ backgroundColor: flow.boardColor }}
+                          />
+                          <span className="truncate">{flow.boardName}</span>
+                        </div>
+                      </button>
+                    );
+                  })}
                 </div>
-                <h3 className="text-sm font-semibold text-neutral-900">AI Flows</h3>
-                <p className="text-xs text-neutral-500 mt-1">
-                  Manage your automated workflows here.
-                </p>
-                <Button size="sm" className="mt-4 w-full" variant="outline">
-                  <Plus className="h-3 w-3 mr-2" />
-                  New Flow
-                </Button>
-              </div>
+
+                {/* Create New Flow */}
+                <div className="pt-2">
+                  <Button size="sm" className="w-full" variant="outline">
+                    <Plus className="h-3 w-3 mr-2" />
+                    New AI Flow
+                  </Button>
+                </div>
+              </>
             )}
           </div>
 

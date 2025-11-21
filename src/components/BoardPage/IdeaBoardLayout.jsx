@@ -41,30 +41,15 @@ import {
   SheetDescription,
 } from "../ui/sheet";
 import { Avatar, AvatarFallback } from "../ui/avatar";
+import { mockUsers, mockLabels, mockBoards, mockCards, mockAIFlows } from "../../data/mockData.js";
 
-const defaultMembers = [
-  {
-    id: "1",
-    name: "Alex Morgan",
-    email: "alex@example.com",
-    avatar: "A",
-    role: "admin",
-  },
-  {
-    id: "2",
-    name: "Maria Chen",
-    email: "maria@example.com",
-    avatar: "M",
-    role: "editor",
-  },
-  {
-    id: "3",
-    name: "David Kim",
-    email: "david@example.com",
-    avatar: "D",
-    role: "viewer",
-  },
-];
+const defaultMembers = mockUsers.map(user => ({
+  id: user.id,
+  name: user.name,
+  email: user.email,
+  avatar: user.avatar,
+  role: user.role,
+}));
 
 const createEmptyBoard = (name, color, icon) => ({
   id: crypto.randomUUID(),
@@ -78,7 +63,7 @@ const createEmptyBoard = (name, color, icon) => ({
     description: "",
     themeColor: color,
     icon,
-    defaultLabels: [],
+    defaultLabels: mockLabels,
   },
   members: defaultMembers.map((member) => ({ ...member })),
   invites: [],
@@ -87,10 +72,29 @@ const createEmptyBoard = (name, color, icon) => ({
 });
 
 export const IdeaBoardLayout = ({ initialView = "flow" }) => {
-  const [boards, setBoards] = useState([
-    createEmptyBoard("Main Content Board", "#6366f1", "\u007f"),
-    createEmptyBoard("Marketing Board", "#22c55e"),
-  ]);
+  // Initialize boards with mock data
+  const [boards, setBoards] = useState(() => {
+    return mockBoards.map(board => {
+      // Get cards for this board
+      const boardCards = mockCards.filter(card => card.boardId === board.id);
+      
+      // Get AI flow ideas for this board
+      const boardFlow = mockAIFlows.find(flow => flow.boardId === board.id);
+      const flowIdeas = boardFlow ? boardFlow.ideas : [];
+      
+      // Combine cards and AI flow ideas
+      const allIdeas = [...boardCards, ...flowIdeas];
+      
+      return {
+        ...board,
+        ideas: allIdeas,
+        comments: {},
+        invites: [],
+        activity: [],
+        isArchived: false,
+      };
+    });
+  });
 
   const [activeBoardId, setActiveBoardId] = useState(() => boards[0]?.id);
 
@@ -145,7 +149,7 @@ export const IdeaBoardLayout = ({ initialView = "flow" }) => {
     if (!activeBoard) return [];
     const map = new Map();
     activeBoard.ideas.forEach((idea) => {
-      idea.labels.forEach((label) => {
+      (idea.labels || []).forEach((label) => {
         if (!map.has(label.id)) {
           map.set(label.id, label);
         }

@@ -2,6 +2,7 @@ import { useMemo, useEffect, useRef } from "react";
 import { useReactFlow, useNodesState } from "reactflow";
 import { InputNode } from "../InputNode.jsx";
 import { IdeaNode } from "../IdeaNode.jsx";
+import { mockComments, mockCommenters } from "../../../data/mockData.js";
 
 export const useIdeaFlowLayout = (
   ideas,
@@ -61,6 +62,11 @@ export const useIdeaFlowLayout = (
         const shouldPreservePosition = draggedNodesRef.current.has(idea.id);
         const preservedPosition = previousPositions.get(idea.id);
 
+        // Get mock comments for this idea (using index as a simple demo)
+        const ideaComments = mockComments[1] || [];
+        const hasComments = ideaComments.length > 0;
+        const commenters = hasComments ? mockCommenters.slice(0, 2) : [];
+
         return {
           id: idea.id,
           type: "ideaNode",
@@ -70,6 +76,9 @@ export const useIdeaFlowLayout = (
               : fallbackPosition,
           data: {
             ...idea,
+            comments: ideaComments,
+            commenters: commenters,
+            hasUnreadComments: index % 2 === 0 && hasComments, // Demo: every other idea has unread
             onOpenComments: handleOpenComments,
             onDelete:
               canEdit && idea.type === "manual" ? handleDeleteIdea : undefined,

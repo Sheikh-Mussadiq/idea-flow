@@ -102,12 +102,10 @@ export const KanbanBoard = ({
     Done: [],
   };
 
+  // Only show ideas that have been explicitly assigned to Kanban (have a kanbanStatus)
   ideas.forEach((idea) => {
-    const status = idea.kanbanStatus || "Backlog";
-    if (ideasByStatus[status]) {
-      ideasByStatus[status].push(idea);
-    } else {
-      ideasByStatus["Backlog"].push(idea);
+    if (idea.kanbanStatus && ideasByStatus[idea.kanbanStatus]) {
+      ideasByStatus[idea.kanbanStatus].push(idea);
     }
   });
 

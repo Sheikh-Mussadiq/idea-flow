@@ -1,11 +1,42 @@
+import { useRef } from "react";
 import { Handle, Position } from "reactflow";
-import { Input } from "../ui/input";
 import { Button } from "../ui/button";
 import { Sparkles, Plus, RotateCw, Trash2 } from "lucide-react";
 
 export const InputNode = ({ data }) => {
+  const promptRef = useRef(null);
+  const manualRef = useRef(null);
+
+  const handleGenerate = () => {
+    if (promptRef.current) {
+      const value = promptRef.current.value.trim();
+      if (value) {
+        data.onGenerate(value);
+      }
+    }
+  };
+
+  const handleAddManual = () => {
+    if (manualRef.current) {
+      const value = manualRef.current.value.trim();
+      if (value) {
+        data.onAddManual(value);
+      }
+    }
+  };
+
+  const handleClearManual = () => {
+    if (manualRef.current) {
+      manualRef.current.value = "";
+    }
+    data.onClearManual();
+  };
+
   return (
-    <div className="bg-white rounded-2xl shadow-xl py-4 px-8 border border-neutral-200/60 min-w-[600px]">
+    <div 
+      className="bg-white rounded-2xl shadow-xl py-4 px-8 border border-neutral-200/60 min-w-[600px]"
+      onClick={(e) => e.stopPropagation()}
+    >
       {/* Mode Toggle */}
       <div className="flex items-center justify-center gap-2 mb-6">
         <button
@@ -35,16 +66,18 @@ export const InputNode = ({ data }) => {
       {/* Input Section */}
       {data.mode === "ai" ? (
         <div className="space-y-4">
-          <Input
-            value={data.prompt}
-            onChange={(e) => data.onPromptChange(e.target.value)}
+          <textarea
+            ref={promptRef}
+            onMouseDown={(e) => e.stopPropagation()}
+            onPointerDown={(e) => e.stopPropagation()}
             placeholder="Describe what kind of content ideas you want…"
-            className="h-14 text-base rounded-xl border-neutral-200 bg-neutral-50"
+            className="w-full h-24 px-4 py-3 text-base rounded-xl border border-neutral-200 bg-neutral-50 resize-none focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent nopan nowheel nodrag"
+            rows={3}
           />
           <div className="flex gap-3">
             <Button
-              onClick={data.onGenerate}
-              disabled={data.isGenerating || !data.prompt.trim()}
+              onClick={handleGenerate}
+              disabled={data.isGenerating}
               className="flex-1 h-12 rounded-xl"
             >
               <Sparkles className="h-4 w-4 mr-2" />
@@ -64,23 +97,24 @@ export const InputNode = ({ data }) => {
         </div>
       ) : (
         <div className="space-y-4">
-          <Input
-            value={data.manualIdea}
-            onChange={(e) => data.onManualIdeaChange(e.target.value)}
+          <textarea
+            ref={manualRef}
+            onMouseDown={(e) => e.stopPropagation()}
+            onPointerDown={(e) => e.stopPropagation()}
             placeholder="Write your idea…"
-            className="h-14 text-base rounded-xl border-neutral-200 bg-neutral-50"
+            className="w-full h-24 px-4 py-3 text-base rounded-xl border border-neutral-200 bg-neutral-50 resize-none focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent nopan nowheel nodrag"
+            rows={3}
           />
           <div className="flex gap-3">
             <Button
-              onClick={data.onAddManual}
-              disabled={!data.manualIdea.trim()}
+              onClick={handleAddManual}
               className="flex-1 h-12 rounded-xl"
             >
               <Plus className="h-4 w-4 mr-2" />
               Add Idea
             </Button>
             <Button
-              onClick={data.onClearManual}
+              onClick={handleClearManual}
               variant="outline"
               className="h-12 rounded-xl"
             >
