@@ -17,14 +17,14 @@ export const KanbanColumn = ({ id, title, ideas, onOpenTask, onAddTask }) => {
       {/* Column Header */}
       <div className="flex items-center justify-between px-2 mb-3 pt-1 flex-shrink-0">
         <div className="flex items-center gap-2.5">
-          <h2 className="font-semibold text-sm text-neutral-800 tracking-tight">
+          <h2 className="font-semibold text-sm text-neutral-800 dark:text-neutral-100 tracking-tight">
             {title}
           </h2>
-          <span className="flex items-center justify-center h-5 min-w-5 px-1.5 rounded-full bg-neutral-200/60 text-[10px] font-semibold text-neutral-500">
+          <span className="flex items-center justify-center h-5 min-w-5 px-1.5 rounded-full bg-neutral-200/60 dark:bg-neutral-700/60 text-[10px] font-semibold text-neutral-500 dark:text-neutral-300">
             {ideas.length}
           </span>
         </div>
-        <button className="text-neutral-400 hover:text-neutral-600 p-1 hover:bg-neutral-200/50 rounded-md transition-colors">
+        <button className="text-neutral-400 dark:text-neutral-500 hover:text-neutral-600 dark:hover:text-neutral-300 p-1 hover:bg-neutral-200/50 dark:hover:bg-neutral-800/50 rounded-md transition-colors">
           <MoreHorizontal className="h-4 w-4" />
         </button>
       </div>
@@ -38,7 +38,7 @@ export const KanbanColumn = ({ id, title, ideas, onOpenTask, onAddTask }) => {
         <div
           ref={setNodeRef}
           className={`flex-1 overflow-y-auto px-0.5 pb-2 custom-scrollbar ${
-            isOver ? "bg-neutral-200/30 rounded-xl" : ""
+            isOver ? "bg-neutral-200/30 dark:bg-neutral-800/30 rounded-xl" : ""
           }`}
         >
           <SortableContext
@@ -66,7 +66,7 @@ export const KanbanColumn = ({ id, title, ideas, onOpenTask, onAddTask }) => {
         <Button
           variant="ghost"
           onClick={() => onAddTask(id)}
-          className="w-full justify-start text-neutral-500 hover:text-neutral-800 hover:bg-white/50 h-9 text-sm font-medium rounded-xl transition-all"
+          className="w-full justify-start text-neutral-500 dark:text-neutral-400 hover:text-neutral-800 dark:hover:text-neutral-100 hover:bg-white/50 dark:hover:bg-neutral-800/50 h-9 text-sm font-medium rounded-xl transition-all"
         >
           <Plus className="h-4 w-4 mr-2" />
           Add task

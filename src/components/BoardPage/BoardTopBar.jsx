@@ -76,14 +76,14 @@ export function BoardHeader({
 
           <div className="flex -space-x-2">
             {[1, 2, 3, 4, 5].map((i) => (
-              <Avatar key={i} className="h-8 w-8 border-2 border-white ring-1 ring-neutral-100">
+              <Avatar key={i} className="h-8 w-8 border-2 border-white dark:border-neutral-950 ring-1 ring-neutral-100 dark:ring-neutral-800">
                 <AvatarImage src={`https://i.pravatar.cc/150?u=${i}`} />
                 <AvatarFallback>U{i}</AvatarFallback>
               </Avatar>
             ))}
           </div>
 
-          <div className="h-6 w-px bg-neutral-200 mx-1" />
+          <div className="h-6 w-px bg-neutral-200 dark:bg-neutral-800 mx-1" />
 
           <NotificationBell />
 
@@ -143,8 +143,8 @@ export function BoardHeader({
                 onClick={() => onChangeViewMode?.(tab.value)}
                 className={`flex items-center gap-2 pb-3 text-sm font-medium border-b-2 transition-all ${
                   isActive
-                    ? "border-primary-500 text-primary-600"
-                    : "border-transparent text-neutral-500 hover:text-neutral-700"
+                    ? "border-primary-500 text-primary-600 dark:text-primary-400"
+                    : "border-transparent text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-300"
                 }`}
               >
                 <tab.icon className="h-4 w-4" />
@@ -158,7 +158,7 @@ export function BoardHeader({
         <Button
           variant="ghost"
           size="sm"
-          className="text-neutral-500 hover:text-neutral-900 gap-2 relative"
+          className="text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-100 gap-2 relative"
           onClick={onOpenFilters}
         >
           <Filter className="h-4 w-4" />
