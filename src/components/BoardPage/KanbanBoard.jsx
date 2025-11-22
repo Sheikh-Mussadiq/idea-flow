@@ -120,7 +120,7 @@ export const KanbanBoard = ({
         onDragOver={handleDragOver}
         onDragEnd={handleDragEnd}
       >
-        <div className="flex h-full gap-2">
+        <div className="flex h-full gap-2 items-start">
           {columns.map((column) => (
             <KanbanColumn
               key={column.id}
