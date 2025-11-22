@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 import { FlowContent } from "./FlowContent.jsx";
 import { ArchivedTasksPanel } from "./ArchivedTasksPanel.jsx";
@@ -6,6 +7,7 @@ import { BoardMembersSheet } from "./BoardMembersSheet.jsx";
 import { BoardHeader } from "./BoardTopBar.jsx";
 import { BoardFiltersSheet } from "./BoardFiltersSheet.jsx";
 import { Button } from "../ui/button";
+import BoardNotFound from "../../pages/BoardNotFound.jsx";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -43,6 +45,7 @@ import {
 import { Avatar, AvatarFallback } from "../ui/avatar";
 import { mockUsers, mockLabels } from "../../data/mockData.js";
 import { useBoard } from "../../context/BoardContext";
+import { useActiveBoard } from "../../hooks/useActiveBoard";
 
 const defaultMembers = mockUsers.map((user) => ({
   id: user.id,
@@ -73,18 +76,21 @@ const createEmptyBoard = (name, color, icon) => ({
 });
 
 export const IdeaBoardLayout = ({ initialView = "flow" }) => {
+  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  
   const {
     boards,
     setBoards,
-    activeBoard,
-    activeBoardId,
-    selectBoard,
     createBoard,
     updateBoard,
     deleteBoard,
     archiveBoard,
     duplicateBoard,
   } = useBoard();
+
+  // Use URL-based board selection
+  const { activeBoard, boardId, notFound } = useActiveBoard();
 
   // Local UI state
   const [isMembersOpen, setIsMembersOpen] = useState(false);
@@ -98,18 +104,22 @@ export const IdeaBoardLayout = ({ initialView = "flow" }) => {
   const [draftBoardName, setDraftBoardName] = useState("");
   const [draftBoardDescription, setDraftBoardDescription] = useState("");
 
-  const [searchQuery, setSearchQuery] = useState("");
-  const [debouncedSearch, setDebouncedSearch] = useState("");
+  // Get search from URL params
+  const searchQuery = searchParams.get("search") || "";
+  const [debouncedSearch, setDebouncedSearch] = useState(searchQuery);
   const [searchCount, setSearchCount] = useState(0);
   const [boardViewMode, setBoardViewMode] = useState(initialView);
-  const [filters, setFilters] = useState({
-    priorities: [],
-    labelIds: [],
-    assigneeIds: [],
-    dueDate: null,
-    statuses: [],
-    types: [],
-  });
+  
+  // Get filters from URL params
+  const [filters, setFilters] = useState(() => ({
+    priorities: searchParams.getAll("priority"),
+    labelIds: searchParams.getAll("label"),
+    assigneeIds: searchParams.getAll("assignee"),
+    dueDate: searchParams.get("dueDate") || null,
+    statuses: searchParams.getAll("status"),
+    types: searchParams.getAll("type"),
+  }));
+  
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isArchivedOpen, setIsArchivedOpen] = useState(false);
 
@@ -158,12 +168,25 @@ export const IdeaBoardLayout = ({ initialView = "flow" }) => {
     return Array.from(map.values());
   }, [activeBoard]);
 
+  // Debounce search
   useEffect(() => {
     const handle = setTimeout(() => {
       setDebouncedSearch(searchQuery.trim().toLowerCase());
     }, 250);
     return () => clearTimeout(handle);
   }, [searchQuery]);
+
+  // Sync filters from URL params
+  useEffect(() => {
+    setFilters({
+      priorities: searchParams.getAll("priority"),
+      labelIds: searchParams.getAll("label"),
+      assigneeIds: searchParams.getAll("assignee"),
+      dueDate: searchParams.get("dueDate") || null,
+      statuses: searchParams.getAll("status"),
+      types: searchParams.getAll("type"),
+    });
+  }, [searchParams]);
 
   const searchInputRef = useRef(null);
 
@@ -182,16 +205,44 @@ export const IdeaBoardLayout = ({ initialView = "flow" }) => {
     setBoardViewMode(initialView);
   }, [initialView]);
 
-  const handleSelectBoard = (id) => {
-    selectBoard(id);
+  // Handler to update search in URL
+  const handleSearchChange = (query) => {
+    const params = new URLSearchParams(searchParams);
+    if (query) {
+      params.set("search", query);
+    } else {
+      params.delete("search");
+    }
+    setSearchParams(params, { replace: true });
+  };
+
+  // Handler to update filters in URL
+  const handleFiltersChange = (newFilters) => {
+    const params = new URLSearchParams();
+    
+    // Add all filter params with safety checks
+    (newFilters.priorities || []).forEach((p) => params.append("priority", p));
+    (newFilters.labelIds || []).forEach((l) => params.append("label", l));
+    (newFilters.assigneeIds || []).forEach((a) => params.append("assignee", a));
+    (newFilters.statuses || []).forEach((s) => params.append("status", s));
+    (newFilters.types || []).forEach((t) => params.append("type", t));
+    if (newFilters.dueDate) params.set("dueDate", newFilters.dueDate);
+    
+    // Preserve search param
+    const search = searchParams.get("search");
+    if (search) params.set("search", search);
+    
+    setSearchParams(params, { replace: true });
+    setFilters(newFilters);
   };
 
   const handleCreateBoard = () => {
     if (!draftBoardName.trim()) return;
-    createBoard(draftBoardName.trim(), draftBoardDescription);
+    const newBoard = createBoard(draftBoardName.trim(), draftBoardDescription);
     setDraftBoardName("");
     setDraftBoardDescription("");
     setIsCreateOpen(false);
+    navigate(`/boards/${newBoard.id}/flow`);
   };
 
   const handleRenameActiveBoard = () => {
@@ -324,6 +375,10 @@ export const IdeaBoardLayout = ({ initialView = "flow" }) => {
     );
   };
 
+  if (notFound) {
+    return <BoardNotFound />;
+  }
+
   if (!activeBoard) {
     return null;
   }
@@ -361,7 +416,6 @@ export const IdeaBoardLayout = ({ initialView = "flow" }) => {
         boards={boards}
         activeBoard={activeBoard}
         isAdmin={isAdmin}
-        onSelectBoard={handleSelectBoard}
         onOpenCreateBoard={() => {
           setDraftBoardName("");
           setDraftBoardDescription("");
@@ -372,8 +426,14 @@ export const IdeaBoardLayout = ({ initialView = "flow" }) => {
           setDraftBoardDescription(activeBoard.settings?.description ?? "");
           setIsSettingsOpen(true);
         }}
-        onDuplicateBoard={() => duplicateBoard(activeBoard.id)}
-        onArchiveBoard={() => archiveBoard(activeBoard.id)}
+        onDuplicateBoard={() => {
+          const duplicated = duplicateBoard(activeBoard.id);
+          if (duplicated) navigate(`/boards/${duplicated.id}/flow`);
+        }}
+        onArchiveBoard={() => {
+          archiveBoard(activeBoard.id);
+          navigate("/");
+        }}
         onDeleteBoard={() => setIsDeleteConfirmOpen(true)}
         onOpenMembers={() => setIsMembersOpen(true)}
         currentUser={currentUser}
@@ -381,7 +441,7 @@ export const IdeaBoardLayout = ({ initialView = "flow" }) => {
         defaultMembers={defaultMembers}
         onChangeUser={setCurrentUserId}
         searchQuery={searchQuery}
-        onChangeSearch={setSearchQuery}
+        onChangeSearch={handleSearchChange}
         searchInputRef={searchInputRef}
         searchCount={searchCount}
         onOpenFilters={() => setIsFilterOpen(true)}
@@ -411,7 +471,7 @@ export const IdeaBoardLayout = ({ initialView = "flow" }) => {
         open={isFilterOpen}
         onOpenChange={setIsFilterOpen}
         filters={filters}
-        setFilters={setFilters}
+        setFilters={handleFiltersChange}
         availableLabels={availableLabels}
         availableAssignees={availableAssignees}
       />
@@ -535,6 +595,7 @@ export const IdeaBoardLayout = ({ initialView = "flow" }) => {
               onClick={() => {
                 deleteBoard(activeBoard.id);
                 setIsDeleteConfirmOpen(false);
+                navigate("/");
               }}
             >
               Delete Board

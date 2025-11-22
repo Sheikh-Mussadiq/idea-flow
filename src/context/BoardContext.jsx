@@ -64,31 +64,6 @@ export const BoardProvider = ({ children }) => {
     });
   });
 
-  const [activeBoardId, setActiveBoardId] = useState(() => {
-    // Get initial board ID from boards
-    const initialBoards = mockBoards.map((board) => {
-      const boardCards = mockCards.filter((card) => card.boardId === board.id);
-      const boardFlow = mockAIFlows.find((flow) => flow.boardId === board.id);
-      const flowIdeas = boardFlow ? boardFlow.ideas : [];
-      const allIdeas = [...boardCards, ...flowIdeas];
-      return {
-        ...board,
-        ideas: allIdeas,
-        comments: {},
-        invites: [],
-        activity: [],
-        isArchived: board.isArchived || false,
-      };
-    });
-    return initialBoards[0]?.id;
-  });
-
-  const activeBoard = boards.find((b) => b.id === activeBoardId) || null;
-
-  const selectBoard = (boardId) => {
-    setActiveBoardId(boardId);
-  };
-
   const createBoard = (name, description = "") => {
     const newBoard = createEmptyBoard(name);
     newBoard.settings.description = description;
@@ -100,7 +75,6 @@ export const BoardProvider = ({ children }) => {
       icon: "layout",
     });
     setBoards((prev) => [...prev, newBoard]);
-    setActiveBoardId(newBoard.id);
     toast.success(`Board "${name}" created`);
     return newBoard;
   };
@@ -115,15 +89,7 @@ export const BoardProvider = ({ children }) => {
     const board = boards.find((b) => b.id === boardId);
     if (!board) return;
 
-    const filtered = boards.filter((b) => b.id !== boardId);
-    setBoards(filtered);
-
-    // If active board is deleted, switch to another one
-    if (activeBoardId === boardId) {
-      const nextBoard = filtered[0];
-      if (nextBoard) setActiveBoardId(nextBoard.id);
-    }
-
+    setBoards((prev) => prev.filter((b) => b.id !== boardId));
     toast.success(`Board "${board.name}" deleted`);
   };
 
@@ -183,8 +149,8 @@ export const BoardProvider = ({ children }) => {
     };
 
     setBoards((prev) => [...prev, copy]);
-    setActiveBoardId(copy.id);
     toast.success(`Board "${board.name}" duplicated`);
+    return copy;
   };
 
   const toggleFavorite = (boardId) => {
@@ -198,9 +164,6 @@ export const BoardProvider = ({ children }) => {
       value={{
         boards,
         setBoards,
-        activeBoard,
-        activeBoardId,
-        selectBoard,
         createBoard,
         updateBoard,
         deleteBoard,

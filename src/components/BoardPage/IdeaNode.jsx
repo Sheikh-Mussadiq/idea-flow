@@ -1,10 +1,11 @@
+import { memo } from "react";
 import { Handle, Position } from "reactflow";
 import { MessageSquare, Inbox } from "lucide-react";
 import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 
-export const IdeaNode = ({ data }) => {
+export const IdeaNode = memo(({ data }) => {
   // Get comment count and commenters
   const commentCount = data.comments?.length || 0;
   const hasUnreadComments = data.hasUnreadComments || false;
@@ -165,4 +166,5 @@ export const IdeaNode = ({ data }) => {
       />
     </div>
   );
-};
+});
+

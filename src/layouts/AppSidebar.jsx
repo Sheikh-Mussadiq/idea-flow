@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { NavLink, useLocation } from "react-router-dom";
+import { NavLink, useLocation, useNavigate, useParams } from "react-router-dom";
 import {
   Home,
   Sparkles,
@@ -37,28 +37,27 @@ const PRIMARY_NAV = [
 
 export const AppSidebar = () => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { boardId } = useParams();
   const [activePrimary, setActivePrimary] = useState(() => {
-    if (location.pathname.startsWith("/flow")) return "ai-flow";
+    if (location.pathname.startsWith("/boards")) return "tasks";
     if (location.pathname === "/") return "home";
-    return "tasks";
+    return "home";
   });
   const [previewPrimary, setPreviewPrimary] = useState(activePrimary);
   const [isExpanded, setIsExpanded] = useState(false);
   
-  const { boards, selectBoard, activeBoardId, archiveBoard, deleteBoard, duplicateBoard, toggleFavorite } = useBoard();
+  const { boards, archiveBoard, deleteBoard, duplicateBoard, toggleFavorite } = useBoard();
 
   const ITEMS_WITH_CONTENT = ["tasks", "ai-flow"];
 
   useEffect(() => {
-    if (location.pathname.startsWith("/flow")) {
-      setActivePrimary("ai-flow");
-      setPreviewPrimary("ai-flow");
+    if (location.pathname.startsWith("/boards")) {
+      setActivePrimary("tasks");
+      setPreviewPrimary("tasks");
     } else if (location.pathname === "/") {
       setActivePrimary("home");
       setPreviewPrimary("home");
-    } else if (location.pathname.startsWith("/board")) {
-      setActivePrimary("tasks");
-      setPreviewPrimary("tasks");
     }
   }, [location.pathname]);
 
@@ -96,7 +95,10 @@ export const AppSidebar = () => {
             {PRIMARY_NAV.map((item) => (
               <button
                 key={item.id}
-                onClick={() => setActivePrimary(item.id)}
+                onClick={() => {
+                  setActivePrimary(item.id);
+                  navigate(item.to);
+                }}
                 onMouseEnter={() => handleItemHover(item.id)}
                 className={`group relative w-12 h-12 rounded-xl flex flex-col items-center justify-center gap-1 transition-all duration-200 ${
                   activePrimary === item.id
@@ -179,7 +181,7 @@ export const AppSidebar = () => {
                   </div>
                   {boards.filter(board => board.isFavorite && !board.isArchived).map((board) => {
                     const boardCards = mockCards.filter(card => card.boardId === board.id);
-                    const isActive = board.id === activeBoardId;
+                    const isActive = board.id === boardId;
                     
                     return (
                       <div
@@ -191,7 +193,7 @@ export const AppSidebar = () => {
                         }`}
                       >
                         <button
-                          onClick={() => selectBoard(board.id)}
+                          onClick={() => navigate(`/boards/${board.id}/kanban`)}
                           className="flex-1 flex items-center gap-3 min-w-0 text-left"
                         >
                           <Star className="h-4 w-4 text-orange-400 fill-orange-400 shrink-0" />
@@ -326,22 +328,23 @@ export const AppSidebar = () => {
                       <Plus className="h-3 w-3 text-neutral-400" />
                     </button>
                   </div>
-                  {mockAIFlows.map((flow, index) => {
-                    const isActive = index === 0; // First flow is active for demo
+                  {mockAIFlows.map((flow) => {
+                    const isActive = boardId === flow.boardId;
                     
                     return (
                       <button
                         key={flow.id}
+                        onClick={() => navigate(`/boards/${flow.boardId}/flow`)}
                         className={`w-full flex flex-col gap-1 px-3 py-2.5 rounded-lg text-sm transition-all ${
                           isActive
-                            ? "bg-white shadow-sm ring-1 ring-neutral-100"
-                            : "hover:bg-white hover:shadow-sm"
+                            ? "bg-white dark:bg-neutral-800 shadow-sm ring-1 ring-neutral-100 dark:ring-neutral-700"
+                            : "hover:bg-white dark:hover:bg-neutral-800 hover:shadow-sm"
                         }`}
                       >
                         <div className="flex items-center justify-between w-full">
                           <div className="flex items-center gap-2">
                             <Zap className="h-3.5 w-3.5 text-primary-500" />
-                            <span className="font-medium text-neutral-900 truncate">
+                            <span className="font-medium text-neutral-900 dark:text-white truncate">
                               {flow.name}
                             </span>
                           </div>
@@ -349,7 +352,7 @@ export const AppSidebar = () => {
                             {flow.ideas.length}
                           </span>
                         </div>
-                        <div className="flex items-center gap-1.5 text-[10px] text-neutral-500">
+                        <div className="flex items-center gap-1.5 text-[10px] text-neutral-500 dark:text-neutral-400">
                           <div 
                             className="h-2 w-2 rounded-full" 
                             style={{ backgroundColor: flow.boardColor }}

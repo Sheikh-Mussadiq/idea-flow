@@ -1,9 +1,10 @@
+import { memo } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { MessageSquare, Paperclip, MoreHorizontal } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 
-export const KanbanCardContent = ({ idea, onClick, style, className, ...props }) => {
+export const KanbanCardContent = memo(({ idea, onClick, style, className, ...props }) => {
   return (
     <div
       style={style}
@@ -112,9 +113,9 @@ export const KanbanCardContent = ({ idea, onClick, style, className, ...props })
       </div>
     </div>
   );
-};
+});
 
-export const KanbanCard = ({ idea, onClick }) => {
+export const KanbanCard = memo(({ idea, onClick }) => {
   const {
     attributes,
     listeners,
@@ -150,4 +151,5 @@ export const KanbanCard = ({ idea, onClick }) => {
       <KanbanCardContent idea={idea} onClick={onClick} />
     </div>
   );
-};
+});
+
