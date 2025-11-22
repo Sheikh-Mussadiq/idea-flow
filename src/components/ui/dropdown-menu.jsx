@@ -44,7 +44,7 @@ export const DropdownMenuContent = ({
   
   return (
     <div
-      className={`absolute z-50 mt-1 min-w-[10rem] rounded-md border border-neutral-200/60 dark:border-neutral-700 bg-white dark:bg-neutral-900 p-1 shadow-md ${alignmentClass} ${className}`}
+      className={`absolute z-50 mt-1 min-w-[10rem] rounded-xl border border-neutral-200/60 dark:border-neutral-700 bg-white dark:bg-neutral-900 p-1 shadow-md ${alignmentClass} ${className}`}
       {...props}
     />
   );
@@ -59,7 +59,7 @@ export const DropdownMenuItem = ({ className = "", onClick, ...props }) => {
   return (
     <button
       type="button"
-      className={`flex w-full cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-xs text-neutral-900 hover:bg-neutral-100 ${className}`}
+      className={`flex w-full cursor-pointer select-none items-center rounded-md px-2 py-1.5 text-xs text-neutral-900 hover:bg-neutral-100 ${className}`}
       onClick={handleClick}
       {...props}
     />
