@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
-import { mockAIFlows, mockCards, boardCategories } from "../data/mockData.js";
+import { mockAIFlows, boardCategories } from "../data/mockData.js"; // Keeping mockAIFlows for now until flow service integration
 import { ThemeToggle } from "../components/ThemeToggle";
 import { useBoard } from "../context/BoardContext";
 import {
@@ -179,8 +179,7 @@ export const AppSidebar = () => {
                     </div>
                     <ChevronDown className="h-3 w-3 text-neutral-400" />
                   </div>
-                  {boards.filter(board => board.isFavorite && !board.isArchived).map((board) => {
-                    const boardCards = mockCards.filter(card => card.boardId === board.id);
+                  {boards.filter(board => board.is_favorite && !board.is_archived).map((board) => {
                     const isActive = board.id === boardId;
                     
                     return (
@@ -202,9 +201,9 @@ export const AppSidebar = () => {
                         </button>
                         
                         <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                          {boardCards.length > 0 && (
+                          {board.cardCount > 0 && (
                             <span className="text-[10px] font-medium text-neutral-400">
-                              {boardCards.length}
+                              {board.cardCount}
                             </span>
                           )}
                           <DropdownMenu>
@@ -245,13 +244,13 @@ export const AppSidebar = () => {
                       <Plus className="h-3 w-3 text-neutral-400" />
                     </button>
                   </div>
-                  {boards.map((board, index) => {
-                    const boardCards = mockCards.filter(card => card.boardId === board.id);
-                    const isActive = index === 0; // First board is active for demo
+                  {boards.filter(board => !board.is_archived).map((board) => {
+                    const isActive = board.id === boardId;
                     
                     return (
                       <button
                         key={board.id}
+                        onClick={() => navigate(`/boards/${board.id}/kanban`)}
                         className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm font-medium transition-all ${
                           isActive
                             ? "bg-white text-neutral-900 shadow-sm ring-1 ring-neutral-100"
@@ -262,9 +261,9 @@ export const AppSidebar = () => {
                           <span className="text-base">{board.icon}</span>
                           <span className="truncate">{board.name}</span>
                         </div>
-                        {boardCards.length > 0 && (
+                        {board.cardCount > 0 && (
                           <span className="text-[10px] font-medium text-neutral-400">
-                            {boardCards.length}
+                            {board.cardCount}
                           </span>
                         )}
                       </button>
@@ -281,6 +280,7 @@ export const AppSidebar = () => {
                     <ChevronDown className="h-3 w-3 text-neutral-400" />
                   </div>
                   {boardCategories.map((category) => {
+                    // Note: Category filtering might need adjustment if categories aren't in DB yet
                     const categoryBoards = boards.filter(board => board.category === category.name);
                     
                     return (

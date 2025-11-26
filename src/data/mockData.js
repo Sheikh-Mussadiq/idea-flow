@@ -509,3 +509,214 @@ export const mockBoardActivity = [
     icon: "user-check",
   },
 ];
+
+// // Mock AI-generated content ideas
+// export const mockAIIdeas = [
+//   {
+//     title: "Interactive Product Demos",
+//     description:
+//       "Create engaging video demonstrations showing product features in real-world scenarios. Focus on problem-solving aspects and user benefits.",
+//   },
+//   {
+//     title: "Customer Success Stories",
+//     description:
+//       "Share authentic testimonials and case studies from satisfied customers. Include metrics and specific outcomes achieved.",
+//   },
+//   {
+//     title: "Educational Content Series",
+//     description:
+//       "Develop a series of tutorial-style posts teaching valuable skills related to your product. Build authority and trust.",
+//   },
+//   {
+//     title: "Behind-the-Scenes Content",
+//     description:
+//       "Give followers a peek into your company culture, team members, and day-to-day operations. Humanize your brand.",
+//   },
+//   {
+//     title: "Industry Trend Analysis",
+//     description:
+//       "Share insights on current trends affecting your industry. Position your brand as a thought leader.",
+//   },
+//   {
+//     title: "User-Generated Content Campaigns",
+//     description:
+//       "Encourage customers to share their experiences. Feature their content to build community and social proof.",
+//   },
+// ];
+
+// // Mock users (matching Supabase auth.users + public.users structure)
+// export const mockUsers = [
+//   {
+//     id: "11111111-1111-1111-1111-111111111111",
+//     email: "alex@example.com",
+//     full_name: "Alex Morgan",
+//     username: "AlexMorgan",
+//     avatar_url: null,
+//   },
+//   {
+//     id: "22222222-2222-2222-2222-222222222222",
+//     email: "maria@example.com",
+//     full_name: "Maria Chen",
+//     username: "MariaChen",
+//     avatar_url: null,
+//   },
+//   {
+//     id: "33333333-3333-3333-3333-333333333333",
+//     email: "david@example.com",
+//     full_name: "David Kim",
+//     username: "DavidKim",
+//     avatar_url: null,
+//   },
+//   {
+//     id: "44444444-4444-4444-4444-444444444444",
+//     email: "sarah@example.com",
+//     full_name: "Sarah Johnson",
+//     username: "SarahJohnson",
+//     avatar_url: null,
+//   },
+// ];
+
+// // Mock boards
+// export const mockBoards = [
+//   {
+//     id: "b1111111-1111-1111-1111-111111111111",
+//     name: "Content Marketing Strategy",
+//     description: "Planning and executing our Q1 content marketing campaigns",
+//     color: "#6366f1",
+//     icon: "📝",
+//     owner_id: mockUsers[0].id,
+//     is_archived: false,
+//     created_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString(),
+//     updated_at: new Date().toISOString(),
+//   },
+//   {
+//     id: "b2222222-2222-2222-2222-222222222222",
+//     name: "Product Launch",
+//     description: "Coordinating our new product launch activities",
+//     color: "#22c55e",
+//     icon: "🚀",
+//     owner_id: mockUsers[0].id,
+//     is_archived: false,
+//     created_at: new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString(),
+//     updated_at: new Date().toISOString(),
+//   },
+// ];
+
+// // Mock board members
+// export const mockBoardMembers = [
+//   {
+//     board_id: mockBoards[0].id,
+//     user_id: mockUsers[1].id,
+//     role: "editor",
+//   },
+//   {
+//     board_id: mockBoards[0].id,
+//     user_id: mockUsers[2].id,
+//     role: "viewer",
+//   },
+// ];
+
+// // Mock columns
+// export const mockColumns = [
+//   {
+//     id: "c1111111-1111-1111-1111-111111111111",
+//     board_id: mockBoards[0].id,
+//     title: "To Do",
+//     position: 0,
+//   },
+//   {
+//     id: "c2222222-2222-2222-2222-222222222222",
+//     board_id: mockBoards[0].id,
+//     title: "In Progress",
+//     position: 1,
+//   },
+//   {
+//     id: "c3333333-3333-3333-3333-333333333333",
+//     board_id: mockBoards[0].id,
+//     title: "Done",
+//     position: 2,
+//   },
+// ];
+
+// // Mock tags
+// export const mockTags = [
+//   {
+//     id: "t1111111-1111-1111-1111-111111111111",
+//     board_id: mockBoards[0].id,
+//     name: "High Priority",
+//     color: "#ef4444",
+//   },
+//   {
+//     id: "t2222222-2222-2222-2222-222222222222",
+//     board_id: mockBoards[0].id,
+//     name: "Design",
+//     color: "#8b5cf6",
+//   },
+// ];
+
+// // Mock cards
+// export const mockCards = [
+//   {
+//     id: "cd111111-1111-1111-1111-111111111111",
+//     column_id: mockColumns[0].id,
+//     title: "Blog Post: 10 Marketing Trends",
+//     description: "Write comprehensive blog post",
+//     position: 0,
+//     priority: "high",
+//     due_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+//     assigned_to: [mockUsers[1].id],
+//     tags: [mockTags[1].id],
+//     created_at: new Date().toISOString(),
+//     updated_at: new Date().toISOString(),
+//   },
+// ];
+
+// // Mock subtasks
+// export const mockSubtasks = [
+//   {
+//     id: "st111111-1111-1111-1111-111111111111",
+//     card_id: mockCards[0].id,
+//     title: "Research trends",
+//     is_completed: true,
+//     position: 0,
+//   },
+// ];
+
+// // Mock comments
+// export const mockComments = [
+//   {
+//     id: "cm111111-1111-1111-1111-111111111111",
+//     card_id: mockCards[0].id,
+//     user_id: mockUsers[1].id,
+//     text: "Started working on the outline",
+//     created_at: new Date().toISOString(),
+//   },
+// ];
+
+// // Mock AI Flows
+// export const mockAIFlows = [
+//   {
+//     id: "af111111-1111-1111-1111-111111111111",
+//     board_id: mockBoards[0].id,
+//     name: "Content Ideas",
+//     description: "AI generated ideas",
+//   },
+// ];
+
+// // Mock AI Ideas
+// export const mockAIIdeasData = [
+//   {
+//     id: "ai111111-1111-1111-1111-111111111111",
+//     flow_id: mockAIFlows[0].id,
+//     parent_id: null,
+//     title: "Video Series",
+//     description: "Create a video series about product features",
+//   },
+//   {
+//     id: "ai222222-2222-2222-2222-222222222222",
+//     flow_id: mockAIFlows[0].id,
+//     parent_id: "ai111111-1111-1111-1111-111111111111",
+//     title: "Episode 1: Intro",
+//     description: "Introduction to the series",
+//   },
+// ];

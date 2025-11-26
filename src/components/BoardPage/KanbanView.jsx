@@ -3,6 +3,7 @@ import { SynthAIChat } from "./SynthAIChat.jsx";
 
 export const KanbanView = ({
   ideas,
+  columns,
   onOpenComments,
   onMoveCard,
   onViewInFlow,
@@ -19,6 +20,7 @@ export const KanbanView = ({
       <div className="flex-1 overflow-hidden">
         <KanbanBoard
           ideas={ideas}
+          columns={columns}
           onOpenComments={onOpenComments}
           onMoveCard={onMoveCard}
           onViewInFlow={onViewInFlow}

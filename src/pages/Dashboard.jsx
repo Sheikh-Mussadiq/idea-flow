@@ -15,9 +15,15 @@ const Dashboard = () => {
     .sort((a, b) => b.createdAt - a.createdAt)
     .slice(0, 6);
 
-  const handleCreateBoard = () => {
-    const newBoard = createBoard("New Board", "");
-    navigate(`/boards/${newBoard.id}/flow`);
+  const handleCreateBoard = async () => {
+    try {
+      const newBoard = await createBoard("New Board", "");
+      if (newBoard && newBoard.id) {
+        navigate(`/boards/${newBoard.id}/flow`);
+      }
+    } catch (error) {
+      // Error handled in context
+    }
   };
 
   const handleBoardClick = (boardId) => {

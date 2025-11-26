@@ -129,16 +129,24 @@ export const IdeaBoardLayout = ({ initialView = "flow" }) => {
     [currentUserId]
   );
 
-  const currentMemberRole = useMemo(() => {
-    if (!activeBoard) return "viewer";
-    const member = (activeBoard.members || []).find(
-      (m) => m.id === currentUser.id
-    );
-    return member?.role || "viewer";
+  // Check if current user is the board owner
+  const isOwner = useMemo(() => {
+    if (!activeBoard) return false;
+    return activeBoard.owner_id === currentUser.id;
   }, [activeBoard, currentUser.id]);
 
-  const isAdmin = currentMemberRole === "admin";
-  const isViewer = currentMemberRole === "viewer";
+  // Check current user's member role
+  const currentMemberRole = useMemo(() => {
+    if (!activeBoard) return null;
+    const member = (activeBoard.members || []).find(
+      (m) => m.user?.id === currentUser.id || m.user_id === currentUser.id
+    );
+    return member?.role || null;
+  }, [activeBoard, currentUser.id]);
+
+  // User can edit if they are owner OR have editor role
+  const canEdit = isOwner || currentMemberRole === 'editor';
+  const isViewer = !canEdit;
 
   const availableLabels = useMemo(() => {
     if (!activeBoard) return [];
@@ -236,22 +244,30 @@ export const IdeaBoardLayout = ({ initialView = "flow" }) => {
     setFilters(newFilters);
   };
 
-  const handleCreateBoard = () => {
+  const handleCreateBoard = async () => {
     if (!draftBoardName.trim()) return;
-    const newBoard = createBoard(draftBoardName.trim(), draftBoardDescription);
-    setDraftBoardName("");
-    setDraftBoardDescription("");
-    setIsCreateOpen(false);
-    navigate(`/boards/${newBoard.id}/flow`);
+    try {
+      const newBoard = await createBoard(draftBoardName.trim(), draftBoardDescription);
+      setDraftBoardName("");
+      setDraftBoardDescription("");
+      setIsCreateOpen(false);
+      navigate(`/boards/${newBoard.id}/flow`);
+    } catch (error) {
+      // Error handled in context
+    }
   };
 
-  const handleRenameActiveBoard = () => {
-    if (!activeBoard || !draftBoardName.trim() || !isAdmin) return;
-    updateBoard(activeBoard.id, {
-      name: draftBoardName.trim(),
-      settings: { ...activeBoard.settings, description: draftBoardDescription },
-    });
-    setIsSettingsOpen(false);
+  const handleRenameActiveBoard = async () => {
+    if (!activeBoard || !draftBoardName.trim() || !isOwner) return;
+    try {
+      await updateBoard(activeBoard.id, {
+        name: draftBoardName.trim(),
+        settings: { ...activeBoard.settings, description: draftBoardDescription },
+      });
+      setIsSettingsOpen(false);
+    } catch (error) {
+      // Error handled in context
+    }
   };
 
   const handleUpdateIdeas = (updater) => {
@@ -375,6 +391,13 @@ export const IdeaBoardLayout = ({ initialView = "flow" }) => {
     );
   };
 
+  // Move useMemo before early returns to comply with Rules of Hooks
+  const archivedIdeas = useMemo(
+    () =>
+      activeBoard ? activeBoard.ideas.filter((idea) => idea.isArchived) : [],
+    [activeBoard]
+  );
+
   if (notFound) {
     return <BoardNotFound />;
   }
@@ -382,12 +405,6 @@ export const IdeaBoardLayout = ({ initialView = "flow" }) => {
   if (!activeBoard) {
     return null;
   }
-
-  const archivedIdeas = useMemo(
-    () =>
-      activeBoard ? activeBoard.ideas.filter((idea) => idea.isArchived) : [],
-    [activeBoard]
-  );
 
   const handleRestoreTask = (id) => {
     if (!activeBoard) return;
@@ -415,7 +432,8 @@ export const IdeaBoardLayout = ({ initialView = "flow" }) => {
       <BoardHeader
         boards={boards}
         activeBoard={activeBoard}
-        isAdmin={isAdmin}
+        isOwner={isOwner}
+        canEdit={canEdit}
         onOpenCreateBoard={() => {
           setDraftBoardName("");
           setDraftBoardDescription("");
@@ -456,6 +474,7 @@ export const IdeaBoardLayout = ({ initialView = "flow" }) => {
         <FlowContent
           initialView={initialView}
           ideas={filteredIdeas}
+          columns={activeBoard.columns}
           comments={activeBoard.comments}
           onUpdateIdeas={handleUpdateIdeas}
           onUpdateComments={handleUpdateComments}

@@ -10,9 +10,11 @@ import { useIdeaFlowLayout } from "./hooks/useIdeaFlowLayout.js";
 import { toast } from "sonner";
 import { mockAIIdeas } from "../../data/mockData.js";
 import { useNotifications } from "../../context/NotificationsContext";
+import { useBoard } from "../../context/BoardContext";
 
 export const FlowContent = ({
   ideas,
+  columns,
   comments,
   onUpdateIdeas,
   onUpdateComments,
@@ -31,6 +33,7 @@ export const FlowContent = ({
   const [isGenerating, setIsGenerating] = useState(false);
   const [selectedIdeaId, setSelectedIdeaId] = useState(null);
   const [selectedTaskId, setSelectedTaskId] = useState(null);
+  const { createCard, updateCard, deleteCard, createFlowIdea, updateFlowIdea, deleteFlowIdea, currentBoard } = useBoard();
 
   const { fitView, getNodes } = useReactFlow();
 
@@ -123,34 +126,42 @@ export const FlowContent = ({
     setTimeout(() => fitView({ padding: 0.2, duration: 800 }), 100);
   }, [fitView, ideas, isViewer, onUpdateIdeas]);
 
-  const handleAddManualIdea = useCallback((manualIdeaValue) => {
-    if (isViewer) return;
+  const handleAddManualIdea = useCallback(async (manualIdeaValue) => {
+    if (isViewer || !currentBoard) return;
     if (!manualIdeaValue || !manualIdeaValue.trim()) return;
 
     const title = manualIdeaValue.split(" ").slice(0, 8).join(" ");
-    const newIdea = {
-      id: Date.now().toString(),
-      title: title.length < manualIdeaValue.length ? title + "..." : title,
-      description: manualIdeaValue,
-      type: "manual",
-      kanbanStatus: undefined,
-      assignedTo: undefined,
-      dueDate: undefined,
-      priority: null,
-      subtasks: [],
-      attachments: [],
-      labels: [],
-      activity: [],
-      parentId: undefined,
-      isArchived: false,
-      showInFlow: true,
-    };
+    const description = manualIdeaValue;
+    
+    // Get the first flow ID or handle missing flow
+    // For now, we assume the board has at least one flow or we use a default if we can't find one
+    // Ideally, we should create a flow if none exists, but let's try to find one first
+    let flowId = currentBoard.ai_flows?.[0]?.id;
+    
+    if (!flowId) {
+       // If no flow exists, we might need to create one. 
+       // For this iteration, let's assume we can't add without a flow and show an error
+       // Or better, we could create a default flow here if we had createFlow in context.
+       // Let's check if we can fallback or if we should block.
+       // User said "get the current flow id".
+       // If the board was just created, it might not have a flow.
+       // Let's try to use the first available flow.
+       if (currentBoard.ai_flows && currentBoard.ai_flows.length > 0) {
+           flowId = currentBoard.ai_flows[0].id;
+       } else {
+           toast.error("No AI Flow found for this board. Please generate ideas first.");
+           return;
+       }
+    }
 
-    onUpdateIdeas((prevIdeas) => [...prevIdeas, newIdea]);
-    toast.success("Idea added!");
-
-    setTimeout(() => fitView({ padding: 0.2, duration: 800 }), 100);
-  }, [fitView, isViewer, onUpdateIdeas]);
+    try {
+      await createFlowIdea(flowId, title, description);
+      toast.success("Idea added to flow!");
+      setTimeout(() => fitView({ padding: 0.2, duration: 800 }), 100);
+    } catch (error) {
+      // Error handled in context
+    }
+  }, [fitView, isViewer, currentBoard, createFlowIdea]);
 
   const handleClearManualIdeas = useCallback(() => {
     if (isViewer) return;
@@ -161,27 +172,16 @@ export const FlowContent = ({
   }, [isViewer, onUpdateIdeas]);
 
   const handleDeleteIdea = useCallback(
-    (id) => {
+    async (id) => {
       if (isViewer) return;
-      onUpdateIdeas((prevIdeas) => {
-        const toDelete = new Set();
-
-        const collectDescendants = (targetId) => {
-          toDelete.add(targetId);
-          prevIdeas.forEach((idea) => {
-            if (idea.parentId === targetId) {
-              collectDescendants(idea.id);
-            }
-          });
-        };
-
-        collectDescendants(id);
-
-        return prevIdeas.filter((idea) => !toDelete.has(idea.id));
-      });
-      toast.success("Idea deleted!");
+      try {
+        await deleteFlowIdea(id);
+        toast.success("Idea deleted!");
+      } catch (error) {
+        // Error handled in context
+      }
     },
-    [onUpdateIdeas]
+    [deleteFlowIdea, isViewer]
   );
 
   const handleSendToKanban = useCallback(
@@ -199,29 +199,24 @@ export const FlowContent = ({
   );
 
   const handleAssign = useCallback(
-    (id, member) => {
+    async (id, member) => {
       if (isViewer) return;
-      onUpdateIdeas((prevIdeas) =>
-        prevIdeas.map((idea) =>
-          idea.id === id
-            ? {
-                ...idea,
-                assignedTo: member || undefined,
-              }
-            : idea
-        )
-      );
-      
-      if (member) {
-        addNotification({
-          userId: member.id,
-          message: `You were assigned to a task`,
-          type: "assignment",
-          taskId: id,
-        });
+      try {
+        await updateCard(id, { assigned_to: member ? [member.id] : [] });
+        
+        if (member) {
+          addNotification({
+            userId: member.id,
+            message: `You were assigned to a task`,
+            type: "assignment",
+            taskId: id,
+          });
+        }
+      } catch (error) {
+        // Error handled in context
       }
     },
-    [isViewer, onUpdateIdeas, addNotification]
+    [isViewer, updateCard, addNotification]
   );
 
   const handleAddSubIdea = useCallback(
@@ -257,206 +252,6 @@ export const FlowContent = ({
   const handleOpenComments = useCallback((ideaId) => {
     setSelectedIdeaId(ideaId);
   }, []);
-
-  const handleMoveCard = useCallback(
-    (id, status) => {
-      if (isViewer) return;
-      onUpdateIdeas((prevIdeas) =>
-        prevIdeas.map((idea) =>
-          idea.id === id
-            ? {
-                ...idea,
-                kanbanStatus: status,
-              }
-            : idea
-        )
-      );
-      logActivity(id, currentUserName, `Moved card to ${status}`);
-      
-      // Notify assignee if exists
-      const idea = ideas.find(i => i.id === id);
-      if (idea && idea.assignedTo) {
-        addNotification({
-          userId: idea.assignedTo.id,
-          message: `Task '${idea.title}' moved to ${status}`,
-          type: "activity",
-          taskId: id,
-        });
-      }
-    },
-    [isViewer, logActivity, onUpdateIdeas, ideas, currentUserName, addNotification]
-  );
-
-  const handleViewInFlow = useCallback(
-    (ideaId) => {
-      handleChangeView("flow");
-
-      setTimeout(() => {
-        const allNodes = getNodes();
-        const targetNodes = allNodes.filter((node) => node.id === ideaId);
-        if (targetNodes.length === 0) return;
-
-        fitView({
-          nodes: targetNodes,
-          padding: 0.2,
-          duration: 800,
-        });
-      }, 150);
-    },
-    [fitView, getNodes]
-  );
-
-  const handleUpdateTitle = useCallback(
-    (id, title) => {
-      if (isViewer) return;
-      onUpdateIdeas((prevIdeas) =>
-        prevIdeas.map((idea) =>
-          idea.id === id
-            ? {
-                ...idea,
-                title,
-              }
-            : idea
-        )
-      );
-      logActivity(id, currentUserName, "Title updated");
-    },
-    [currentUserName, isViewer, logActivity, onUpdateIdeas]
-  );
-
-  const handleAddAttachment = useCallback(
-    (id, attachment) => {
-      if (isViewer) return;
-      onUpdateIdeas((prevIdeas) =>
-        prevIdeas.map((idea) =>
-          idea.id === id
-            ? {
-                ...idea,
-                attachments: [...idea.attachments, attachment],
-              }
-            : idea
-        )
-      );
-      logActivity(
-        id,
-        currentUserName,
-        `Uploaded attachment: ${attachment.name}`
-      );
-    },
-    [currentUserName, logActivity, onUpdateIdeas]
-  );
-
-  const handleRemoveAttachment = useCallback(
-    (id, attachmentId) => {
-      if (isViewer) return;
-      onUpdateIdeas((prevIdeas) => {
-        let removedName = null;
-        const updated = prevIdeas.map((idea) => {
-          if (idea.id !== id) return idea;
-          const attachments = idea.attachments.filter((att) => {
-            if (att.id === attachmentId) {
-              removedName = att.name;
-              return false;
-            }
-            return true;
-          });
-          return { ...idea, attachments };
-        });
-        if (removedName) {
-          logActivity(
-            id,
-            currentUserName,
-            `Deleted attachment: ${removedName}`
-          );
-        }
-        return updated;
-      });
-    },
-    [currentUserName, logActivity, onUpdateIdeas]
-  );
-
-  const handleArchiveTask = useCallback(
-    (id) => {
-      if (isViewer) return;
-      onUpdateIdeas((prevIdeas) =>
-        prevIdeas.map((idea) =>
-          idea.id === id
-            ? {
-                ...idea,
-                isArchived: true,
-                archivedAt: Date.now(),
-                previousKanbanStatus: idea.kanbanStatus,
-              }
-            : idea
-        )
-      );
-      logActivity(id, currentUserName, "Task archived");
-    },
-    [currentUserName, logActivity, onUpdateIdeas]
-  );
-
-  const handleAddLabel = useCallback(
-    (id, label) => {
-      if (isViewer) return;
-      onUpdateIdeas((prevIdeas) =>
-        prevIdeas.map((idea) =>
-          idea.id === id
-            ? {
-                ...idea,
-                labels: idea.labels.find((l) => l.id === label.id)
-                  ? idea.labels
-                  : [...idea.labels, label],
-              }
-            : idea
-        )
-      );
-      logActivity(id, currentUserName, `Added label: ${label.name}`);
-    },
-    [currentUserName, logActivity, onUpdateIdeas]
-  );
-
-  const handleRemoveLabel = useCallback(
-    (id, labelId) => {
-      if (isViewer) return;
-      onUpdateIdeas((prevIdeas) => {
-        let removedName = null;
-        const updated = prevIdeas.map((idea) => {
-          if (idea.id !== id) return idea;
-          const labels = idea.labels.filter((label) => {
-            if (label.id === labelId) {
-              removedName = label.name;
-              return false;
-            }
-            return true;
-          });
-          return { ...idea, labels };
-        });
-        if (removedName) {
-          logActivity(id, currentUserName, `Removed label: ${removedName}`);
-        }
-        return updated;
-      });
-    },
-    [currentUserName, logActivity, onUpdateIdeas]
-  );
-
-  const handleUpdateDescription = useCallback(
-    (id, description) => {
-      if (isViewer) return;
-      onUpdateIdeas((prevIdeas) =>
-        prevIdeas.map((idea) =>
-          idea.id === id
-            ? {
-                ...idea,
-                description,
-              }
-            : idea
-        )
-      );
-      logActivity(id, currentUserName, "Description updated");
-    },
-    [currentUserName, logActivity, onUpdateIdeas]
-  );
 
   const handleAddComment = useCallback(
     (text) => {
@@ -546,25 +341,20 @@ export const FlowContent = ({
   );
 
   const handleDueDateChange = useCallback(
-    (id, date) => {
+    async (id, date) => {
       if (isViewer) return;
-      onUpdateIdeas((prevIdeas) =>
-        prevIdeas.map((idea) =>
-          idea.id === id
-            ? {
-                ...idea,
-                dueDate: date || undefined,
-              }
-            : idea
-        )
-      );
-      logActivity(
-        id,
-        currentUserName,
-        date ? `Due date set to ${date}` : "Due date cleared"
-      );
+      try {
+        await updateCard(id, { due_date: date });
+        logActivity(
+          id,
+          currentUserName,
+          date ? `Due date set to ${date}` : "Due date cleared"
+        );
+      } catch (error) {
+        // Error handled in context
+      }
     },
-    [currentUserName, logActivity, onUpdateIdeas]
+    [currentUserName, logActivity, isViewer, updateCard]
   );
 
   const handleOpenTask = useCallback((id) => {
@@ -576,26 +366,21 @@ export const FlowContent = ({
   }, []);
 
   const handlePriorityChange = useCallback(
-    (id, priority) => {
+    async (id, priority) => {
       if (isViewer) return;
-      onUpdateIdeas((prevIdeas) =>
-        prevIdeas.map((idea) =>
-          idea.id === id
-            ? {
-                ...idea,
-                priority,
-              }
-            : idea
-        )
-      );
+      try {
+        await updateCard(id, { priority });
 
-      if (priority) {
-        const label =
-          priority.charAt(0).toUpperCase() + priority.slice(1).toLowerCase();
-        logActivity(id, currentUserName, `Priority changed to ${label}`);
+        if (priority) {
+          const label =
+            priority.charAt(0).toUpperCase() + priority.slice(1).toLowerCase();
+          logActivity(id, currentUserName, `Priority changed to ${label}`);
+        }
+      } catch (error) {
+        // Error handled in context
       }
     },
-    [currentUserName, logActivity, onUpdateIdeas]
+    [currentUserName, logActivity, isViewer, updateCard]
   );
 
   const handleAddSubtask = useCallback(
@@ -684,6 +469,150 @@ export const FlowContent = ({
     [currentUserName, logActivity, onUpdateIdeas]
   );
 
+  const handleUpdateTitle = useCallback(
+    async (id, title) => {
+      if (isViewer) return;
+      try {
+        await updateFlowIdea(id, { title });
+        logActivity(id, currentUserName, "Updated title");
+      } catch (error) {
+        // Error handled in context
+      }
+    },
+    [currentUserName, logActivity, isViewer, updateFlowIdea]
+  );
+
+  const handleUpdateDescription = useCallback(
+    async (id, description) => {
+      if (isViewer) return;
+      try {
+        await updateFlowIdea(id, { description });
+        logActivity(id, currentUserName, "Updated description");
+      } catch (error) {
+        // Error handled in context
+      }
+    },
+    [currentUserName, logActivity, isViewer, updateFlowIdea]
+  );
+
+  const handleAddAttachment = useCallback(
+    (id, attachment) => {
+      if (isViewer) return;
+      // TODO: Implement attachment upload via attachmentService
+      onUpdateIdeas((prevIdeas) =>
+        prevIdeas.map((idea) =>
+          idea.id === id
+            ? {
+                ...idea,
+                attachments: [...idea.attachments, attachment],
+              }
+            : idea
+        )
+      );
+      logActivity(id, currentUserName, `Added attachment: ${attachment.name}`);
+    },
+    [currentUserName, logActivity, onUpdateIdeas, isViewer]
+  );
+
+  const handleRemoveAttachment = useCallback(
+    (id, attachmentId) => {
+      if (isViewer) return;
+      // TODO: Implement attachment deletion via attachmentService
+      onUpdateIdeas((prevIdeas) =>
+        prevIdeas.map((idea) =>
+          idea.id === id
+            ? {
+                ...idea,
+                attachments: idea.attachments.filter((a) => a.id !== attachmentId),
+              }
+            : idea
+        )
+      );
+      logActivity(id, currentUserName, "Removed attachment");
+    },
+    [currentUserName, logActivity, onUpdateIdeas, isViewer]
+  );
+
+  const handleAddLabel = useCallback(
+    async (id, labelId) => {
+      if (isViewer) return;
+      try {
+        const idea = ideas.find(i => i.id === id);
+        const currentTags = idea?.tags || [];
+        await updateCard(id, { tags: [...currentTags, labelId] });
+        logActivity(id, currentUserName, "Added label");
+      } catch (error) {
+        // Error handled in context
+      }
+    },
+    [currentUserName, logActivity, ideas, isViewer, updateCard]
+  );
+
+  const handleRemoveLabel = useCallback(
+    async (id, labelId) => {
+      if (isViewer) return;
+      try {
+        const idea = ideas.find(i => i.id === id);
+        const currentTags = idea?.tags || [];
+        await updateCard(id, { tags: currentTags.filter(t => t !== labelId) });
+        logActivity(id, currentUserName, "Removed label");
+      } catch (error) {
+        // Error handled in context
+      }
+    },
+    [currentUserName, logActivity, ideas, isViewer, updateCard]
+  );
+
+  const handleArchiveTask = useCallback(
+    (id) => {
+      if (isViewer) return;
+      onUpdateIdeas((prevIdeas) =>
+        prevIdeas.map((idea) =>
+          idea.id === id
+            ? {
+                ...idea,
+                isArchived: true,
+                archivedAt: Date.now(),
+                previousKanbanStatus: idea.kanbanStatus,
+              }
+            : idea
+        )
+      );
+      logActivity(id, currentUserName, "Archived task");
+      handleCloseTask();
+    },
+    [currentUserName, handleCloseTask, logActivity, onUpdateIdeas, isViewer]
+  );
+
+  const handleMoveCard = useCallback(
+    async (cardId, columnId) => {
+      if (isViewer || !currentBoard) return;
+      try {
+        const column = currentBoard.columns?.find(c => c.id === columnId);
+        if (!column) return;
+        
+        // Calculate new position (end of column)
+        const cardsInColumn = ideas.filter(i => i.kanbanStatus === column.title);
+        const position = cardsInColumn.length > 0 
+          ? Math.max(...cardsInColumn.map(c => c.position || 0)) + 1000 
+          : 0;
+
+        await updateCard(cardId, { column_id: columnId, position });
+      } catch (error) {
+        // Error handled in context
+      }
+    },
+    [currentBoard, ideas, isViewer, updateCard]
+  );
+
+  const handleViewInFlow = useCallback(
+    (id) => {
+      // TODO: Implement view in flow - scroll to node in flow view
+      handleChangeView("flow");
+    },
+    [handleChangeView]
+  );
+
   const inputNodeData = useMemo(
     () => ({
       mode,
@@ -725,35 +654,33 @@ export const FlowContent = ({
     ? comments[selectedTaskId] || []
     : [];
 
-  const handleAddTask = useCallback(
-    (status = "Backlog") => {
-      if (isViewer) return;
-      const title = "New Task";
-      const newIdea = {
-        id: Date.now().toString(),
-        title,
-        description: "",
-        type: "manual",
-        kanbanStatus: status,
-        assignedTo: undefined,
-        dueDate: undefined,
-        priority: null,
-        subtasks: [],
-        attachments: [],
-        labels: [],
-        activity: [],
-        parentId: undefined,
-        isArchived: false,
-        showInFlow: false,
-      };
 
-      onUpdateIdeas((prevIdeas) => [...prevIdeas, newIdea]);
-      toast.success("Task added!");
+
+  const handleAddTask = useCallback(
+    async (status = "Backlog") => {
+      if (isViewer || !currentBoard) return;
       
-      // Log activity
-      logActivity(newIdea.id, currentUserName, `Created task in ${status}`);
+      // Find column ID for the status
+      const column = currentBoard.columns?.find(c => c.title === status);
+      if (!column) {
+        toast.error(`Column "${status}" not found`);
+        return;
+      }
+
+      // Calculate position (end of list)
+      const cardsInColumn = ideas.filter(i => i.kanbanStatus === status);
+      const position = cardsInColumn.length > 0 
+        ? Math.max(...cardsInColumn.map(c => c.position || 0)) + 1000 
+        : 0;
+
+      try {
+        await createCard(currentBoard.id, column.id, "New Task", position);
+        toast.success("Task added!");
+      } catch (error) {
+        // Error handled in context
+      }
     },
-    [currentUserName, isViewer, logActivity, onUpdateIdeas]
+    [currentBoard, createCard, ideas, isViewer]
   );
 
   return (
@@ -771,6 +698,7 @@ export const FlowContent = ({
       {viewMode === "kanban" && (
         <KanbanView
           ideas={ideas}
+          columns={columns}
           onOpenComments={handleOpenComments}
           onMoveCard={handleMoveCard}
           onViewInFlow={handleViewInFlow}

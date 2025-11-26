@@ -7,7 +7,9 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { NotificationsProvider } from "./context/NotificationsContext";
 import { ThemeProvider } from "./context/ThemeContext";
 import { BoardProvider } from "./context/BoardContext";
+import { AuthProvider } from "./context/AuthContext";
 import ErrorBoundary from "./components/ErrorBoundary";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 // Lazy load pages for better performance
 const Dashboard = lazy(() => import("./pages/Dashboard.jsx"));
@@ -15,6 +17,7 @@ const BoardPage = lazy(() => import("./pages/BoardPage.jsx"));
 const AnalyticsPage = lazy(() => import("./pages/AnalyticsPage.jsx"));
 const SettingsPage = lazy(() => import("./pages/SettingsPage.jsx"));
 const NotFound = lazy(() => import("./pages/NotFound.jsx"));
+const LoginSignUpPage = lazy(() => import("./pages/LoginSignUpPage.jsx"));
 
 // Loading component
 const PageLoader = () => (
@@ -27,45 +30,69 @@ const PageLoader = () => (
 );
 
 const App = () => (
-  <ThemeProvider>
-    <NotificationsProvider>
-      <BoardProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <ErrorBoundary>
-              <Suspense fallback={<PageLoader />}>
-                <Routes>
-                  {/* Dashboard - Home */}
-                  <Route path="/" element={<Dashboard />} />
+  <AuthProvider>
+    <ThemeProvider>
+      <NotificationsProvider>
+        <BoardProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <ErrorBoundary>
+                <Suspense fallback={<PageLoader />}>
+                  <Routes>
+                    {/* Public Auth Route */}
+                    <Route path="/auth" element={<LoginSignUpPage />} />
 
-                  {/* Board Routes with dynamic IDs */}
-                  <Route path="/boards/:boardId" element={<BoardPage />}>
-                    <Route index element={<Navigate to="flow" replace />} />
-                    <Route path="flow" element={<BoardPage initialView="flow" />} />
-                    <Route path="kanban" element={<BoardPage initialView="kanban" />} />
-                    <Route path="table" element={<BoardPage initialView="table" />} />
-                  </Route>
+                    {/* Protected Routes */}
+                    <Route
+                      path="/"
+                      element={
+                        <ProtectedRoute>
+                          <Dashboard />
+                        </ProtectedRoute>
+                      }
+                    />
 
-                  {/* Legacy routes - redirect to new structure */}
-                  <Route path="/flow" element={<Navigate to="/" replace />} />
-                  <Route path="/tasks" element={<Navigate to="/" replace />} />
+                    {/* Board Routes with dynamic IDs */}
+                    <Route path="/boards/:boardId" element={
+                        <ProtectedRoute>
+                            <BoardPage />
+                        </ProtectedRoute>
+                    }>
+                      <Route index element={<Navigate to="flow" replace />} />
+                      <Route path="flow" element={<BoardPage initialView="flow" />} />
+                      <Route path="kanban" element={<BoardPage initialView="kanban" />} />
+                      <Route path="table" element={<BoardPage initialView="table" />} />
+                    </Route>
 
-                  {/* Global routes */}
-                  <Route path="/analytics" element={<AnalyticsPage />} />
-                  <Route path="/settings" element={<SettingsPage />} />
+                    {/* Legacy routes - redirect to new structure */}
+                    <Route path="/flow" element={<Navigate to="/" replace />} />
+                    <Route path="/tasks" element={<Navigate to="/" replace />} />
 
-                  {/* 404 - Catch all */}
-                  <Route path="*" element={<NotFound />} />
-                </Routes>
-              </Suspense>
-            </ErrorBoundary>
-          </BrowserRouter>
-        </TooltipProvider>
-      </BoardProvider>
-    </NotificationsProvider>
-  </ThemeProvider>
+                    {/* Global routes */}
+                    <Route path="/analytics" element={
+                        <ProtectedRoute>
+                            <AnalyticsPage />
+                        </ProtectedRoute>
+                    } />
+                    <Route path="/settings" element={
+                        <ProtectedRoute>
+                            <SettingsPage />
+                        </ProtectedRoute>
+                    } />
+
+                    {/* 404 - Catch all */}
+                    <Route path="*" element={<NotFound />} />
+                  </Routes>
+                </Suspense>
+              </ErrorBoundary>
+            </BrowserRouter>
+          </TooltipProvider>
+        </BoardProvider>
+      </NotificationsProvider>
+    </ThemeProvider>
+  </AuthProvider>
 );
 
 export default App;
