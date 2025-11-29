@@ -1,7 +1,7 @@
 import { useMemo, useEffect, useRef } from "react";
 import { useReactFlow, useNodesState } from "reactflow";
-import { InputNode } from "../InputNode.jsx";
-import { IdeaNode } from "../IdeaNode.jsx";
+import { InputNode } from "../Flow/InputNode.jsx";
+import { IdeaNode } from "../Flow/IdeaNode.jsx";
 import { mockComments, mockCommenters } from "../../../data/mockData.js";
 
 export const useIdeaFlowLayout = (
@@ -27,7 +27,7 @@ export const useIdeaFlowLayout = (
   const draggedNodesRef = useRef(new Set());
 
   useEffect(() => {
-    const flowIdeas = ideas.filter(idea => idea.showInFlow !== false);
+    const flowIdeas = ideas.filter((idea) => idea.showInFlow !== false);
     const currentIdeaIds = new Set(flowIdeas.map((idea) => idea.id));
     draggedNodesRef.current.forEach((id) => {
       if (!currentIdeaIds.has(id)) {

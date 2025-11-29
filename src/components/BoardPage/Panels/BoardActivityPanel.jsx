@@ -1,7 +1,17 @@
-import { X, Plus, Move, MessageSquare, UserPlus, UserCheck, Tag, Trash2, Layout } from "lucide-react";
-import { Button } from "../ui/button";
-import { Avatar, AvatarFallback } from "../ui/avatar";
-import { mockBoardActivity } from "../../data/mockData";
+import {
+  X,
+  Plus,
+  Move,
+  MessageSquare,
+  UserPlus,
+  UserCheck,
+  Tag,
+  Trash2,
+  Layout,
+} from "lucide-react";
+import { Button } from "../../ui/button";
+import { Avatar, AvatarFallback } from "../../ui/avatar";
+import { mockBoardActivity } from "../../../data/mockData";
 
 const activityIcons = {
   plus: Plus,
@@ -52,7 +62,7 @@ export const BoardActivityPanel = ({ isOpen, onClose }) => {
           <div className="space-y-6">
             {mockBoardActivity.map((activity) => {
               const IconComponent = activityIcons[activity.icon] || Layout;
-              
+
               return (
                 <div key={activity.id} className="flex gap-4">
                   {/* Avatar */}
@@ -67,18 +77,19 @@ export const BoardActivityPanel = ({ isOpen, onClose }) => {
                     <div className="flex items-start gap-2">
                       <div className="flex-1">
                         <p className="text-sm text-neutral-900 dark:text-neutral-100">
-                          <span className="font-semibold">{activity.user.name}</span>
-                          {" "}
+                          <span className="font-semibold">
+                            {activity.user.name}
+                          </span>{" "}
                           <span className="text-neutral-600 dark:text-neutral-400">
                             {activity.action}
-                          </span>
-                          {" "}
+                          </span>{" "}
                           <span className="font-medium text-neutral-900 dark:text-white">
                             {activity.target}
                           </span>
                           {activity.details && (
                             <span className="text-neutral-600 dark:text-neutral-400">
-                              {" "}{activity.details}
+                              {" "}
+                              {activity.details}
                             </span>
                           )}
                         </p>
@@ -86,7 +97,7 @@ export const BoardActivityPanel = ({ isOpen, onClose }) => {
                           {activity.timestamp}
                         </p>
                       </div>
-                      
+
                       {/* Icon */}
                       <div className="h-8 w-8 rounded-lg bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center shrink-0">
                         <IconComponent className="h-4 w-4 text-neutral-600 dark:text-neutral-400" />

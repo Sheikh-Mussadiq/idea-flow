@@ -1,9 +1,9 @@
 import { X, Send, ThumbsUp, Heart } from "lucide-react";
-import { Button } from "../ui/button";
-import { Input } from "../ui/input";
-import { Avatar, AvatarFallback } from "../ui/avatar";
+import { Button } from "../../ui/button";
+import { Input } from "../../ui/input";
+import { Avatar, AvatarFallback } from "../../ui/avatar";
 import { useState } from "react";
-import { useNotifications } from "../../context/NotificationsContext";
+import { useNotifications } from "../../../context/NotificationsContext";
 
 export const CommentPanel = ({
   isOpen,
@@ -23,7 +23,7 @@ export const CommentPanel = ({
     if (!canComment) return;
     if (newComment.trim()) {
       onAddComment(newComment);
-      
+
       // Trigger notifications
       if (newComment.includes("@")) {
         // Mention notification
@@ -42,7 +42,7 @@ export const CommentPanel = ({
           taskId: ideaId,
         });
       }
-      
+
       setNewComment("");
     }
   };

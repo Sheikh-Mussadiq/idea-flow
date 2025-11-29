@@ -1,6 +1,6 @@
 import { useRef } from "react";
 import { Handle, Position } from "reactflow";
-import { Button } from "../ui/button";
+import { Button } from "../../ui/button";
 import { Sparkles, Plus, RotateCw, Trash2 } from "lucide-react";
 
 export const InputNode = ({ data }) => {
@@ -33,7 +33,7 @@ export const InputNode = ({ data }) => {
   };
 
   return (
-    <div 
+    <div
       className="bg-white dark:bg-neutral-900 rounded-2xl shadow-xl py-4 px-8 border border-neutral-200/60 dark:border-neutral-700/60 min-w-[600px]"
       onClick={(e) => e.stopPropagation()}
     >

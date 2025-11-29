@@ -1,8 +1,16 @@
-import { Plus, Calendar, MessageSquare, MoreVertical, GripVertical, Link as LinkIcon, User as UserIcon } from "lucide-react";
-import { Button } from "../ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+import {
+  Plus,
+  Calendar,
+  MessageSquare,
+  MoreVertical,
+  GripVertical,
+  Link as LinkIcon,
+  User as UserIcon,
+} from "lucide-react";
+import { Button } from "../../ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "../../ui/avatar";
 import { useMemo, useState } from "react";
-import { useBoard } from "../../context/BoardContext";
+import { useBoard } from "../../../context/BoardContext";
 import {
   DndContext,
   DragOverlay,
@@ -23,7 +31,12 @@ import { CSS } from "@dnd-kit/utilities";
 import { createPortal } from "react-dom";
 
 // Sortable Task Item Component
-const SortableTaskItem = ({ task, onOpenTask, getStatusColor, getPriorityColor }) => {
+const SortableTaskItem = ({
+  task,
+  onOpenTask,
+  getStatusColor,
+  getPriorityColor,
+}) => {
   const {
     attributes,
     listeners,
@@ -70,7 +83,11 @@ const SortableTaskItem = ({ task, onOpenTask, getStatusColor, getPriorityColor }
       </div>
 
       {/* Priority Dot */}
-      <div className={`h-2 w-2 rounded-full shrink-0 ${getPriorityColor(task.priority)}`} />
+      <div
+        className={`h-2 w-2 rounded-full shrink-0 ${getPriorityColor(
+          task.priority
+        )}`}
+      />
 
       {/* Title */}
       <div className="flex-1 min-w-0 flex items-center gap-3">
@@ -111,12 +128,20 @@ const SortableTaskItem = ({ task, onOpenTask, getStatusColor, getPriorityColor }
         </div>
 
         {/* Status Badge (Pill) */}
-        <div className={`px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wide ${getStatusColor(task.kanbanStatus)}`}>
+        <div
+          className={`px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wide ${getStatusColor(
+            task.kanbanStatus
+          )}`}
+        >
           {task.kanbanStatus}
         </div>
 
         {/* Actions Menu */}
-        <Button variant="ghost" size="icon" className="h-8 w-8 text-neutral-400 dark:text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100 opacity-0 group-hover:opacity-100 transition-opacity">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 text-neutral-400 dark:text-neutral-500 hover:text-neutral-900 dark:hover:text-neutral-100 opacity-0 group-hover:opacity-100 transition-opacity"
+        >
           <MoreVertical className="h-4 w-4" />
         </Button>
       </div>
@@ -125,7 +150,14 @@ const SortableTaskItem = ({ task, onOpenTask, getStatusColor, getPriorityColor }
 };
 
 // Droppable Status Group Component
-const StatusGroup = ({ status, tasks, onAddTask, onOpenTask, getStatusColor, getPriorityColor }) => {
+const StatusGroup = ({
+  status,
+  tasks,
+  onAddTask,
+  onOpenTask,
+  getStatusColor,
+  getPriorityColor,
+}) => {
   const { setNodeRef, isOver } = useDroppable({
     id: status,
     data: {
@@ -139,12 +171,16 @@ const StatusGroup = ({ status, tasks, onAddTask, onOpenTask, getStatusColor, get
       {/* Group Header */}
       <div className="flex items-center justify-between px-1">
         <div className="flex items-center gap-3">
-          <h3 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">{status}</h3>
-          <span className="text-xs font-medium text-neutral-700 dark:text-neutral-300 bg-white dark:bg-neutral-800 px-2 py-1 rounded-full">{tasks.length}</span>
+          <h3 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
+            {status}
+          </h3>
+          <span className="text-xs font-medium text-neutral-700 dark:text-neutral-300 bg-white dark:bg-neutral-800 px-2 py-1 rounded-full">
+            {tasks.length}
+          </span>
         </div>
-        <Button 
-          variant="ghost" 
-          size="sm" 
+        <Button
+          variant="ghost"
+          size="sm"
           onClick={() => onAddTask(status)}
           className="h-6 text-xs font-medium text-neutral-900 dark:text-neutral-100 hover:text-neutral-900 dark:hover:text-neutral-100 hover:bg-neutral-200 dark:hover:bg-neutral-800"
         >
@@ -154,20 +190,27 @@ const StatusGroup = ({ status, tasks, onAddTask, onOpenTask, getStatusColor, get
       </div>
 
       {/* Tasks List */}
-      <div 
+      <div
         ref={setNodeRef}
-        className={`space-y-2 min-h-[50px] rounded-xl transition-colors ${isOver ? 'bg-neutral-100/50 dark:bg-neutral-800/50 ring-2 ring-primary-100 dark:ring-primary-900' : ''}`}
+        className={`space-y-2 min-h-[50px] rounded-xl transition-colors ${
+          isOver
+            ? "bg-neutral-100/50 dark:bg-neutral-800/50 ring-2 ring-primary-100 dark:ring-primary-900"
+            : ""
+        }`}
       >
-        <SortableContext items={tasks.map(t => t.id)} strategy={verticalListSortingStrategy}>
+        <SortableContext
+          items={tasks.map((t) => t.id)}
+          strategy={verticalListSortingStrategy}
+        >
           {tasks.length === 0 ? (
-             <div className="px-4 py-8 border border-dashed border-neutral-200 dark:border-neutral-700 rounded-xl flex flex-col items-center justify-center text-neutral-400 dark:text-neutral-500 bg-white/50 dark:bg-neutral-800/50">
-                <p className="text-sm">No tasks in {status}</p>
-             </div>
+            <div className="px-4 py-8 border border-dashed border-neutral-200 dark:border-neutral-700 rounded-xl flex flex-col items-center justify-center text-neutral-400 dark:text-neutral-500 bg-white/50 dark:bg-neutral-800/50">
+              <p className="text-sm">No tasks in {status}</p>
+            </div>
           ) : (
             tasks.map((task) => (
-              <SortableTaskItem 
-                key={task.id} 
-                task={task} 
+              <SortableTaskItem
+                key={task.id}
+                task={task}
                 onOpenTask={onOpenTask}
                 getStatusColor={getStatusColor}
                 getPriorityColor={getPriorityColor}
@@ -192,11 +235,11 @@ export const ListView = ({ onAddTask, onOpenTask }) => {
     const groups = {
       "To Do": [],
       "In Progress": [],
-      "Review": [],
-      "Done": []
+      Review: [],
+      Done: [],
     };
 
-    ideas.forEach(idea => {
+    ideas.forEach((idea) => {
       if (idea.kanbanStatus && groups[idea.kanbanStatus]) {
         groups[idea.kanbanStatus].push(idea);
       } else if (idea.kanbanStatus) {
@@ -212,19 +255,27 @@ export const ListView = ({ onAddTask, onOpenTask }) => {
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'To Do': return 'bg-neutral-200 text-neutral-700';
-      case 'In Progress': return 'bg-blue-100 text-blue-700';
-      case 'Review': return 'bg-purple-100 text-purple-700';
-      case 'Done': return 'bg-green-100 text-green-700';
-      default: return 'bg-neutral-100 text-neutral-600';
+      case "To Do":
+        return "bg-neutral-200 text-neutral-700";
+      case "In Progress":
+        return "bg-blue-100 text-blue-700";
+      case "Review":
+        return "bg-purple-100 text-purple-700";
+      case "Done":
+        return "bg-green-100 text-green-700";
+      default:
+        return "bg-neutral-100 text-neutral-600";
     }
   };
 
   const getPriorityColor = (priority) => {
     switch (priority) {
-      case 'High': return 'bg-red-500';
-      case 'Medium': return 'bg-yellow-500';
-      default: return 'bg-neutral-300';
+      case "High":
+        return "bg-red-500";
+      case "Medium":
+        return "bg-yellow-500";
+      default:
+        return "bg-neutral-300";
     }
   };
 
@@ -258,7 +309,7 @@ export const ListView = ({ onAddTask, onOpenTask }) => {
     const overId = over.id;
 
     // Find the active task
-    const activeTask = ideas.find(i => i.id === activeId);
+    const activeTask = ideas.find((i) => i.id === activeId);
     if (!activeTask) return;
 
     // Determine the target status
@@ -267,10 +318,10 @@ export const ListView = ({ onAddTask, onOpenTask }) => {
     // If dropped over a column (status group)
     if (over.data.current?.type === "Column") {
       targetStatus = over.data.current.status;
-    } 
+    }
     // If dropped over another task
     else if (over.data.current?.type === "Task") {
-      const overTask = ideas.find(i => i.id === overId);
+      const overTask = ideas.find((i) => i.id === overId);
       if (overTask) {
         targetStatus = overTask.kanbanStatus;
       }
@@ -280,7 +331,7 @@ export const ListView = ({ onAddTask, onOpenTask }) => {
 
     // Case 1: Moving to a different status
     if (targetStatus !== activeTask.kanbanStatus) {
-      const updatedIdeas = ideas.map(idea => {
+      const updatedIdeas = ideas.map((idea) => {
         if (idea.id === activeId) {
           return { ...idea, kanbanStatus: targetStatus };
         }
@@ -292,16 +343,18 @@ export const ListView = ({ onAddTask, onOpenTask }) => {
     // Case 2: Reordering within the same status
     else if (activeId !== overId) {
       // Get all tasks with the same status
-      const tasksInStatus = ideas.filter(i => i.kanbanStatus === targetStatus);
-      const activeIndex = tasksInStatus.findIndex(t => t.id === activeId);
-      const overIndex = tasksInStatus.findIndex(t => t.id === overId);
+      const tasksInStatus = ideas.filter(
+        (i) => i.kanbanStatus === targetStatus
+      );
+      const activeIndex = tasksInStatus.findIndex((t) => t.id === activeId);
+      const overIndex = tasksInStatus.findIndex((t) => t.id === overId);
 
       if (activeIndex !== -1 && overIndex !== -1) {
         // Reorder tasks within the status
         const reorderedTasks = arrayMove(tasksInStatus, activeIndex, overIndex);
-        
+
         // Merge back with other tasks
-        const otherTasks = ideas.filter(i => i.kanbanStatus !== targetStatus);
+        const otherTasks = ideas.filter((i) => i.kanbanStatus !== targetStatus);
         const updatedIdeas = [...otherTasks, ...reorderedTasks];
 
         updateBoard(activeBoard.id, { ideas: updatedIdeas });
@@ -317,7 +370,6 @@ export const ListView = ({ onAddTask, onOpenTask }) => {
       onDragEnd={handleDragEnd}
     >
       <div className="h-full w-full bg-white dark:bg-neutral-950 flex flex-col overflow-hidden">
-
         {/* Content Area */}
         <div className="flex-1 overflow-y-auto custom-scrollbar px-6 py-4 space-y-3">
           {Object.entries(groupedTasks).map(([status, tasks]) => (
@@ -335,19 +387,35 @@ export const ListView = ({ onAddTask, onOpenTask }) => {
 
         {/* Drag Overlay */}
         {createPortal(
-          <DragOverlay dropAnimation={{ sideEffects: defaultDropAnimationSideEffects({ styles: { active: { opacity: '0.5' } } }) }}>
+          <DragOverlay
+            dropAnimation={{
+              sideEffects: defaultDropAnimationSideEffects({
+                styles: { active: { opacity: "0.5" } },
+              }),
+            }}
+          >
             {activeDragItem && (
-              <div 
-                style={{ width: activeDragWidth ? `${activeDragWidth}px` : 'auto' }}
+              <div
+                style={{
+                  width: activeDragWidth ? `${activeDragWidth}px` : "auto",
+                }}
                 className="bg-white dark:bg-neutral-800 border border-neutral-200/60 dark:border-neutral-700 rounded-xl p-3 shadow-2xl flex items-center gap-4 rotate-2 cursor-grabbing"
               >
-                 <div className={`h-2 w-2 rounded-full shrink-0 ${getPriorityColor(activeDragItem.priority)}`} />
-                 <span className="font-medium text-sm text-neutral-900 dark:text-neutral-100 truncate flex-1">
-                    {activeDragItem.title}
-                 </span>
-                 <div className={`px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wide ${getStatusColor(activeDragItem.kanbanStatus)}`}>
-                    {activeDragItem.kanbanStatus}
-                 </div>
+                <div
+                  className={`h-2 w-2 rounded-full shrink-0 ${getPriorityColor(
+                    activeDragItem.priority
+                  )}`}
+                />
+                <span className="font-medium text-sm text-neutral-900 dark:text-neutral-100 truncate flex-1">
+                  {activeDragItem.title}
+                </span>
+                <div
+                  className={`px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wide ${getStatusColor(
+                    activeDragItem.kanbanStatus
+                  )}`}
+                >
+                  {activeDragItem.kanbanStatus}
+                </div>
               </div>
             )}
           </DragOverlay>,

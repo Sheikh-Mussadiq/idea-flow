@@ -1,7 +1,7 @@
 import { ReactFlowProvider } from "reactflow";
 import "reactflow/dist/style.css";
 import { AppLayout } from "../layouts/AppLayout.jsx";
-import { IdeaBoardLayout } from "../components/BoardPage/IdeaBoardLayout.jsx";
+import { IdeaBoardLayout } from "../layouts/IdeaBoardLayout";
 
 const BoardPage = ({ initialView = "flow" }) => {
   return (

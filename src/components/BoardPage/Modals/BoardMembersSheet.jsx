@@ -5,11 +5,11 @@ import {
   SheetHeader,
   SheetTitle,
   SheetDescription,
-} from "../ui/sheet";
-import { Avatar, AvatarFallback } from "../ui/avatar";
-import { Button } from "../ui/button";
-import { Input } from "../ui/input";
-import { useNotifications } from "../../context/NotificationsContext";
+} from "../../ui/sheet";
+import { Avatar, AvatarFallback } from "../../ui/avatar";
+import { Button } from "../../ui/button";
+import { Input } from "../../ui/input";
+import { useNotifications } from "../../../context/NotificationsContext";
 
 function InviteForm({ activeBoard, setBoards, currentUser }) {
   const { addNotification } = useNotifications();

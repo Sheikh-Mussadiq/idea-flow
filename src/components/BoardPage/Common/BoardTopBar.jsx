@@ -9,13 +9,13 @@ import {
   GitFork,
   Plus,
 } from "lucide-react";
-import { Button } from "../ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
-import { NotificationBell } from "../Notifications/NotificationBell";
-import { BoardActionsMenu } from "./BoardActionsMenu";
-import { BoardActivityPanel } from "./BoardActivityPanel";
-import { BoardSettingsModal } from "./BoardSettingsModal";
-import { ShareBoardModal } from "./ShareBoardModal";
+import { Button } from "../../ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "../../ui/avatar";
+import { NotificationBell } from "../../Notifications/NotificationBell";
+import { BoardActionsMenu } from "../Modals/BoardActionsMenu";
+import { BoardActivityPanel } from "../Panels/BoardActivityPanel";
+import { BoardSettingsModal } from "../Modals/BoardSettingsModal";
+import { ShareBoardModal } from "../Modals/ShareBoardModal";
 import { toast } from "sonner";
 import { useState } from "react";
 
@@ -38,7 +38,7 @@ export function BoardHeader({
   const [isActivityOpen, setIsActivityOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isShareOpen, setIsShareOpen] = useState(false);
-  
+
   if (!activeBoard) return null;
 
   const viewTabs = [
@@ -76,7 +76,10 @@ export function BoardHeader({
 
           <div className="flex -space-x-2">
             {[1, 2, 3, 4, 5].map((i) => (
-              <Avatar key={i} className="h-8 w-8 border-2 border-white dark:border-neutral-950 ring-1 ring-neutral-100 dark:ring-neutral-800">
+              <Avatar
+                key={i}
+                className="h-8 w-8 border-2 border-white dark:border-neutral-950 ring-1 ring-neutral-100 dark:ring-neutral-800"
+              >
                 <AvatarImage src={`https://i.pravatar.cc/150?u=${i}`} />
                 <AvatarFallback>U{i}</AvatarFallback>
               </Avatar>
@@ -102,10 +105,16 @@ export function BoardHeader({
             }}
             onDuplicate={() => {
               onDuplicateBoard?.();
-              toast.success(`Board "${activeBoard.name}" duplicated successfully!`);
+              toast.success(
+                `Board "${activeBoard.name}" duplicated successfully!`
+              );
             }}
             onArchive={() => {
-              if (window.confirm(`Are you sure you want to archive "${activeBoard.name}"?`)) {
+              if (
+                window.confirm(
+                  `Are you sure you want to archive "${activeBoard.name}"?`
+                )
+              ) {
                 onArchiveBoard?.();
                 toast.success(`Board "${activeBoard.name}" archived`);
               }
@@ -116,7 +125,11 @@ export function BoardHeader({
             onExport={() => {
               toast.success("Board exported as JSON");
               // Mock export
-              const data = JSON.stringify({ board: activeBoard, timestamp: new Date().toISOString() }, null, 2);
+              const data = JSON.stringify(
+                { board: activeBoard, timestamp: new Date().toISOString() },
+                null,
+                2
+              );
               console.log("Exported data:", data);
             }}
             onSettings={() => {
@@ -126,7 +139,9 @@ export function BoardHeader({
               setIsShareOpen(true);
             }}
             onSaveAsTemplate={() => {
-              toast.success(`Board saved as template: "${activeBoard.name} Template"`);
+              toast.success(
+                `Board saved as template: "${activeBoard.name} Template"`
+              );
             }}
           />
         </div>
@@ -154,7 +169,6 @@ export function BoardHeader({
           })}
         </div>
 
-
         <Button
           variant="ghost"
           size="sm"
@@ -171,7 +185,7 @@ export function BoardHeader({
               filters.statuses.length +
               filters.types.length +
               (filters.dueDate ? 1 : 0);
-            
+
             return activeFilterCount > 0 ? (
               <span className="absolute -top-1 -right-1 h-4 w-4 bg-primary-900 text-white text-[10px] font-medium rounded-full flex items-center justify-center">
                 {activeFilterCount}
@@ -180,16 +194,16 @@ export function BoardHeader({
           })()}
         </Button>
       </div>
-      
+
       {/* Activity Panel */}
-      <BoardActivityPanel 
-        isOpen={isActivityOpen} 
-        onClose={() => setIsActivityOpen(false)} 
+      <BoardActivityPanel
+        isOpen={isActivityOpen}
+        onClose={() => setIsActivityOpen(false)}
       />
-      
+
       {/* Settings Modal */}
-      <BoardSettingsModal 
-        isOpen={isSettingsOpen} 
+      <BoardSettingsModal
+        isOpen={isSettingsOpen}
         onClose={() => setIsSettingsOpen(false)}
         board={activeBoard}
       />

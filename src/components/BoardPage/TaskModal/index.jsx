@@ -1,12 +1,12 @@
 import { useEffect, useLayoutEffect, useState } from "react";
-import { TaskModalHeader } from "./TaskModal/TaskModalHeader";
-import { TaskModalSidebar } from "./TaskModal/TaskModalSidebar";
-import { TaskModalTabs } from "./TaskModal/TaskModalTabs";
-import { SubtasksTab } from "./TaskModal/SubtasksTab";
-import { CommentsTab } from "./TaskModal/CommentsTab";
-import { ActivitiesTab } from "./TaskModal/ActivitiesTab";
-import { TeamTab } from "./TaskModal/TeamTab";
-import { useNotifications } from "../../context/NotificationsContext";
+import { TaskModalHeader } from "./TaskModalHeader";
+import { TaskModalSidebar } from "./TaskModalSidebar";
+import { TaskModalTabs } from "./TaskModalTabs";
+import { SubtasksTab } from "./SubtasksTab";
+import { CommentsTab } from "./CommentsTab";
+import { ActivitiesTab } from "./ActivitiesTab";
+import { TeamTab } from "./TeamTab";
+import { useNotifications } from "../../../context/NotificationsContext";
 
 export const TaskModal = ({
   isOpen,
@@ -112,7 +112,7 @@ export const TaskModal = ({
 
   const handleAddComment = (text) => {
     onAddCommentToIdea?.(idea.id, text);
-    
+
     // Check for mentions
     if (text.includes("@")) {
       addNotification({

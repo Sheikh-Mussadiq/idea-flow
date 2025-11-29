@@ -1,15 +1,15 @@
 import { memo } from "react";
 import { Handle, Position } from "reactflow";
 import { MessageSquare, Inbox } from "lucide-react";
-import { Button } from "../ui/button";
-import { Badge } from "../ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
+import { Button } from "../../ui/button";
+import { Badge } from "../../ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "../../ui/avatar";
 
 export const IdeaNode = memo(({ data }) => {
   // Get comment count and commenters
   const commentCount = data.comments?.length || 0;
   const hasUnreadComments = data.hasUnreadComments || false;
-  
+
   // Get unique commenters (limit to 3 for display)
   const commenters = data.commenters || [];
   const displayCommenters = commenters.slice(0, 3);
@@ -47,11 +47,14 @@ export const IdeaNode = memo(({ data }) => {
           {hasUnreadComments && (
             <div className="absolute -top-1 -right-1 h-3 w-3 bg-primary-500 rounded-full border-2 border-white animate-pulse" />
           )}
-          
+
           {/* Avatar Stack */}
           <div className="flex -space-x-2">
             {displayCommenters.map((commenter, index) => (
-              <Avatar key={index} className="h-6 w-6 border-2 border-white dark:border-neutral-900 ring-1 ring-neutral-100 dark:ring-neutral-700">
+              <Avatar
+                key={index}
+                className="h-6 w-6 border-2 border-white dark:border-neutral-900 ring-1 ring-neutral-100 dark:ring-neutral-700"
+              >
                 <AvatarImage src={commenter.avatarUrl} />
                 <AvatarFallback className="text-[9px] bg-primary-50 dark:bg-neutral-700 text-primary-600 dark:text-neutral-200 font-semibold">
                   {commenter.name?.[0] || commenter.avatar || "?"}
@@ -167,4 +170,3 @@ export const IdeaNode = memo(({ data }) => {
     </div>
   );
 });
-

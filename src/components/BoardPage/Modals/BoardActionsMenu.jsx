@@ -15,7 +15,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "../ui/dropdown-menu";
+} from "../../ui/dropdown-menu";
 
 export const BoardActionsMenu = ({
   trigger,
@@ -31,10 +31,15 @@ export const BoardActionsMenu = ({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>{trigger}</DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-56 dark:bg-neutral-900 dark:border-neutral-700">
-        <DropdownMenuLabel className="dark:text-neutral-400">Board Actions</DropdownMenuLabel>
+      <DropdownMenuContent
+        align="end"
+        className="w-56 dark:bg-neutral-900 dark:border-neutral-700"
+      >
+        <DropdownMenuLabel className="dark:text-neutral-400">
+          Board Actions
+        </DropdownMenuLabel>
         <DropdownMenuSeparator className="dark:bg-neutral-700" />
-        
+
         {/* View Actions */}
         <DropdownMenuItem
           onClick={onViewActivity}

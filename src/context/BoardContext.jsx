@@ -20,10 +20,14 @@ export const BoardProvider = ({ children }) => {
 
     // Realtime subscription for boards list
     const channel = supabase
-      .channel('public:boards')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'boards' }, () => {
-        fetchBoards();
-      })
+      .channel("public:boards")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "boards" },
+        () => {
+          fetchBoards();
+        }
+      )
       .subscribe();
 
     return () => {
@@ -67,10 +71,10 @@ export const BoardProvider = ({ children }) => {
         description,
         owner_id: authUser.id,
         is_favorite: false,
-        is_archived: false
+        is_archived: false,
       });
-      
-      setBoards(prev => [newBoard, ...prev]);
+
+      setBoards((prev) => [newBoard, ...prev]);
       toast.success(`Board "${name}" created`);
       return newBoard;
     } catch (error) {
@@ -83,9 +87,11 @@ export const BoardProvider = ({ children }) => {
   const updateBoard = async (boardId, updates) => {
     try {
       const updatedBoard = await boardService.updateBoard(boardId, updates);
-      setBoards(prev => prev.map(b => b.id === boardId ? { ...b, ...updatedBoard } : b));
+      setBoards((prev) =>
+        prev.map((b) => (b.id === boardId ? { ...b, ...updatedBoard } : b))
+      );
       if (currentBoard?.id === boardId) {
-        setCurrentBoard(prev => ({ ...prev, ...updatedBoard }));
+        setCurrentBoard((prev) => ({ ...prev, ...updatedBoard }));
       }
       return updatedBoard;
     } catch (error) {
@@ -98,7 +104,7 @@ export const BoardProvider = ({ children }) => {
   const deleteBoard = async (boardId) => {
     try {
       await boardService.deleteBoard(boardId);
-      setBoards(prev => prev.filter(b => b.id !== boardId));
+      setBoards((prev) => prev.filter((b) => b.id !== boardId));
       if (currentBoard?.id === boardId) {
         setCurrentBoard(null);
       }
@@ -134,11 +140,18 @@ export const BoardProvider = ({ children }) => {
 
   const toggleFavorite = async (boardId) => {
     try {
-      const board = boards.find(b => b.id === boardId);
+      const board = boards.find((b) => b.id === boardId);
       if (!board) return;
-      
-      const updatedBoard = await boardService.toggleFavorite(boardId, !board.is_favorite);
-      setBoards(prev => prev.map(b => b.id === boardId ? { ...b, is_favorite: updatedBoard.is_favorite } : b));
+
+      const updatedBoard = await boardService.toggleFavorite(
+        boardId,
+        !board.is_favorite
+      );
+      setBoards((prev) =>
+        prev.map((b) =>
+          b.id === boardId ? { ...b, is_favorite: updatedBoard.is_favorite } : b
+        )
+      );
     } catch (error) {
       console.error("Error toggling favorite:", error);
       toast.error("Failed to update favorite status");
@@ -157,28 +170,31 @@ export const BoardProvider = ({ children }) => {
         description: "",
         priority: null,
         assigned_to: [],
-        tags: []
+        tags: [],
       });
-      
+
       if (currentBoard?.id === boardId) {
         const newIdea = {
           ...newCard,
-          kanbanStatus: currentBoard.columns.find(c => c.id === columnId)?.title || "Backlog",
+          kanbanStatus:
+            currentBoard.columns.find((c) => c.id === columnId)?.title ||
+            "Backlog",
+          showInFlow: false,
           assignedTo: null,
           assignees: [],
           labels: [],
           subtasks: [],
           attachments: [],
           comments: [],
-          boardId: boardId
+          boardId: boardId,
         };
-        
-        setCurrentBoard(prev => ({
+
+        setCurrentBoard((prev) => ({
           ...prev,
-          ideas: [...(prev.ideas || []), newIdea]
+          ideas: [...(prev.ideas || []), newIdea],
         }));
       }
-      
+
       return newCard;
     } catch (error) {
       console.error("Error creating card:", error);
@@ -191,23 +207,28 @@ export const BoardProvider = ({ children }) => {
     try {
       // Optimistic update
       if (currentBoard) {
-        setCurrentBoard(prev => ({
+        setCurrentBoard((prev) => ({
           ...prev,
-          ideas: prev.ideas.map(idea => 
+          ideas: prev.ideas.map((idea) =>
             idea.id === cardId ? { ...idea, ...updates } : idea
-          )
+          ),
         }));
       }
 
       // Map frontend fields to backend fields if necessary
       const backendUpdates = {};
       if (updates.title !== undefined) backendUpdates.title = updates.title;
-      if (updates.description !== undefined) backendUpdates.description = updates.description;
-      if (updates.priority !== undefined) backendUpdates.priority = updates.priority;
-      if (updates.dueDate !== undefined) backendUpdates.due_date = updates.dueDate;
-      if (updates.columnId !== undefined) backendUpdates.column_id = updates.columnId;
-      if (updates.position !== undefined) backendUpdates.position = updates.position;
-      
+      if (updates.description !== undefined)
+        backendUpdates.description = updates.description;
+      if (updates.priority !== undefined)
+        backendUpdates.priority = updates.priority;
+      if (updates.dueDate !== undefined)
+        backendUpdates.due_date = updates.dueDate;
+      if (updates.columnId !== undefined)
+        backendUpdates.column_id = updates.columnId;
+      if (updates.position !== undefined)
+        backendUpdates.position = updates.position;
+
       // Handle special fields like assigned_to, tags if needed
       // For now assuming simple updates
 
@@ -224,9 +245,9 @@ export const BoardProvider = ({ children }) => {
     try {
       // Optimistic update
       if (currentBoard) {
-        setCurrentBoard(prev => ({
+        setCurrentBoard((prev) => ({
           ...prev,
-          ideas: prev.ideas.filter(idea => idea.id !== cardId)
+          ideas: prev.ideas.filter((idea) => idea.id !== cardId),
         }));
       }
 
@@ -244,20 +265,22 @@ export const BoardProvider = ({ children }) => {
       // Optimistic update handled in component usually, but we can do it here too
       // Ideally we update the local state immediately
       if (currentBoard) {
-        const newStatus = currentBoard.columns.find(c => c.id === newColumnId)?.title;
-        setCurrentBoard(prev => ({
+        const newStatus = currentBoard.columns.find(
+          (c) => c.id === newColumnId
+        )?.title;
+        setCurrentBoard((prev) => ({
           ...prev,
-          ideas: prev.ideas.map(idea => 
-            idea.id === cardId 
-              ? { ...idea, kanbanStatus: newStatus, position: newPosition } 
+          ideas: prev.ideas.map((idea) =>
+            idea.id === cardId
+              ? { ...idea, kanbanStatus: newStatus, position: newPosition }
               : idea
-          )
+          ),
         }));
       }
 
       await cardService.updateCard(cardId, {
         column_id: newColumnId,
-        position: newPosition
+        position: newPosition,
       });
     } catch (error) {
       console.error("Error moving card:", error);
@@ -273,13 +296,13 @@ export const BoardProvider = ({ children }) => {
       const newColumn = await columnService.createColumn({
         board_id: boardId,
         title,
-        position
+        position,
       });
 
       if (currentBoard?.id === boardId) {
-        setCurrentBoard(prev => ({
+        setCurrentBoard((prev) => ({
           ...prev,
-          columns: [...(prev.columns || []), { ...newColumn, cards: [] }]
+          columns: [...(prev.columns || []), { ...newColumn, cards: [] }],
         }));
       }
       return newColumn;
@@ -293,11 +316,11 @@ export const BoardProvider = ({ children }) => {
   const updateColumn = async (columnId, title) => {
     try {
       if (currentBoard) {
-        setCurrentBoard(prev => ({
+        setCurrentBoard((prev) => ({
           ...prev,
-          columns: prev.columns.map(col => 
+          columns: prev.columns.map((col) =>
             col.id === columnId ? { ...col, title } : col
-          )
+          ),
         }));
       }
 
@@ -311,9 +334,9 @@ export const BoardProvider = ({ children }) => {
   const deleteColumn = async (columnId) => {
     try {
       if (currentBoard) {
-        setCurrentBoard(prev => ({
+        setCurrentBoard((prev) => ({
           ...prev,
-          columns: prev.columns.filter(col => col.id !== columnId)
+          columns: prev.columns.filter((col) => col.id !== columnId),
         }));
       }
 
@@ -329,15 +352,19 @@ export const BoardProvider = ({ children }) => {
     try {
       // Optimistic update
       if (currentBoard) {
-        const updatesMap = new Map(columnUpdates.map(u => [u.id, u.position]));
-        setCurrentBoard(prev => ({
+        const updatesMap = new Map(
+          columnUpdates.map((u) => [u.id, u.position])
+        );
+        setCurrentBoard((prev) => ({
           ...prev,
           columns: prev.columns
-            .map(col => ({
+            .map((col) => ({
               ...col,
-              position: updatesMap.has(col.id) ? updatesMap.get(col.id) : col.position
+              position: updatesMap.has(col.id)
+                ? updatesMap.get(col.id)
+                : col.position,
             }))
-            .sort((a, b) => a.position - b.position)
+            .sort((a, b) => a.position - b.position),
         }));
       }
 
@@ -351,13 +378,18 @@ export const BoardProvider = ({ children }) => {
 
   // --- Flow Operations ---
 
-  const createFlowIdea = async (flowId, title, description = "", parentId = null) => {
+  const createFlowIdea = async (
+    flowId,
+    title,
+    description = "",
+    parentId = null
+  ) => {
     try {
       const newIdea = await flowService.createIdea({
         flow_id: flowId,
         title,
         description,
-        parent_id: parentId
+        parent_id: parentId,
       });
 
       if (currentBoard) {
@@ -366,20 +398,20 @@ export const BoardProvider = ({ children }) => {
           id: newIdea.id,
           title: newIdea.title,
           description: newIdea.description,
-          type: 'ai',
-          showInFlow: true,
+          type: "ai",
+          showInFlow: false,
           boardId: currentBoard.id,
           flowId: flowId,
           parentId: parentId,
           kanbanStatus: null,
           assignedTo: null,
           labels: [],
-          comments: []
+          comments: [],
         };
 
-        setCurrentBoard(prev => ({
+        setCurrentBoard((prev) => ({
           ...prev,
-          ideas: [...(prev.ideas || []), frontendIdea]
+          ideas: [...(prev.ideas || []), frontendIdea],
         }));
       }
       return newIdea;
@@ -394,11 +426,11 @@ export const BoardProvider = ({ children }) => {
     try {
       // Optimistic update
       if (currentBoard) {
-        setCurrentBoard(prev => ({
+        setCurrentBoard((prev) => ({
           ...prev,
-          ideas: prev.ideas.map(idea => 
+          ideas: prev.ideas.map((idea) =>
             idea.id === ideaId ? { ...idea, ...updates } : idea
-          )
+          ),
         }));
       }
 
@@ -413,9 +445,9 @@ export const BoardProvider = ({ children }) => {
   const deleteFlowIdea = async (ideaId) => {
     try {
       if (currentBoard) {
-        setCurrentBoard(prev => ({
+        setCurrentBoard((prev) => ({
           ...prev,
-          ideas: prev.ideas.filter(idea => idea.id !== ideaId)
+          ideas: prev.ideas.filter((idea) => idea.id !== ideaId),
         }));
       }
 

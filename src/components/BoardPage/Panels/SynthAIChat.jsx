@@ -6,8 +6,8 @@ import {
   ArrowUp,
   Sparkles,
 } from "lucide-react";
-import { Button } from "../ui/button";
-import { Avatar, AvatarFallback } from "../ui/avatar";
+import { Button } from "../../ui/button";
+import { Avatar, AvatarFallback } from "../../ui/avatar";
 
 export function SynthAIChat() {
   return (
@@ -18,7 +18,9 @@ export function SynthAIChat() {
           <div className="h-6 w-6 rounded-full bg-primary-100 text-primary-600 flex items-center justify-center">
             <Sparkles className="h-3.5 w-3.5" />
           </div>
-          <span className="font-semibold text-sm text-neutral-900">SynthAI</span>
+          <span className="font-semibold text-sm text-neutral-900">
+            SynthAI
+          </span>
         </div>
         <button className="text-neutral-400 hover:text-neutral-600">
           <MoreVertical className="h-4 w-4" />
@@ -37,27 +39,34 @@ export function SynthAIChat() {
         {/* AI Message */}
         <div className="flex gap-3">
           <div className="flex-shrink-0 mt-1">
-             <div className="h-8 w-8 rounded-full bg-primary-100 text-primary-600 flex items-center justify-center">
-                <Sparkles className="h-4 w-4" />
-             </div>
+            <div className="h-8 w-8 rounded-full bg-primary-100 text-primary-600 flex items-center justify-center">
+              <Sparkles className="h-4 w-4" />
+            </div>
           </div>
           <div className="space-y-3 text-sm text-neutral-600">
             <p>
-              Improving your website's conversion rate starts with optimizing user
-              experience. Here are three key strategies:
+              Improving your website's conversion rate starts with optimizing
+              user experience. Here are three key strategies:
             </p>
             <ol className="space-y-3 list-decimal list-inside">
               <li>
-                <strong className="text-neutral-900">Simplify Your Landing Page</strong> – Keep it
-                clean, remove distractions, and highlight a clear call-to-action.
+                <strong className="text-neutral-900">
+                  Simplify Your Landing Page
+                </strong>{" "}
+                – Keep it clean, remove distractions, and highlight a clear
+                call-to-action.
               </li>
               <li>
-                <strong className="text-neutral-900">Use AI-Powered A/B Testing</strong> – Test
-                headlines, images, and CTAs to find what converts best.
+                <strong className="text-neutral-900">
+                  Use AI-Powered A/B Testing
+                </strong>{" "}
+                – Test headlines, images, and CTAs to find what converts best.
               </li>
               <li>
-                <strong className="text-neutral-900">Personalize User Experience</strong> – Tailor
-                content and recommendations based on visitor behavior.
+                <strong className="text-neutral-900">
+                  Personalize User Experience
+                </strong>{" "}
+                – Tailor content and recommendations based on visitor behavior.
               </li>
             </ol>
           </div>

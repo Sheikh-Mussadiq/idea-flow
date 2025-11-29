@@ -12,7 +12,7 @@ import { useState } from "react";
 import { createPortal } from "react-dom";
 import { KanbanCard, KanbanCardContent } from "./KanbanCard.jsx";
 import { KanbanColumn } from "./KanbanColumn.jsx";
-import { useBoard } from "../../context/BoardContext";
+import { useBoard } from "../../../context/BoardContext";
 import { toast } from "sonner";
 
 export const KanbanBoard = ({
@@ -61,10 +61,12 @@ export const KanbanBoard = ({
 
     // Check if over is a column
     const isOverColumn = columns.some((col) => col.id === overId);
-    
+
     if (isOverColumn) {
       // Dragging over a column - just move to that column
-      if (activeIdea.kanbanStatus !== columns.find(c => c.id === overId)?.title) {
+      if (
+        activeIdea.kanbanStatus !== columns.find((c) => c.id === overId)?.title
+      ) {
         onMoveCard(activeId, overId); // Pass column ID
       }
     } else if (overIdea) {
@@ -83,9 +85,9 @@ export const KanbanBoard = ({
         }
       } else {
         // Different column - move to the over card's column
-        const targetColumn = columns.find(c => c.title === overStatus);
+        const targetColumn = columns.find((c) => c.title === overStatus);
         if (targetColumn) {
-           onMoveCard(activeId, targetColumn.id);
+          onMoveCard(activeId, targetColumn.id);
         }
       }
     }
@@ -97,15 +99,16 @@ export const KanbanBoard = ({
 
   const handleAddList = async () => {
     console.log("handleAddList");
-    
+
     if (!canEdit || !currentBoard) return;
     const title = window.prompt("Enter list title:");
     if (!title) return;
 
     try {
-      const position = columns.length > 0 
-        ? Math.max(...columns.map(c => c.position)) + 1000 
-        : 0;
+      const position =
+        columns.length > 0
+          ? Math.max(...columns.map((c) => c.position)) + 1000
+          : 0;
       await createColumn(currentBoard.id, title, position);
       toast.success("List added");
     } catch (error) {
@@ -115,8 +118,10 @@ export const KanbanBoard = ({
 
   // Group ideas by status (column title)
   const ideasByColumnId = {};
-  columns.forEach(col => {
-    ideasByColumnId[col.id] = ideas.filter(idea => idea.kanbanStatus === col.title);
+  columns.forEach((col) => {
+    ideasByColumnId[col.id] = ideas.filter(
+      (idea) => idea.kanbanStatus === col.title
+    );
   });
 
   const activeIdea = activeId ? ideas.find((i) => i.id === activeId) : null;
@@ -144,7 +149,7 @@ export const KanbanBoard = ({
 
           {/* Add another list button */}
           <div className="flex-shrink-0 w-[280px]">
-            <button 
+            <button
               onClick={handleAddList}
               className="w-full h-12 rounded-xl border border-dashed border-neutral-300 text-neutral-500 hover:border-neutral-400 hover:text-neutral-600 flex items-center justify-center gap-2 text-sm font-medium transition-colors"
             >

@@ -1,6 +1,6 @@
 import { X, Lock, Globe, Users, Bell, Archive } from "lucide-react";
-import { Button } from "../ui/button";
-import { Input } from "../ui/input";
+import { Button } from "../../ui/button";
+import { Input } from "../../ui/input";
 import { useState } from "react";
 import { toast } from "sonner";
 
@@ -65,14 +65,16 @@ export const BoardSettingsModal = ({ isOpen, onClose, board }) => {
                 <Globe className="h-5 w-5" />
                 General
               </h3>
-              
+
               <div className="space-y-2">
                 <label className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
                   Board Name
                 </label>
                 <Input
                   value={settings.name}
-                  onChange={(e) => setSettings({ ...settings, name: e.target.value })}
+                  onChange={(e) =>
+                    setSettings({ ...settings, name: e.target.value })
+                  }
                   placeholder="Enter board name"
                   className="dark:bg-neutral-800 dark:border-neutral-700 dark:text-white"
                 />
@@ -84,7 +86,9 @@ export const BoardSettingsModal = ({ isOpen, onClose, board }) => {
                 </label>
                 <textarea
                   value={settings.description}
-                  onChange={(e) => setSettings({ ...settings, description: e.target.value })}
+                  onChange={(e) =>
+                    setSettings({ ...settings, description: e.target.value })
+                  }
                   placeholder="Add a description for your board"
                   rows={3}
                   className="w-full px-3 py-2 text-sm rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 dark:text-white resize-none focus:outline-none focus:ring-2 focus:ring-primary-500"
@@ -105,13 +109,17 @@ export const BoardSettingsModal = ({ isOpen, onClose, board }) => {
                     type="radio"
                     name="visibility"
                     checked={settings.visibility === "private"}
-                    onChange={() => setSettings({ ...settings, visibility: "private" })}
+                    onChange={() =>
+                      setSettings({ ...settings, visibility: "private" })
+                    }
                     className="h-4 w-4 text-primary-500"
                   />
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
                       <Lock className="h-4 w-4 text-neutral-500 dark:text-neutral-400" />
-                      <span className="font-medium text-neutral-900 dark:text-white">Private</span>
+                      <span className="font-medium text-neutral-900 dark:text-white">
+                        Private
+                      </span>
                     </div>
                     <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
                       Only invited members can view and edit
@@ -124,13 +132,17 @@ export const BoardSettingsModal = ({ isOpen, onClose, board }) => {
                     type="radio"
                     name="visibility"
                     checked={settings.visibility === "public"}
-                    onChange={() => setSettings({ ...settings, visibility: "public" })}
+                    onChange={() =>
+                      setSettings({ ...settings, visibility: "public" })
+                    }
                     className="h-4 w-4 text-primary-500"
                   />
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
                       <Globe className="h-4 w-4 text-neutral-500 dark:text-neutral-400" />
-                      <span className="font-medium text-neutral-900 dark:text-white">Public</span>
+                      <span className="font-medium text-neutral-900 dark:text-white">
+                        Public
+                      </span>
                     </div>
                     <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
                       Anyone with the link can view
@@ -144,14 +156,23 @@ export const BoardSettingsModal = ({ isOpen, onClose, board }) => {
                   <div className="flex items-center gap-3">
                     <Users className="h-4 w-4 text-neutral-500 dark:text-neutral-400" />
                     <div>
-                      <span className="text-sm font-medium text-neutral-900 dark:text-white">Allow member invites</span>
-                      <p className="text-xs text-neutral-500 dark:text-neutral-400">Members can invite others</p>
+                      <span className="text-sm font-medium text-neutral-900 dark:text-white">
+                        Allow member invites
+                      </span>
+                      <p className="text-xs text-neutral-500 dark:text-neutral-400">
+                        Members can invite others
+                      </p>
                     </div>
                   </div>
                   <input
                     type="checkbox"
                     checked={settings.allowInvites}
-                    onChange={(e) => setSettings({ ...settings, allowInvites: e.target.checked })}
+                    onChange={(e) =>
+                      setSettings({
+                        ...settings,
+                        allowInvites: e.target.checked,
+                      })
+                    }
                     className="h-4 w-4 rounded text-primary-500"
                   />
                 </label>
@@ -168,13 +189,22 @@ export const BoardSettingsModal = ({ isOpen, onClose, board }) => {
               <div className="space-y-3">
                 <label className="flex items-center justify-between p-3 rounded-lg hover:bg-neutral-50 dark:hover:bg-neutral-800/50 cursor-pointer">
                   <div>
-                    <span className="text-sm font-medium text-neutral-900 dark:text-white">Email notifications</span>
-                    <p className="text-xs text-neutral-500 dark:text-neutral-400">Receive updates via email</p>
+                    <span className="text-sm font-medium text-neutral-900 dark:text-white">
+                      Email notifications
+                    </span>
+                    <p className="text-xs text-neutral-500 dark:text-neutral-400">
+                      Receive updates via email
+                    </p>
                   </div>
                   <input
                     type="checkbox"
                     checked={settings.emailNotifications}
-                    onChange={(e) => setSettings({ ...settings, emailNotifications: e.target.checked })}
+                    onChange={(e) =>
+                      setSettings({
+                        ...settings,
+                        emailNotifications: e.target.checked,
+                      })
+                    }
                     className="h-4 w-4 rounded text-primary-500"
                   />
                 </label>
@@ -183,14 +213,23 @@ export const BoardSettingsModal = ({ isOpen, onClose, board }) => {
                   <div className="flex items-center gap-3">
                     <Archive className="h-4 w-4 text-neutral-500 dark:text-neutral-400" />
                     <div>
-                      <span className="text-sm font-medium text-neutral-900 dark:text-white">Auto-archive completed tasks</span>
-                      <p className="text-xs text-neutral-500 dark:text-neutral-400">Archive tasks after 30 days</p>
+                      <span className="text-sm font-medium text-neutral-900 dark:text-white">
+                        Auto-archive completed tasks
+                      </span>
+                      <p className="text-xs text-neutral-500 dark:text-neutral-400">
+                        Archive tasks after 30 days
+                      </p>
                     </div>
                   </div>
                   <input
                     type="checkbox"
                     checked={settings.autoArchive}
-                    onChange={(e) => setSettings({ ...settings, autoArchive: e.target.checked })}
+                    onChange={(e) =>
+                      setSettings({
+                        ...settings,
+                        autoArchive: e.target.checked,
+                      })
+                    }
                     className="h-4 w-4 rounded text-primary-500"
                   />
                 </label>

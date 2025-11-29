@@ -1,5 +1,5 @@
 import { KanbanBoard } from "./KanbanBoard.jsx";
-import { SynthAIChat } from "./SynthAIChat.jsx";
+import { SynthAIChat } from "../Panels/SynthAIChat.jsx";
 
 export const KanbanView = ({
   ideas,

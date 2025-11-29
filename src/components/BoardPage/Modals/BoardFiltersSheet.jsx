@@ -1,11 +1,11 @@
-import { Button } from "../ui/button";
+import { Button } from "../../ui/button";
 import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
   SheetDescription,
-} from "../ui/sheet";
+} from "../../ui/sheet";
 
 export function BoardFiltersSheet({
   open,
@@ -172,7 +172,13 @@ export function BoardFiltersSheet({
                       }));
                     }}
                     icon={
-                      <span className={`flex h-4 w-4 items-center justify-center rounded-full text-[9px] font-medium ${active ? 'bg-white/20 text-white' : 'bg-neutral-200 text-neutral-600'}`}>
+                      <span
+                        className={`flex h-4 w-4 items-center justify-center rounded-full text-[9px] font-medium ${
+                          active
+                            ? "bg-white/20 text-white"
+                            : "bg-neutral-200 text-neutral-600"
+                        }`}
+                      >
                         {member.avatar || member.name.charAt(0)}
                       </span>
                     }

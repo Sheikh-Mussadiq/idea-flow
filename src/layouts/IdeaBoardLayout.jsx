@@ -1,13 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
-import { FlowContent } from "./FlowContent.jsx";
-import { ArchivedTasksPanel } from "./ArchivedTasksPanel.jsx";
-import { BoardMembersSheet } from "./BoardMembersSheet.jsx";
-import { BoardHeader } from "./BoardTopBar.jsx";
-import { BoardFiltersSheet } from "./BoardFiltersSheet.jsx";
-import { Button } from "../ui/button";
-import BoardNotFound from "../../pages/BoardNotFound.jsx";
+import { BoardContent } from "../components/BoardPage/BoardContent.jsx";
+import { ArchivedTasksPanel } from "../components/BoardPage/Panels/ArchivedTasksPanel.jsx";
+import { BoardMembersSheet } from "../components/BoardPage/Modals/BoardMembersSheet.jsx";
+import { BoardHeader } from "../components/BoardPage/Common/BoardTopBar.jsx";
+import { BoardFiltersSheet } from "../components/BoardPage/Modals/BoardFiltersSheet.jsx";
+import { Button } from "../components/ui/button";
+import BoardNotFound from "../pages/BoardNotFound.jsx";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,7 +15,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "../ui/dropdown-menu";
+} from "../components/ui/dropdown-menu";
 import {
   Dialog,
   DialogContent,
@@ -23,7 +23,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "../ui/dialog";
+} from "../components/ui/dialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -33,19 +33,19 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "../ui/alert-dialog";
-import { Input } from "../ui/input";
+} from "../components/ui/alert-dialog";
+import { Input } from "../components/ui/input";
 import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
   SheetDescription,
-} from "../ui/sheet";
-import { Avatar, AvatarFallback } from "../ui/avatar";
-import { mockUsers, mockLabels } from "../../data/mockData.js";
-import { useBoard } from "../../context/BoardContext";
-import { useActiveBoard } from "../../hooks/useActiveBoard";
+} from "../components/ui/sheet";
+import { Avatar, AvatarFallback } from "../components/ui/avatar";
+import { mockUsers, mockLabels } from "../data/mockData.js";
+import { useBoard } from "../context/BoardContext";
+import { useActiveBoard } from "../hooks/useActiveBoard";
 
 const defaultMembers = mockUsers.map((user) => ({
   id: user.id,
@@ -78,7 +78,7 @@ const createEmptyBoard = (name, color, icon) => ({
 export const IdeaBoardLayout = ({ initialView = "flow" }) => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  
+
   const {
     boards,
     setBoards,
@@ -109,7 +109,7 @@ export const IdeaBoardLayout = ({ initialView = "flow" }) => {
   const [debouncedSearch, setDebouncedSearch] = useState(searchQuery);
   const [searchCount, setSearchCount] = useState(0);
   const [boardViewMode, setBoardViewMode] = useState(initialView);
-  
+
   // Get filters from URL params
   const [filters, setFilters] = useState(() => ({
     priorities: searchParams.getAll("priority"),
@@ -119,33 +119,25 @@ export const IdeaBoardLayout = ({ initialView = "flow" }) => {
     statuses: searchParams.getAll("status"),
     types: searchParams.getAll("type"),
   }));
-  
+
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isArchivedOpen, setIsArchivedOpen] = useState(false);
 
-  const currentUser = useMemo(
-    () =>
-      defaultMembers.find((m) => m.id === currentUserId) ?? defaultMembers[0],
-    [currentUserId]
-  );
+  const currentUser =
+    defaultMembers.find((m) => m.id === currentUserId) ?? defaultMembers[0];
 
   // Check if current user is the board owner
-  const isOwner = useMemo(() => {
-    if (!activeBoard) return false;
-    return activeBoard.owner_id === currentUser.id;
-  }, [activeBoard, currentUser.id]);
+  const isOwner = activeBoard ? activeBoard.owner_id === currentUser.id : false;
 
   // Check current user's member role
-  const currentMemberRole = useMemo(() => {
-    if (!activeBoard) return null;
-    const member = (activeBoard.members || []).find(
-      (m) => m.user?.id === currentUser.id || m.user_id === currentUser.id
-    );
-    return member?.role || null;
-  }, [activeBoard, currentUser.id]);
+  const currentMemberRole = activeBoard
+    ? (activeBoard.members || []).find(
+        (m) => m.user?.id === currentUser.id || m.user_id === currentUser.id
+      )?.role || null
+    : null;
 
   // User can edit if they are owner OR have editor role
-  const canEdit = isOwner || currentMemberRole === 'editor';
+  const canEdit = isOwner || currentMemberRole === "editor";
   const isViewer = !canEdit;
 
   const availableLabels = useMemo(() => {
@@ -227,7 +219,7 @@ export const IdeaBoardLayout = ({ initialView = "flow" }) => {
   // Handler to update filters in URL
   const handleFiltersChange = (newFilters) => {
     const params = new URLSearchParams();
-    
+
     // Add all filter params with safety checks
     (newFilters.priorities || []).forEach((p) => params.append("priority", p));
     (newFilters.labelIds || []).forEach((l) => params.append("label", l));
@@ -235,11 +227,11 @@ export const IdeaBoardLayout = ({ initialView = "flow" }) => {
     (newFilters.statuses || []).forEach((s) => params.append("status", s));
     (newFilters.types || []).forEach((t) => params.append("type", t));
     if (newFilters.dueDate) params.set("dueDate", newFilters.dueDate);
-    
+
     // Preserve search param
     const search = searchParams.get("search");
     if (search) params.set("search", search);
-    
+
     setSearchParams(params, { replace: true });
     setFilters(newFilters);
   };
@@ -247,7 +239,10 @@ export const IdeaBoardLayout = ({ initialView = "flow" }) => {
   const handleCreateBoard = async () => {
     if (!draftBoardName.trim()) return;
     try {
-      const newBoard = await createBoard(draftBoardName.trim(), draftBoardDescription);
+      const newBoard = await createBoard(
+        draftBoardName.trim(),
+        draftBoardDescription
+      );
       setDraftBoardName("");
       setDraftBoardDescription("");
       setIsCreateOpen(false);
@@ -262,7 +257,10 @@ export const IdeaBoardLayout = ({ initialView = "flow" }) => {
     try {
       await updateBoard(activeBoard.id, {
         name: draftBoardName.trim(),
-        settings: { ...activeBoard.settings, description: draftBoardDescription },
+        settings: {
+          ...activeBoard.settings,
+          description: draftBoardDescription,
+        },
       });
       setIsSettingsOpen(false);
     } catch (error) {
@@ -392,11 +390,9 @@ export const IdeaBoardLayout = ({ initialView = "flow" }) => {
   };
 
   // Move useMemo before early returns to comply with Rules of Hooks
-  const archivedIdeas = useMemo(
-    () =>
-      activeBoard ? activeBoard.ideas.filter((idea) => idea.isArchived) : [],
-    [activeBoard]
-  );
+  const archivedIdeas = activeBoard
+    ? activeBoard.ideas.filter((idea) => idea.isArchived)
+    : [];
 
   if (notFound) {
     return <BoardNotFound />;
@@ -471,7 +467,7 @@ export const IdeaBoardLayout = ({ initialView = "flow" }) => {
       />
 
       <div className="flex-1 w-full overflow-hidden">
-        <FlowContent
+        <BoardContent
           initialView={initialView}
           ideas={filteredIdeas}
           columns={activeBoard.columns}

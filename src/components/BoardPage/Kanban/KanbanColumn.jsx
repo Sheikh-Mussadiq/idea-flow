@@ -5,15 +5,15 @@ import {
 } from "@dnd-kit/sortable";
 import { MoreHorizontal, Plus, Pencil, Trash2 } from "lucide-react";
 import { KanbanCard } from "./KanbanCard.jsx";
-import { Button } from "../ui/button";
+import { Button } from "../../ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "../ui/dropdown-menu";
+} from "../../ui/dropdown-menu";
 import { useState } from "react";
-import { useBoard } from "../../context/BoardContext";
+import { useBoard } from "../../../context/BoardContext";
 
 export const KanbanColumn = ({ id, title, ideas, onOpenTask, onAddTask }) => {
   const { setNodeRef, isOver } = useDroppable({
@@ -31,7 +31,11 @@ export const KanbanColumn = ({ id, title, ideas, onOpenTask, onAddTask }) => {
   };
 
   const handleDelete = async () => {
-    if (window.confirm(`Are you sure you want to delete the "${title}" column? All cards in this column will be deleted.`)) {
+    if (
+      window.confirm(
+        `Are you sure you want to delete the "${title}" column? All cards in this column will be deleted.`
+      )
+    ) {
       await deleteColumn(id);
     }
   };
@@ -82,7 +86,10 @@ export const KanbanColumn = ({ id, title, ideas, onOpenTask, onAddTask }) => {
               <Pencil className="h-4 w-4 mr-2" />
               Rename column
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={handleDelete} className="text-red-600 dark:text-red-400">
+            <DropdownMenuItem
+              onClick={handleDelete}
+              className="text-red-600 dark:text-red-400"
+            >
               <Trash2 className="h-4 w-4 mr-2" />
               Delete column
             </DropdownMenuItem>

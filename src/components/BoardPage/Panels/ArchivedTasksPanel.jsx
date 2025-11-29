@@ -1,5 +1,5 @@
-import { Button } from "../ui/button";
-import { Badge } from "../ui/badge";
+import { Button } from "../../ui/button";
+import { Badge } from "../../ui/badge";
 
 export const ArchivedTasksPanel = ({ ideas, onRestoreTask }) => {
   if (ideas.length === 0) {
