@@ -151,16 +151,27 @@ export function BoardHeader({
 
               return (
                 <>
-                  {displayUsers.map((user) => (
-                    <div key={user.id} className="relative">
+                  {displayUsers.map((user, index) => (
+                    <div
+                      key={user.id}
+                      className="relative"
+                      style={{
+                        zIndex: user.isOnline
+                          ? 10
+                          : displayUsers.length - index,
+                      }}
+                    >
                       <Avatar
                         className={`h-8 w-8 border-2 border-white dark:border-neutral-950 ring-1 ring-neutral-100 dark:ring-neutral-800 ${
                           user.isOnline
                             ? "ring-2 ring-green-400 ring-offset-1"
-                            : ""
+                            : "opacity-75"
                         }`}
                       >
-                        <AvatarImage src={user.avatar_url} />
+                        <AvatarImage
+                          src={user.avatar_url}
+                          className={!user.isOnline ? "grayscale-[30%]" : ""}
+                        />
                         <AvatarFallback
                           className={`text-xs font-medium ${
                             user.isOwner
@@ -173,10 +184,14 @@ export function BoardHeader({
                             .toUpperCase()}
                         </AvatarFallback>
                       </Avatar>
-                      {/* Online indicator dot */}
-                      {user.isOnline && (
-                        <span className="absolute bottom-0 right-0 h-2.5 w-2.5 bg-green-500 border-2 border-white dark:border-neutral-950 rounded-full" />
-                      )}
+                      {/* Status indicator dot */}
+                      <span
+                        className={`absolute bottom-0 right-0 h-2.5 w-2.5 border-2 border-white dark:border-neutral-950 rounded-full ${
+                          user.isOnline
+                            ? "bg-green-500"
+                            : "bg-neutral-400 dark:bg-neutral-600"
+                        }`}
+                      />
                     </div>
                   ))}
                   {/* Show +N if more users */}

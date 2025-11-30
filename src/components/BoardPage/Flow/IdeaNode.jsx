@@ -56,7 +56,7 @@ export const IdeaNode = memo(({ data }) => {
                 key={index}
                 className="h-6 w-6 border-2 border-white dark:border-neutral-900 ring-1 ring-neutral-100 dark:ring-neutral-700"
               >
-                <AvatarImage src={commenter.avatarUrl} />
+                <AvatarImage src={commenter.avatar_url} />
                 <AvatarFallback className="text-[9px] bg-primary-50 dark:bg-neutral-700 text-primary-600 dark:text-neutral-200 font-semibold">
                   {commenter.name?.[0] || commenter.avatar || "?"}
                 </AvatarFallback>
@@ -127,11 +127,17 @@ export const IdeaNode = memo(({ data }) => {
               size="icon"
               className={cn(
                 "h-7 w-7 transition-colors",
-                data.is_liked && "text-primary-500 bg-primary-50 dark:bg-primary-900/20",
+                data.is_liked &&
+                  "text-success-500 bg-success-50 dark:bg-success-500/20",
                 !data.is_liked && "text-neutral-600 dark:text-neutral-400",
-                data.onToggleLike && !data.is_liked && "hover:text-primary-500 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800",
-                data.onToggleLike && data.is_liked && "hover:text-primary-600 hover:bg-primary-100 dark:hover:bg-primary-900/30",
-                !data.onToggleLike && "cursor-not-allowed pointer-events-none opacity-70"
+                data.onToggleLike &&
+                  !data.is_liked &&
+                  "hover:text-success-500 hover:bg-success-50 dark:hover:bg-success-500/10",
+                data.onToggleLike &&
+                  data.is_liked &&
+                  "hover:text-success-700 hover:bg-success-50 dark:hover:bg-success-500/30",
+                !data.onToggleLike &&
+                  "cursor-not-allowed pointer-events-none opacity-70"
               )}
               onClick={(e) => {
                 e.stopPropagation();
@@ -139,20 +145,32 @@ export const IdeaNode = memo(({ data }) => {
                   data.onToggleLike(data.id);
                 }
               }}
-              title={data.onToggleLike ? "Like this idea" : "Only the board owner can like ideas"}
+              title={
+                data.onToggleLike
+                  ? "Like this idea"
+                  : "Only the board owner can like ideas"
+              }
             >
-              <ThumbsUp className={cn("h-3.5 w-3.5", data.is_liked && "fill-current")} />
+              <ThumbsUp
+                className={cn("h-3.5 w-3.5", data.is_liked && "fill-current")}
+              />
             </Button>
             <Button
               variant="ghost"
               size="icon"
               className={cn(
                 "h-7 w-7 transition-colors",
-                data.is_disliked && "text-error-500 bg-error-50 dark:bg-error-900/20",
+                data.is_disliked &&
+                  "text-error-500 bg-error-50 dark:bg-error-900/20",
                 !data.is_disliked && "text-neutral-600 dark:text-neutral-400",
-                data.onToggleDislike && !data.is_disliked && "hover:text-error-500 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800",
-                data.onToggleDislike && data.is_disliked && "hover:text-error-600 hover:bg-error-100 dark:hover:bg-error-900/30",
-                !data.onToggleDislike && "cursor-not-allowed pointer-events-none opacity-70"
+                data.onToggleDislike &&
+                  !data.is_disliked &&
+                  "hover:text-error-500 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800",
+                data.onToggleDislike &&
+                  data.is_disliked &&
+                  "hover:text-error-600 hover:bg-error-100 dark:hover:bg-error-900/30",
+                !data.onToggleDislike &&
+                  "cursor-not-allowed pointer-events-none opacity-70"
               )}
               onClick={(e) => {
                 e.stopPropagation();
@@ -160,13 +178,22 @@ export const IdeaNode = memo(({ data }) => {
                   data.onToggleDislike(data.id);
                 }
               }}
-              title={data.onToggleDislike ? "Dislike this idea" : "Only the board owner can dislike ideas"}
+              title={
+                data.onToggleDislike
+                  ? "Dislike this idea"
+                  : "Only the board owner can dislike ideas"
+              }
             >
-              <ThumbsDown className={cn("h-3.5 w-3.5", data.is_disliked && "fill-current")} />
+              <ThumbsDown
+                className={cn(
+                  "h-3.5 w-3.5",
+                  data.is_disliked && "fill-current"
+                )}
+              />
             </Button>
           </div>
         )}
-        
+
         {/* Action buttons */}
         <div className="flex items-center gap-1 ml-auto">
           {data.onSendToKanban && (
@@ -213,12 +240,14 @@ export const IdeaNode = memo(({ data }) => {
         </div>
       </div>
 
-      {/* Bottom handle for outgoing connections to sub-ideas */}
-      <Handle
-        type="source"
-        position={Position.Bottom}
-        className="!bg-primary-500 !w-3 !h-3"
-      />
+      {/* Bottom handle for outgoing connections to sub-ideas - only show if has sub-ideas */}
+      {data.hasSubIdeas && (
+        <Handle
+          type="source"
+          position={Position.Bottom}
+          className="!bg-primary-900 !w-3 !h-3"
+        />
+      )}
     </div>
   );
 });

@@ -33,6 +33,15 @@ export const ShareBoardModal = ({ isOpen, onClose, board }) => {
   // Create a set of online user IDs for quick lookup
   const onlineUserIds = new Set(onlineUsers.map((u) => u.id));
 
+  // Sort members: online users first
+  const sortedMembers = [...members].sort((a, b) => {
+    const aOnline = onlineUserIds.has(a.user?.id);
+    const bOnline = onlineUserIds.has(b.user?.id);
+    if (aOnline && !bOnline) return -1;
+    if (!aOnline && bOnline) return 1;
+    return 0;
+  });
+
   // Debounced search for users
   useEffect(() => {
     if (!searchQuery.trim()) {
@@ -239,17 +248,32 @@ export const ShareBoardModal = ({ isOpen, onClose, board }) => {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <div className="relative">
-                      <Avatar className="h-9 w-9 border border-neutral-200 dark:border-neutral-700">
-                        <AvatarImage src={board.owner.avatar_url} />
+                      <Avatar
+                        className={`h-9 w-9 border border-neutral-200 dark:border-neutral-700 ${
+                          !onlineUserIds.has(board.owner.id) ? "opacity-75" : ""
+                        }`}
+                      >
+                        <AvatarImage
+                          src={board.owner.avatar_url}
+                          className={
+                            !onlineUserIds.has(board.owner.id)
+                              ? "grayscale-[30%]"
+                              : ""
+                          }
+                        />
                         <AvatarFallback className="bg-primary-50 text-primary-600 dark:bg-primary-900/20 dark:text-primary-400 text-xs font-medium">
                           {(board.owner.full_name || "O")
                             .substring(0, 2)
                             .toUpperCase()}
                         </AvatarFallback>
                       </Avatar>
-                      {onlineUserIds.has(board.owner.id) && (
-                        <span className="absolute bottom-0 right-0 h-2.5 w-2.5 bg-green-500 border-2 border-white dark:border-neutral-900 rounded-full" />
-                      )}
+                      <span
+                        className={`absolute bottom-0 right-0 h-2.5 w-2.5 border-2 border-white dark:border-neutral-900 rounded-full ${
+                          onlineUserIds.has(board.owner.id)
+                            ? "bg-green-500"
+                            : "bg-neutral-400 dark:bg-neutral-600"
+                        }`}
+                      />
                     </div>
                     <div>
                       <p className="text-sm font-medium text-neutral-900 dark:text-white flex items-center gap-2">
@@ -259,11 +283,18 @@ export const ShareBoardModal = ({ isOpen, onClose, board }) => {
                             (you)
                           </span>
                         )}
-                        {onlineUserIds.has(board.owner.id) && (
-                          <span className="text-xs text-green-600 dark:text-green-400 font-normal">
-                            • Online
-                          </span>
-                        )}
+                        <span
+                          className={`text-xs font-normal ${
+                            onlineUserIds.has(board.owner.id)
+                              ? "text-green-600 dark:text-green-400"
+                              : "text-neutral-400 dark:text-neutral-500"
+                          }`}
+                        >
+                          •{" "}
+                          {onlineUserIds.has(board.owner.id)
+                            ? "Online"
+                            : "Offline"}
+                        </span>
                       </p>
                       <p className="text-xs text-neutral-500 dark:text-neutral-400">
                         {board.owner.email}
@@ -285,29 +316,46 @@ export const ShareBoardModal = ({ isOpen, onClose, board }) => {
               </h3>
 
               <div className="space-y-3">
-                {members.length === 0 ? (
+                {sortedMembers.length === 0 ? (
                   <p className="text-sm text-neutral-500 dark:text-neutral-400 text-center py-4">
                     No members added yet
                   </p>
                 ) : (
-                  members.map((member) => (
+                  sortedMembers.map((member) => (
                     <div
                       key={member.user?.id}
                       className="flex items-center justify-between group"
                     >
                       <div className="flex items-center gap-3">
                         <div className="relative">
-                          <Avatar className="h-9 w-9 border border-neutral-200 dark:border-neutral-700">
-                            <AvatarImage src={member.user?.avatar_url} />
+                          <Avatar
+                            className={`h-9 w-9 border border-neutral-200 dark:border-neutral-700 ${
+                              !onlineUserIds.has(member.user?.id)
+                                ? "opacity-75"
+                                : ""
+                            }`}
+                          >
+                            <AvatarImage
+                              src={member.user?.avatar_url}
+                              className={
+                                !onlineUserIds.has(member.user?.id)
+                                  ? "grayscale-[30%]"
+                                  : ""
+                              }
+                            />
                             <AvatarFallback className="bg-primary-50 text-primary-600 dark:bg-primary-900/20 dark:text-primary-400 text-xs font-medium">
                               {(member.user?.full_name || "U")
                                 .substring(0, 2)
                                 .toUpperCase()}
                             </AvatarFallback>
                           </Avatar>
-                          {onlineUserIds.has(member.user?.id) && (
-                            <span className="absolute bottom-0 right-0 h-2.5 w-2.5 bg-green-500 border-2 border-white dark:border-neutral-900 rounded-full" />
-                          )}
+                          <span
+                            className={`absolute bottom-0 right-0 h-2.5 w-2.5 border-2 border-white dark:border-neutral-900 rounded-full ${
+                              onlineUserIds.has(member.user?.id)
+                                ? "bg-green-500"
+                                : "bg-neutral-400 dark:bg-neutral-600"
+                            }`}
+                          />
                         </div>
                         <div>
                           <p className="text-sm font-medium text-neutral-900 dark:text-white flex items-center gap-2">
@@ -317,11 +365,18 @@ export const ShareBoardModal = ({ isOpen, onClose, board }) => {
                                 (you)
                               </span>
                             )}
-                            {onlineUserIds.has(member.user?.id) && (
-                              <span className="text-xs text-green-600 dark:text-green-400 font-normal">
-                                • Online
-                              </span>
-                            )}
+                            <span
+                              className={`text-xs font-normal ${
+                                onlineUserIds.has(member.user?.id)
+                                  ? "text-green-600 dark:text-green-400"
+                                  : "text-neutral-400 dark:text-neutral-500"
+                              }`}
+                            >
+                              •{" "}
+                              {onlineUserIds.has(member.user?.id)
+                                ? "Online"
+                                : "Offline"}
+                            </span>
                           </p>
                           <p className="text-xs text-neutral-500 dark:text-neutral-400">
                             {member.user?.email}

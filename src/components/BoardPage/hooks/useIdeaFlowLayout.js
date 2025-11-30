@@ -55,6 +55,11 @@ export const useIdeaFlowLayout = (
         draggable: false,
       };
 
+      // Create a set of parent IDs to check which ideas have sub-ideas
+      const parentIds = new Set(
+        flowIdeas.map((idea) => idea.parentId).filter(Boolean)
+      );
+
       const ideaNodes = flowIdeas.map((idea, index) => {
         const fallbackPosition = {
           x: startX + index * horizontalSpacing,
@@ -76,6 +81,9 @@ export const useIdeaFlowLayout = (
             ).slice(0, 2)
           : [];
 
+        // Check if this idea has any sub-ideas
+        const hasSubIdeas = parentIds.has(idea.id);
+
         return {
           id: idea.id,
           type: "ideaNode",
@@ -88,14 +96,17 @@ export const useIdeaFlowLayout = (
             comments: ideaComments,
             commenters: commenters,
             hasUnreadComments: false, // TODO: Implement unread logic
+            hasSubIdeas: hasSubIdeas,
             onOpenComments: handleOpenComments,
             onDelete:
               canEdit && idea.type === "manual" ? handleDeleteIdea : undefined,
             onAddSubIdea: canEdit ? handleAddSubIdea : undefined,
             onSendToKanban: canEdit ? handleSendToKanban : undefined,
             onOpenTask: handleOpenTask,
-            onToggleLike: isOwner && idea.type === "ai" ? handleToggleLike : undefined,
-            onToggleDislike: isOwner && idea.type === "ai" ? handleToggleDislike : undefined,
+            onToggleLike:
+              isOwner && idea.type === "ai" ? handleToggleLike : undefined,
+            onToggleDislike:
+              isOwner && idea.type === "ai" ? handleToggleDislike : undefined,
           },
           draggable: canEdit,
         };
