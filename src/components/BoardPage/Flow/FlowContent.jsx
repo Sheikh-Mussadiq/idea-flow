@@ -12,6 +12,7 @@ export const FlowContent = ({
   onUpdateIdeas,
   isViewer,
   currentBoard,
+  currentUser,
   onOpenComments,
   onOpenTask,
   activeFlowId,
@@ -32,9 +33,14 @@ export const FlowContent = ({
     createCard,
     updateCard,
     updateFlowIdea,
+    toggleIdeaLike,
+    toggleIdeaDislike,
   } = useBoard();
 
   const { fitView } = useReactFlow();
+
+  // Check if current user is the board owner
+  const isOwner = currentBoard?.owner_id === currentUser?.user?.id || currentBoard?.owner_id === currentUser?.id;
 
   const handleGenerate = useCallback(
     async (promptValue) => {
@@ -257,6 +263,40 @@ export const FlowContent = ({
     [isViewer, currentBoard, createFlowIdea, fitView, activeFlowId]
   );
 
+  const handleToggleLike = useCallback(
+    async (ideaId) => {
+      if (isViewer || !isOwner) {
+        if (!isOwner) {
+          toast.error("Only the board owner can like ideas");
+        }
+        return;
+      }
+      try {
+        await toggleIdeaLike(ideaId);
+      } catch (error) {
+        // Error handled in context
+      }
+    },
+    [isViewer, isOwner, toggleIdeaLike]
+  );
+
+  const handleToggleDislike = useCallback(
+    async (ideaId) => {
+      if (isViewer || !isOwner) {
+        if (!isOwner) {
+          toast.error("Only the board owner can dislike ideas");
+        }
+        return;
+      }
+      try {
+        await toggleIdeaDislike(ideaId);
+      } catch (error) {
+        // Error handled in context
+      }
+    },
+    [isViewer, isOwner, toggleIdeaDislike]
+  );
+
   const inputNodeData = useMemo(
     () => ({
       mode,
@@ -289,7 +329,10 @@ export const FlowContent = ({
     handleAddSubIdea,
     handleSendToKanban,
     onOpenTask,
-    !isViewer
+    handleToggleLike,
+    handleToggleDislike,
+    !isViewer,
+    isOwner
   );
 
   const flows = currentBoard?.ai_flows || [];

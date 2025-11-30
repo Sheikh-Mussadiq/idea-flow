@@ -1,9 +1,10 @@
 import { memo } from "react";
 import { Handle, Position } from "reactflow";
-import { MessageSquare, Inbox } from "lucide-react";
+import { MessageSquare, Inbox, ThumbsUp, ThumbsDown } from "lucide-react";
 import { Button } from "../../ui/button";
 import { Badge } from "../../ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "../../ui/avatar";
+import { cn } from "../../../lib/utils";
 
 export const IdeaNode = memo(({ data }) => {
   // Get comment count and commenters
@@ -117,48 +118,95 @@ export const IdeaNode = memo(({ data }) => {
       </div>
 
       {/* Footer */}
-      <div className="flex items-center justify-end gap-1 mt-4 pt-4 border-t border-neutral-200/60 dark:border-neutral-700/60">
-        {data.onSendToKanban && (
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-7 w-7 text-neutral-600 dark:text-neutral-400 hover:text-primary-500 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800"
-            onClick={(e) => {
-              e.stopPropagation();
-              data.onSendToKanban?.(data.id);
-            }}
-          >
-            <Inbox className="h-3.5 w-3.5" />
-          </Button>
+      <div className="flex items-center justify-between gap-2 mt-4 pt-4 border-t border-neutral-200/60 dark:border-neutral-700/60">
+        {/* Like/Dislike buttons - Only for AI ideas */}
+        {data.type === "ai" && (
+          <div className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              disabled={!data.onToggleLike}
+              className={cn(
+                "h-7 w-7 transition-colors",
+                data.is_liked
+                  ? "text-primary-500 hover:text-primary-600 bg-primary-50 dark:bg-primary-900/20"
+                  : "text-neutral-600 dark:text-neutral-400 hover:text-primary-500 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800",
+                !data.onToggleLike && "opacity-40 cursor-not-allowed hover:bg-transparent hover:text-neutral-600 dark:hover:text-neutral-400"
+              )}
+              onClick={(e) => {
+                e.stopPropagation();
+                data.onToggleLike?.(data.id);
+              }}
+              title={data.onToggleLike ? "Like this idea" : "Only the board owner can like ideas"}
+            >
+              <ThumbsUp className={cn("h-3.5 w-3.5", data.is_liked && "fill-current")} />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              disabled={!data.onToggleDislike}
+              className={cn(
+                "h-7 w-7 transition-colors",
+                data.is_disliked
+                  ? "text-error-500 hover:text-error-600 bg-error-50 dark:bg-error-900/20"
+                  : "text-neutral-600 dark:text-neutral-400 hover:text-error-500 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800",
+                !data.onToggleDislike && "opacity-40 cursor-not-allowed hover:bg-transparent hover:text-neutral-600 dark:hover:text-neutral-400"
+              )}
+              onClick={(e) => {
+                e.stopPropagation();
+                data.onToggleDislike?.(data.id);
+              }}
+              title={data.onToggleDislike ? "Dislike this idea" : "Only the board owner can dislike ideas"}
+            >
+              <ThumbsDown className={cn("h-3.5 w-3.5", data.is_disliked && "fill-current")} />
+            </Button>
+          </div>
         )}
+        
+        {/* Action buttons */}
+        <div className="flex items-center gap-1 ml-auto">
+          {data.onSendToKanban && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 text-neutral-600 dark:text-neutral-400 hover:text-primary-500 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800"
+              onClick={(e) => {
+                e.stopPropagation();
+                data.onSendToKanban?.(data.id);
+              }}
+            >
+              <Inbox className="h-3.5 w-3.5" />
+            </Button>
+          )}
 
-        {data.onAddSubIdea && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={(e) => {
-              e.stopPropagation();
-              data.onAddSubIdea?.(data.id);
-            }}
-            className="text-neutral-600 dark:text-neutral-400 hover:text-primary-500 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors text-xs"
-          >
-            Sub-idea
-          </Button>
-        )}
+          {data.onAddSubIdea && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                data.onAddSubIdea?.(data.id);
+              }}
+              className="text-neutral-600 dark:text-neutral-400 hover:text-primary-500 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors text-xs"
+            >
+              Sub-idea
+            </Button>
+          )}
 
-        {data.type === "manual" && data.onDelete && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={(e) => {
-              e.stopPropagation();
-              data.onDelete(data.id);
-            }}
-            className="text-neutral-600 dark:text-neutral-400 hover:text-error-500 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors text-xs"
-          >
-            Delete
-          </Button>
-        )}
+          {data.type === "manual" && data.onDelete && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                data.onDelete(data.id);
+              }}
+              className="text-neutral-600 dark:text-neutral-400 hover:text-error-500 hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors text-xs"
+            >
+              Delete
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Bottom handle for outgoing connections to sub-ideas */}

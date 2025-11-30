@@ -63,5 +63,35 @@ export const flowService = {
       .eq('id', ideaId);
 
     if (error) throw error;
+  },
+
+  async toggleIdeaLike(ideaId, currentlyLiked) {
+    const { data, error } = await supabase
+      .from('ai_ideas')
+      .update({
+        is_liked: !currentlyLiked,
+        is_disliked: false // Clear dislike if setting like
+      })
+      .eq('id', ideaId)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  },
+
+  async toggleIdeaDislike(ideaId, currentlyDisliked) {
+    const { data, error } = await supabase
+      .from('ai_ideas')
+      .update({
+        is_disliked: !currentlyDisliked,
+        is_liked: false // Clear like if setting dislike
+      })
+      .eq('id', ideaId)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
   }
 };

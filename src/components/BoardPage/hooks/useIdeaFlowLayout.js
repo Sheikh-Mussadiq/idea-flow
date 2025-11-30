@@ -11,7 +11,10 @@ export const useIdeaFlowLayout = (
   handleAddSubIdea,
   handleSendToKanban,
   handleOpenTask,
-  canEdit
+  handleToggleLike,
+  handleToggleDislike,
+  canEdit,
+  isOwner
 ) => {
   const { fitView } = useReactFlow();
   const nodeTypes = useMemo(
@@ -91,6 +94,8 @@ export const useIdeaFlowLayout = (
             onAddSubIdea: canEdit ? handleAddSubIdea : undefined,
             onSendToKanban: canEdit ? handleSendToKanban : undefined,
             onOpenTask: handleOpenTask,
+            onToggleLike: isOwner && idea.type === "ai" ? handleToggleLike : undefined,
+            onToggleDislike: isOwner && idea.type === "ai" ? handleToggleDislike : undefined,
           },
           draggable: canEdit,
         };
@@ -104,7 +109,10 @@ export const useIdeaFlowLayout = (
     handleOpenComments,
     handleSendToKanban,
     handleOpenTask,
+    handleToggleLike,
+    handleToggleDislike,
     canEdit,
+    isOwner,
     ideas,
     inputNodeData,
     setNodes,

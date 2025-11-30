@@ -491,6 +491,7 @@ export const BoardContent = ({
           onUpdateIdeas={onUpdateFlowIdeas}
           isViewer={isViewer}
           currentBoard={currentBoard}
+          currentUser={currentUser}
           onOpenComments={handleOpenComments}
           onOpenTask={handleOpenTask}
           activeFlowId={activeFlowId}

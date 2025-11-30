@@ -511,6 +511,64 @@ export const BoardProvider = ({ children }) => {
     }
   };
 
+  const toggleIdeaLike = async (ideaId) => {
+    try {
+      const idea = currentBoard?.flowIdeas.find((i) => i.id === ideaId);
+      if (!idea) return;
+
+      // Optimistic update
+      if (currentBoard) {
+        setCurrentBoard((prev) => ({
+          ...prev,
+          flowIdeas: prev.flowIdeas.map((i) =>
+            i.id === ideaId
+              ? {
+                  ...i,
+                  is_liked: !i.is_liked,
+                  is_disliked: false,
+                }
+              : i
+          ),
+        }));
+      }
+
+      await flowService.toggleIdeaLike(ideaId, idea.is_liked);
+    } catch (error) {
+      console.error("Error toggling idea like:", error);
+      toast.error("Failed to update reaction");
+      if (currentBoard) fetchBoardDetails(currentBoard.id);
+    }
+  };
+
+  const toggleIdeaDislike = async (ideaId) => {
+    try {
+      const idea = currentBoard?.flowIdeas.find((i) => i.id === ideaId);
+      if (!idea) return;
+
+      // Optimistic update
+      if (currentBoard) {
+        setCurrentBoard((prev) => ({
+          ...prev,
+          flowIdeas: prev.flowIdeas.map((i) =>
+            i.id === ideaId
+              ? {
+                  ...i,
+                  is_disliked: !i.is_disliked,
+                  is_liked: false,
+                }
+              : i
+          ),
+        }));
+      }
+
+      await flowService.toggleIdeaDislike(ideaId, idea.is_disliked);
+    } catch (error) {
+      console.error("Error toggling idea dislike:", error);
+      toast.error("Failed to update reaction");
+      if (currentBoard) fetchBoardDetails(currentBoard.id);
+    }
+  };
+
   // --- Member Operations ---
 
   const addMember = async (boardId, userId, role = "viewer") => {
@@ -832,6 +890,8 @@ export const BoardProvider = ({ children }) => {
         createFlowIdea,
         updateFlowIdea,
         deleteFlowIdea,
+        toggleIdeaLike,
+        toggleIdeaDislike,
         addMember,
         updateMemberRole,
         removeMember,
