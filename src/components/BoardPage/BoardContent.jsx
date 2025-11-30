@@ -451,6 +451,7 @@ export const BoardContent = ({
       {viewMode === "list" && (
         <ListView
           ideas={ideas}
+          columns={columns}
           onAddTask={handleAddTask}
           onOpenTask={handleOpenTask}
         />

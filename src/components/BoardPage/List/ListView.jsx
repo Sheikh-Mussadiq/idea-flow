@@ -9,7 +9,7 @@ import {
 } from "lucide-react";
 import { Button } from "../../ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "../../ui/avatar";
-import { useMemo, useState } from "react";
+import { useState, useMemo } from "react";
 import { useBoard } from "../../../context/BoardContext";
 import {
   DndContext,
@@ -25,7 +25,6 @@ import {
   SortableContext,
   verticalListSortingStrategy,
   useSortable,
-  arrayMove,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { createPortal } from "react-dom";
@@ -223,35 +222,34 @@ const StatusGroup = ({
   );
 };
 
-export const ListView = ({ onAddTask, onOpenTask }) => {
-  const { activeBoard, updateBoard } = useBoard();
+export const ListView = ({
+  ideas = [],
+  columns = [],
+  onAddTask,
+  onOpenTask,
+}) => {
+  const { currentBoard, updateCard } = useBoard();
   const [activeDragItem, setActiveDragItem] = useState(null);
   const [activeDragWidth, setActiveDragWidth] = useState(null);
 
-  const ideas = useMemo(() => activeBoard?.ideas || [], [activeBoard]);
-
-  // Group tasks by status
+  // Group tasks by status using actual board columns
   const groupedTasks = useMemo(() => {
-    const groups = {
-      "To Do": [],
-      "In Progress": [],
-      Review: [],
-      Done: [],
-    };
+    const groups = {};
 
+    // Initialize groups based on actual columns
+    columns.forEach((column) => {
+      groups[column.title] = [];
+    });
+
+    // Group ideas by their kanbanStatus
     ideas.forEach((idea) => {
-      if (idea.kanbanStatus && groups[idea.kanbanStatus]) {
-        groups[idea.kanbanStatus].push(idea);
-      } else if (idea.kanbanStatus) {
-        if (!groups[idea.kanbanStatus]) {
-          groups[idea.kanbanStatus] = [];
-        }
+      if (idea.kanbanStatus && groups[idea.kanbanStatus] !== undefined) {
         groups[idea.kanbanStatus].push(idea);
       }
     });
 
     return groups;
-  }, [ideas]);
+  }, [ideas, columns]);
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -298,7 +296,7 @@ export const ListView = ({ onAddTask, onOpenTask }) => {
     }
   };
 
-  const handleDragEnd = (event) => {
+  const handleDragEnd = async (event) => {
     setActiveDragItem(null);
     setActiveDragWidth(null);
     const { active, over } = event;
@@ -331,16 +329,31 @@ export const ListView = ({ onAddTask, onOpenTask }) => {
 
     // Case 1: Moving to a different status
     if (targetStatus !== activeTask.kanbanStatus) {
-      const updatedIdeas = ideas.map((idea) => {
-        if (idea.id === activeId) {
-          return { ...idea, kanbanStatus: targetStatus };
-        }
-        return idea;
-      });
+      try {
+        // Find the column ID for the target status
+        const targetColumn = currentBoard?.columns?.find(
+          (c) => c.title === targetStatus
+        );
+        if (!targetColumn) return;
 
-      updateBoard(activeBoard.id, { ideas: updatedIdeas });
+        // Calculate new position (end of column)
+        const cardsInColumn = ideas.filter(
+          (i) => i.kanbanStatus === targetStatus
+        );
+        const position =
+          cardsInColumn.length > 0
+            ? Math.max(...cardsInColumn.map((c) => c.position || 0)) + 1000
+            : 0;
+
+        await updateCard(activeId, {
+          column_id: targetColumn.id,
+          position,
+        });
+      } catch (error) {
+        console.error("Error moving card:", error);
+      }
     }
-    // Case 2: Reordering within the same status
+    // Case 2: Reordering within the same status - handled by backend via position updates
     else if (activeId !== overId) {
       // Get all tasks with the same status
       const tasksInStatus = ideas.filter(
@@ -350,14 +363,15 @@ export const ListView = ({ onAddTask, onOpenTask }) => {
       const overIndex = tasksInStatus.findIndex((t) => t.id === overId);
 
       if (activeIndex !== -1 && overIndex !== -1) {
-        // Reorder tasks within the status
-        const reorderedTasks = arrayMove(tasksInStatus, activeIndex, overIndex);
+        try {
+          // Calculate new position based on surrounding cards
+          const overTask = tasksInStatus[overIndex];
+          const position = overTask.position || 0;
 
-        // Merge back with other tasks
-        const otherTasks = ideas.filter((i) => i.kanbanStatus !== targetStatus);
-        const updatedIdeas = [...otherTasks, ...reorderedTasks];
-
-        updateBoard(activeBoard.id, { ideas: updatedIdeas });
+          await updateCard(activeId, { position });
+        } catch (error) {
+          console.error("Error reordering card:", error);
+        }
       }
     }
   };

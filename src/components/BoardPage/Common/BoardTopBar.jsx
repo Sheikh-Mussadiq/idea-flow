@@ -44,7 +44,7 @@ export function BoardHeader({
   const viewTabs = [
     { label: "Flow", value: "flow", icon: GitFork },
     { label: "Kanban", value: "kanban", icon: LayoutTemplate },
-    { label: "Table", value: "table", icon: Table2 },
+    // { label: "Table", value: "table", icon: Table2 },
     { label: "List", value: "list", icon: List },
   ];
 
