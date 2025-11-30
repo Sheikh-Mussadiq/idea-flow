@@ -27,7 +27,7 @@ export const useIdeaFlowLayout = (
   const draggedNodesRef = useRef(new Set());
 
   useEffect(() => {
-    const flowIdeas = ideas.filter((idea) => idea.showInFlow !== false);
+    const flowIdeas = ideas.filter((idea) => idea.flowId);
     const currentIdeaIds = new Set(flowIdeas.map((idea) => idea.id));
     draggedNodesRef.current.forEach((id) => {
       if (!currentIdeaIds.has(id)) {

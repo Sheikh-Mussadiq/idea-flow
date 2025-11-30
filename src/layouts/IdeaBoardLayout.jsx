@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams, useParams } from "react-router-dom";
 
 import { BoardContent } from "../components/BoardPage/BoardContent.jsx";
 import { ArchivedTasksPanel } from "../components/BoardPage/Panels/ArchivedTasksPanel.jsx";
@@ -48,36 +48,45 @@ import { useBoard } from "../context/BoardContext";
 import { useActiveBoard } from "../hooks/useActiveBoard";
 
 const defaultMembers = mockUsers.map((user) => ({
-  id: user.id,
-  name: user.name,
-  email: user.email,
-  avatar: user.avatar,
-  role: user.role,
+  user_id: user.id,
+  user: {
+    id: user.id,
+    full_name: user.name,
+    email: user.email,
+    avatar_url: user.avatar,
+  },
+  role: "editor", // Default role
+  created_at: new Date().toISOString(),
 }));
 
-const createEmptyBoard = (name, color, icon) => ({
+const createEmptyBoard = (name, color = "#6366f1", icon = "📝") => ({
   id: crypto.randomUUID(),
   name,
+  description: "",
   color,
   icon,
-  createdAt: Date.now(),
-  ideas: [],
-  comments: {},
+  is_archived: false,
+  is_favorite: false,
+  created_at: new Date().toISOString(),
+  updated_at: new Date().toISOString(),
+  owner_id: null, // Will be set by the backend with the current user's ID
+  columns: [],
+  members: [...defaultMembers],
+  tags: [],
+  ai_flows: [],
+  // For backward compatibility with existing code
   settings: {
     description: "",
     themeColor: color,
     icon,
-    defaultLabels: mockLabels,
+    defaultLabels: [],
   },
-  members: defaultMembers.map((member) => ({ ...member })),
-  invites: [],
-  activity: [],
-  isArchived: false,
 });
 
 export const IdeaBoardLayout = ({ initialView = "flow" }) => {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
+  const { flowId } = useParams(); // Get flowId from URL if present
 
   const {
     boards,
@@ -92,10 +101,18 @@ export const IdeaBoardLayout = ({ initialView = "flow" }) => {
   // Use URL-based board selection
   const { activeBoard, boardId, notFound } = useActiveBoard();
 
+  // Determine the active flow - use flowId from URL or default to first flow
+  const activeFlowId = useMemo(() => {
+    if (flowId) return flowId;
+    return activeBoard?.ai_flows?.[0]?.id || null;
+  }, [flowId, activeBoard?.ai_flows]);
+
   // Local UI state
   const [isMembersOpen, setIsMembersOpen] = useState(false);
 
-  const [currentUserId, setCurrentUserId] = useState(defaultMembers[0].id);
+  const [currentUserId, setCurrentUserId] = useState(
+    defaultMembers[0]?.user_id || defaultMembers[0]?.id
+  );
 
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -124,15 +141,20 @@ export const IdeaBoardLayout = ({ initialView = "flow" }) => {
   const [isArchivedOpen, setIsArchivedOpen] = useState(false);
 
   const currentUser =
-    defaultMembers.find((m) => m.id === currentUserId) ?? defaultMembers[0];
+    defaultMembers.find((m) => m.user_id === currentUserId) ??
+    defaultMembers[0];
 
   // Check if current user is the board owner
-  const isOwner = activeBoard ? activeBoard.owner_id === currentUser.id : false;
+  const isOwner = activeBoard
+    ? activeBoard.owner_id === (currentUser?.user_id || currentUser?.id)
+    : false;
 
   // Check current user's member role
   const currentMemberRole = activeBoard
     ? (activeBoard.members || []).find(
-        (m) => m.user?.id === currentUser.id || m.user_id === currentUser.id
+        (m) =>
+          m.user?.id === (currentUser?.user_id || currentUser?.id) ||
+          m.user_id === (currentUser?.user_id || currentUser?.id)
       )?.role || null
     : null;
 
@@ -141,32 +163,21 @@ export const IdeaBoardLayout = ({ initialView = "flow" }) => {
   const isViewer = !canEdit;
 
   const availableLabels = useMemo(() => {
-    if (!activeBoard) return [];
-    const map = new Map();
-    activeBoard.ideas.forEach((idea) => {
-      (idea.labels || []).forEach((label) => {
-        if (!map.has(label.id)) {
-          map.set(label.id, label);
-        }
-      });
-    });
-    return Array.from(map.values());
-  }, [activeBoard]);
+    if (!activeBoard?.tags) return [];
+    return [...activeBoard.tags];
+  }, [activeBoard?.tags]);
 
   const availableAssignees = useMemo(() => {
-    if (!activeBoard) return [];
-    const map = new Map();
-    activeBoard.ideas.forEach((idea) => {
-      if (idea.assignedTo && !map.has(idea.assignedTo.id)) {
-        map.set(idea.assignedTo.id, {
-          id: idea.assignedTo.id,
-          name: idea.assignedTo.name,
-          avatar: idea.assignedTo.avatar,
-        });
-      }
-    });
-    return Array.from(map.values());
-  }, [activeBoard]);
+    if (!activeBoard?.members) return [];
+    return activeBoard.members
+      .map((member) => ({
+        id: member.user_id || member.user?.id,
+        name: member.user?.full_name || member.user?.name,
+        avatar: member.user?.avatar_url || member.user?.avatar,
+        role: member.role,
+      }))
+      .filter(Boolean);
+  }, [activeBoard?.members]);
 
   // Debounce search
   useEffect(() => {
@@ -204,6 +215,17 @@ export const IdeaBoardLayout = ({ initialView = "flow" }) => {
   useEffect(() => {
     setBoardViewMode(initialView);
   }, [initialView]);
+
+  // Handler to change view mode and update URL
+  const handleChangeViewMode = (newViewMode) => {
+    if (!activeBoard) return;
+    setBoardViewMode(newViewMode);
+
+    // Navigate to the new view URL while preserving search params
+    const currentParams = searchParams.toString();
+    const queryString = currentParams ? `?${currentParams}` : "";
+    navigate(`/boards/${activeBoard.id}/${newViewMode}${queryString}`);
+  };
 
   // Handler to update search in URL
   const handleSearchChange = (query) => {
@@ -282,98 +304,176 @@ export const IdeaBoardLayout = ({ initialView = "flow" }) => {
     );
   };
 
-  const filteredIdeas = useMemo(() => {
-    if (!activeBoard) return [];
+  const handleUpdateCards = (updater) => {
+    if (!activeBoard) return;
+    setBoards((prev) =>
+      prev.map((board) => {
+        if (board.id !== activeBoard.id) return board;
 
-    const baseIdeas = activeBoard.ideas.filter((idea) => !idea.isArchived);
+        // Create a deep copy of the board to avoid direct state mutation
+        const updatedBoard = { ...board };
 
-    const applyFilters = (idea) => {
-      if (
-        filters.priorities.length &&
-        (!idea.priority || !filters.priorities.includes(idea.priority))
-      ) {
-        return false;
-      }
-
-      if (
-        filters.labelIds.length &&
-        !(idea.labels || []).some((l) => filters.labelIds.includes(l.id))
-      ) {
-        return false;
-      }
-
-      if (
-        filters.assigneeIds.length &&
-        (!idea.assignedTo || !filters.assigneeIds.includes(idea.assignedTo.id))
-      ) {
-        return false;
-      }
-
-      if (
-        filters.statuses.length &&
-        (!idea.kanbanStatus || !filters.statuses.includes(idea.kanbanStatus))
-      ) {
-        return false;
-      }
-
-      if (filters.types.length && !filters.types.includes(idea.type)) {
-        return false;
-      }
-
-      if (filters.dueDate) {
-        const hasDueDate = !!idea.dueDate;
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-
-        if (!hasDueDate) {
-          if (filters.dueDate === "none") return true;
-          return false;
+        // Update cards in their respective columns
+        if (updatedBoard.columns) {
+          updatedBoard.columns = updatedBoard.columns.map((column) => {
+            const updatedColumn = { ...column };
+            updatedColumn.cards = updater(updatedColumn.cards || []);
+            return updatedColumn;
+          });
         }
 
-        const due = new Date(idea.dueDate);
-        due.setHours(0, 0, 0, 0);
+        return updatedBoard;
+      })
+    );
+  };
 
-        const diffDays = Math.floor(
-          (due.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
-        );
+  const handleUpdateFlowIdeas = (updater) => {
+    if (!activeBoard) return;
+    setBoards((prev) =>
+      prev.map((board) => {
+        if (board.id !== activeBoard.id) return board;
 
-        if (filters.dueDate === "overdue" && due < today) return true;
-        if (filters.dueDate === "today" && diffDays === 0) return true;
-        if (filters.dueDate === "week" && diffDays >= 0 && diffDays <= 7)
-          return true;
-        if (filters.dueDate === "none") return !hasDueDate;
+        // Create a deep copy of the board to avoid direct state mutation
+        const updatedBoard = { ...board };
 
+        // Update ideas in their respective flows
+        if (updatedBoard.ai_flows) {
+          updatedBoard.ai_flows = updatedBoard.ai_flows.map((flow) => {
+            const updatedFlow = { ...flow };
+            updatedFlow.ideas = updater(updatedFlow.ideas || []);
+            return updatedFlow;
+          });
+        }
+
+        return updatedBoard;
+      })
+    );
+  };
+
+  // Use the already-flattened cards and flowIdeas from boardService
+  const allCards = useMemo(() => {
+    return activeBoard?.cards || [];
+  }, [activeBoard?.cards]);
+
+  // Use the already-flattened flowIdeas from boardService
+  const allIdeas = useMemo(() => {
+    return activeBoard?.flowIdeas || [];
+  }, [activeBoard?.flowIdeas]);
+
+  const filterItems = (items) => {
+    if (!items || !items.length) return [];
+
+    const q = debouncedSearch;
+    const { priorities, labelIds, assigneeIds, dueDate, statuses, types } =
+      filters;
+
+    const applyFilters = (item) => {
+      // Filter by priority
+      if (priorities.length > 0 && !priorities.includes(item.priority)) {
+        return false;
+      }
+
+      // Filter by labels
+      if (
+        labelIds.length > 0 &&
+        !labelIds.some(
+          (id) =>
+            (item.tags || []).includes(id) ||
+            (item.labels || []).some((label) => label.id === id)
+        )
+      ) {
+        return false;
+      }
+
+      // Filter by assignees
+      if (
+        assigneeIds.length > 0 &&
+        !assigneeIds.some(
+          (id) =>
+            (item.assigned_to || []).includes(id) || item.assignedTo?.id === id
+        )
+      ) {
+        return false;
+      }
+
+      // Filter by status
+      if (
+        statuses.length > 0 &&
+        !statuses.includes(item.status || item.kanbanStatus)
+      ) {
+        return false;
+      }
+
+      // Filter by type
+      if (types.length > 0 && !types.includes(item.type)) {
+        return false;
+      }
+
+      // Filter by due date
+      if (dueDate && item.dueDate) {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const due = new Date(item.dueDate);
+        const diffDays = Math.floor((due - today) / (1000 * 60 * 60 * 24));
+
+        if (dueDate === "overdue" && diffDays >= 0) return false;
+        if (dueDate === "today" && diffDays !== 0) return false;
+        if (dueDate === "week" && (diffDays < 0 || diffDays > 7)) return false;
+        if (dueDate === "none" && item.dueDate) return false;
+      } else if (dueDate && dueDate !== "none") {
         return false;
       }
 
       return true;
     };
 
-    const matchesSearch = (idea) => {
-      if (!debouncedSearch) return true;
-      const q = debouncedSearch;
+    const matchesSearch = (item) => {
+      if (!q) return true;
+      const searchStr = q.toLowerCase();
 
-      const commentsForIdea = activeBoard.comments[idea.id] || [];
+      // Check title and description
+      if (
+        item.title?.toLowerCase().includes(searchStr) ||
+        item.description?.toLowerCase().includes(searchStr)
+      ) {
+        return true;
+      }
 
-      if (idea.title?.toLowerCase().includes(q)) return true;
-      if (idea.description?.toLowerCase().includes(q)) return true;
-      if ((idea.labels || []).some((l) => l.name.toLowerCase().includes(q)))
+      // Check labels
+      if (
+        (item.labels || []).some((l) =>
+          l.name?.toLowerCase().includes(searchStr)
+        )
+      ) {
         return true;
-      if ((idea.subtasks || []).some((s) => s.text.toLowerCase().includes(q)))
+      }
+
+      // Check assignees
+      if (item.assignedTo?.name?.toLowerCase().includes(searchStr)) {
         return true;
-      if (idea.assignedTo && idea.assignedTo.name.toLowerCase().includes(q))
-        return true;
-      if (commentsForIdea.some((c) => c.text.toLowerCase().includes(q)))
-        return true;
+      }
 
       return false;
     };
 
-    const afterFilter = baseIdeas.filter(applyFilters);
+    const afterFilter = items.filter(applyFilters);
     const afterSearch = afterFilter.filter(matchesSearch);
-    setSearchCount(afterSearch.length);
     return afterSearch;
-  }, [activeBoard, debouncedSearch, filters]);
+  };
+
+  const filteredCards = useMemo(
+    () => filterItems(allCards),
+    [allCards, debouncedSearch, filters]
+  );
+
+  const filteredFlowIdeas = useMemo(
+    () => filterItems(allIdeas),
+    [allIdeas, debouncedSearch, filters]
+  );
+
+  useEffect(() => {
+    setSearchCount(filteredCards.length + filteredFlowIdeas.length);
+  }, [filteredCards.length, filteredFlowIdeas.length]);
 
   const handleUpdateComments = (updater) => {
     if (!activeBoard) return;
@@ -390,9 +490,19 @@ export const IdeaBoardLayout = ({ initialView = "flow" }) => {
   };
 
   // Move useMemo before early returns to comply with Rules of Hooks
-  const archivedIdeas = activeBoard
-    ? activeBoard.ideas.filter((idea) => idea.isArchived)
-    : [];
+  const archivedIdeas = useMemo(() => {
+    if (!activeBoard?.columns) return [];
+    // Get all archived cards from all columns
+    const archived = activeBoard.columns.flatMap((column) =>
+      (column.cards || []).filter((card) => card.isArchived)
+    );
+    // Also include archived ideas from flows
+    const archivedIdeasFromFlows =
+      activeBoard.ai_flows?.flatMap((flow) =>
+        (flow.ideas || []).filter((idea) => idea.isArchived)
+      ) || [];
+    return [...archived, ...archivedIdeasFromFlows];
+  }, [activeBoard?.columns, activeBoard?.ai_flows]);
 
   if (notFound) {
     return <BoardNotFound />;
@@ -407,18 +517,67 @@ export const IdeaBoardLayout = ({ initialView = "flow" }) => {
     setBoards((prev) =>
       prev.map((board) => {
         if (board.id !== activeBoard.id) return board;
-        const ideas = (board.ideas || []).map((idea) => {
-          if (idea.id !== id) return idea;
-          const nextStatus =
-            idea.previousKanbanStatus ?? idea.kanbanStatus ?? "Backlog";
-          return {
-            ...idea,
-            isArchived: false,
-            archivedAt: undefined,
-            kanbanStatus: nextStatus,
-          };
-        });
-        return { ...board, ideas };
+
+        // Create a deep copy of the board
+        const updatedBoard = { ...board };
+        let found = false;
+
+        // Try to find and restore the card in columns
+        if (updatedBoard.columns) {
+          updatedBoard.columns = updatedBoard.columns.map((column) => {
+            const cardIndex = (column.cards || []).findIndex(
+              (card) => card.id === id
+            );
+            if (cardIndex === -1) return column;
+
+            found = true;
+            const updatedColumn = { ...column };
+            const updatedCards = [...(updatedColumn.cards || [])];
+            const cardToRestore = updatedCards[cardIndex];
+
+            updatedCards[cardIndex] = {
+              ...cardToRestore,
+              isArchived: false,
+              archivedAt: undefined,
+              kanbanStatus:
+                cardToRestore.previousKanbanStatus ||
+                cardToRestore.kanbanStatus ||
+                "Backlog",
+              previousKanbanStatus: undefined,
+            };
+
+            return {
+              ...updatedColumn,
+              cards: updatedCards,
+            };
+          });
+        }
+
+        // If not found in cards, try to find in ideas
+        if (!found && updatedBoard.ai_flows) {
+          updatedBoard.ai_flows = updatedBoard.ai_flows.map((flow) => {
+            const ideaIndex = (flow.ideas || []).findIndex(
+              (idea) => idea.id === id
+            );
+            if (ideaIndex === -1) return flow;
+
+            const updatedFlow = { ...flow };
+            const updatedIdeas = [...(updatedFlow.ideas || [])];
+
+            updatedIdeas[ideaIndex] = {
+              ...updatedIdeas[ideaIndex],
+              isArchived: false,
+              archivedAt: undefined,
+            };
+
+            return {
+              ...updatedFlow,
+              ideas: updatedIdeas,
+            };
+          });
+        }
+
+        return updatedBoard;
       })
     );
   };
@@ -462,23 +621,26 @@ export const IdeaBoardLayout = ({ initialView = "flow" }) => {
         onOpenArchived={() => setIsArchivedOpen(true)}
         archivedCount={archivedIdeas.length}
         viewMode={boardViewMode}
-        onChangeViewMode={setBoardViewMode}
+        onChangeViewMode={handleChangeViewMode}
         filters={filters}
       />
 
       <div className="flex-1 w-full overflow-hidden">
         <BoardContent
           initialView={initialView}
-          ideas={filteredIdeas}
-          columns={activeBoard.columns}
-          comments={activeBoard.comments}
-          onUpdateIdeas={handleUpdateIdeas}
+          cards={filteredCards}
+          flowIdeas={filteredFlowIdeas}
+          columns={activeBoard.columns || []}
+          comments={activeBoard.comments || {}}
+          onUpdateCards={handleUpdateCards}
+          onUpdateFlowIdeas={handleUpdateFlowIdeas}
           onUpdateComments={handleUpdateComments}
           teamMembers={activeBoard.members || []}
           currentUser={currentUser}
           currentRole={currentMemberRole}
           viewMode={boardViewMode}
-          onChangeView={setBoardViewMode}
+          onChangeView={handleChangeViewMode}
+          activeFlowId={activeFlowId}
         />
       </div>
 

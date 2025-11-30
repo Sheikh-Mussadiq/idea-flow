@@ -84,14 +84,14 @@ export const KanbanColumn = ({ id, title, ideas, onOpenTask, onAddTask }) => {
           <DropdownMenuContent align="end">
             <DropdownMenuItem onClick={() => setIsEditing(true)}>
               <Pencil className="h-4 w-4 mr-2" />
-              Rename column
+              Rename
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={handleDelete}
               className="text-red-600 dark:text-red-400"
             >
               <Trash2 className="h-4 w-4 mr-2" />
-              Delete column
+              Delete
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

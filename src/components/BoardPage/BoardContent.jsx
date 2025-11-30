@@ -10,10 +10,12 @@ import { useNotifications } from "../../context/NotificationsContext";
 import { useBoard } from "../../context/BoardContext";
 
 export const BoardContent = ({
-  ideas,
+  cards,
+  flowIdeas,
   columns,
   comments,
-  onUpdateIdeas,
+  onUpdateCards,
+  onUpdateFlowIdeas,
   onUpdateComments,
   teamMembers,
   currentUser,
@@ -21,6 +23,7 @@ export const BoardContent = ({
   initialView = "flow",
   viewMode: controlledViewMode,
   onChangeView,
+  activeFlowId,
 }) => {
   const { addNotification } = useNotifications();
   const [uncontrolledViewMode, setUncontrolledViewMode] = useState(initialView);
@@ -31,28 +34,53 @@ export const BoardContent = ({
   const [selectedTaskId, setSelectedTaskId] = useState(null);
   const { createCard, updateCard, updateFlowIdea, currentBoard } = useBoard();
 
-  const currentUserName = currentUser?.name || "You";
+  const currentUserName =
+    currentUser?.user?.full_name || currentUser?.name || "You";
   const isViewer = currentRole === "viewer";
 
-  const logActivity = (ideaId, user, action) => {
-    onUpdateIdeas((prevIdeas) =>
-      prevIdeas.map((idea) =>
-        idea.id === ideaId
-          ? {
-              ...idea,
-              activity: [
-                {
-                  id: Date.now().toString(),
-                  timestamp: Date.now(),
-                  user,
-                  action,
-                },
-                ...(idea.activity || []),
-              ],
-            }
-          : idea
-      )
-    );
+  const logActivity = (itemId, user, action) => {
+    // Check if item is a card or flow idea
+    const isCard = cards.some((c) => c.id === itemId);
+
+    if (isCard) {
+      onUpdateCards((prevCards) =>
+        prevCards.map((card) =>
+          card.id === itemId
+            ? {
+                ...card,
+                activity: [
+                  {
+                    id: Date.now().toString(),
+                    timestamp: Date.now(),
+                    user,
+                    action,
+                  },
+                  ...(card.activity || []),
+                ],
+              }
+            : card
+        )
+      );
+    } else {
+      onUpdateFlowIdeas((prevIdeas) =>
+        prevIdeas.map((idea) =>
+          idea.id === itemId
+            ? {
+                ...idea,
+                activity: [
+                  {
+                    id: Date.now().toString(),
+                    timestamp: Date.now(),
+                    user,
+                    action,
+                  },
+                  ...(idea.activity || []),
+                ],
+              }
+            : idea
+        )
+      );
+    }
   };
 
   const handleOpenComments = (ideaId) => {
@@ -175,13 +203,14 @@ export const BoardContent = ({
     if (isViewer) return;
     if (!text.trim()) return;
 
-    onUpdateIdeas((prevIdeas) =>
-      prevIdeas.map((idea) =>
-        idea.id === id
+    // Subtasks are usually for cards
+    onUpdateCards((prevCards) =>
+      prevCards.map((card) =>
+        card.id === id
           ? {
-              ...idea,
+              ...card,
               subtasks: [
-                ...idea.subtasks,
+                ...card.subtasks,
                 {
                   id: Date.now().toString(),
                   text,
@@ -189,7 +218,7 @@ export const BoardContent = ({
                 },
               ],
             }
-          : idea
+          : card
       )
     );
 
@@ -198,19 +227,19 @@ export const BoardContent = ({
 
   const handleToggleSubtask = (id, subtaskId) => {
     if (isViewer) return;
-    onUpdateIdeas((prevIdeas) => {
+    onUpdateCards((prevCards) => {
       let toggledText = null;
 
-      const updated = prevIdeas.map((idea) => {
-        if (idea.id !== id) return idea;
+      const updated = prevCards.map((card) => {
+        if (card.id !== id) return card;
 
-        const subtasks = idea.subtasks.map((st) => {
+        const subtasks = card.subtasks.map((st) => {
           if (st.id !== subtaskId) return st;
           toggledText = st.text;
           return { ...st, completed: !st.completed };
         });
 
-        return { ...idea, subtasks };
+        return { ...card, subtasks };
       });
 
       if (toggledText) {
@@ -223,13 +252,13 @@ export const BoardContent = ({
 
   const handleRemoveSubtask = (id, subtaskId) => {
     if (isViewer) return;
-    onUpdateIdeas((prevIdeas) => {
+    onUpdateCards((prevCards) => {
       let removedText = null;
 
-      const updated = prevIdeas.map((idea) => {
-        if (idea.id !== id) return idea;
+      const updated = prevCards.map((card) => {
+        if (card.id !== id) return card;
 
-        const subtasks = idea.subtasks.filter((st) => {
+        const subtasks = card.subtasks.filter((st) => {
           if (st.id === subtaskId) {
             removedText = st.text;
             return false;
@@ -237,7 +266,7 @@ export const BoardContent = ({
           return true;
         });
 
-        return { ...idea, subtasks };
+        return { ...card, subtasks };
       });
 
       if (removedText) {
@@ -251,7 +280,12 @@ export const BoardContent = ({
   const handleUpdateTitle = async (id, title) => {
     if (isViewer) return;
     try {
-      await updateFlowIdea(id, { title });
+      // Check if it's a flow idea or card
+      if (flowIdeas.some((i) => i.id === id)) {
+        await updateFlowIdea(id, { title });
+      } else {
+        await updateCard(id, { title });
+      }
       logActivity(id, currentUserName, "Updated title");
     } catch (error) {
       // Error handled in context
@@ -261,7 +295,12 @@ export const BoardContent = ({
   const handleUpdateDescription = async (id, description) => {
     if (isViewer) return;
     try {
-      await updateFlowIdea(id, { description });
+      // Check if it's a flow idea or card
+      if (flowIdeas.some((i) => i.id === id)) {
+        await updateFlowIdea(id, { description });
+      } else {
+        await updateCard(id, { description });
+      }
       logActivity(id, currentUserName, "Updated description");
     } catch (error) {
       // Error handled in context
@@ -270,15 +309,15 @@ export const BoardContent = ({
 
   const handleAddAttachment = (id, attachment) => {
     if (isViewer) return;
-    // TODO: Implement attachment upload via attachmentService
-    onUpdateIdeas((prevIdeas) =>
-      prevIdeas.map((idea) =>
-        idea.id === id
+    // Assuming attachments are for cards for now
+    onUpdateCards((prevCards) =>
+      prevCards.map((card) =>
+        card.id === id
           ? {
-              ...idea,
-              attachments: [...idea.attachments, attachment],
+              ...card,
+              attachments: [...card.attachments, attachment],
             }
-          : idea
+          : card
       )
     );
     logActivity(id, currentUserName, `Added attachment: ${attachment.name}`);
@@ -286,17 +325,16 @@ export const BoardContent = ({
 
   const handleRemoveAttachment = (id, attachmentId) => {
     if (isViewer) return;
-    // TODO: Implement attachment deletion via attachmentService
-    onUpdateIdeas((prevIdeas) =>
-      prevIdeas.map((idea) =>
-        idea.id === id
+    onUpdateCards((prevCards) =>
+      prevCards.map((card) =>
+        card.id === id
           ? {
-              ...idea,
-              attachments: idea.attachments.filter(
+              ...card,
+              attachments: card.attachments.filter(
                 (a) => a.id !== attachmentId
               ),
             }
-          : idea
+          : card
       )
     );
     logActivity(id, currentUserName, "Removed attachment");
@@ -305,10 +343,14 @@ export const BoardContent = ({
   const handleAddLabel = async (id, labelId) => {
     if (isViewer) return;
     try {
-      const idea = ideas.find((i) => i.id === id);
-      const currentTags = idea?.tags || [];
-      await updateCard(id, { tags: [...currentTags, labelId] });
-      logActivity(id, currentUserName, "Added label");
+      const card = cards.find((i) => i.id === id);
+      const currentTags = card?.tags || [];
+      // Ensure we're adding UUIDs, not objects
+      const tagId = typeof labelId === "string" ? labelId : labelId.id;
+      if (!currentTags.includes(tagId)) {
+        await updateCard(id, { tags: [...currentTags, tagId] });
+        logActivity(id, currentUserName, "Added label");
+      }
     } catch (error) {
       // Error handled in context
     }
@@ -317,9 +359,10 @@ export const BoardContent = ({
   const handleRemoveLabel = async (id, labelId) => {
     if (isViewer) return;
     try {
-      const idea = ideas.find((i) => i.id === id);
-      const currentTags = idea?.tags || [];
-      await updateCard(id, { tags: currentTags.filter((t) => t !== labelId) });
+      const card = cards.find((i) => i.id === id);
+      const currentTags = card?.tags || [];
+      const tagId = typeof labelId === "string" ? labelId : labelId.id;
+      await updateCard(id, { tags: currentTags.filter((t) => t !== tagId) });
       logActivity(id, currentUserName, "Removed label");
     } catch (error) {
       // Error handled in context
@@ -328,16 +371,16 @@ export const BoardContent = ({
 
   const handleArchiveTask = (id) => {
     if (isViewer) return;
-    onUpdateIdeas((prevIdeas) =>
-      prevIdeas.map((idea) =>
-        idea.id === id
+    onUpdateCards((prevCards) =>
+      prevCards.map((card) =>
+        card.id === id
           ? {
-              ...idea,
+              ...card,
               isArchived: true,
               archivedAt: Date.now(),
-              previousKanbanStatus: idea.kanbanStatus,
+              previousKanbanStatus: card.kanbanStatus,
             }
-          : idea
+          : card
       )
     );
     logActivity(id, currentUserName, "Archived task");
@@ -351,9 +394,7 @@ export const BoardContent = ({
       if (!column) return;
 
       // Calculate new position (end of column)
-      const cardsInColumn = ideas.filter(
-        (i) => i.kanbanStatus === column.title
-      );
+      const cardsInColumn = column.cards || [];
       const position =
         cardsInColumn.length > 0
           ? Math.max(...cardsInColumn.map((c) => c.position || 0)) + 1000
@@ -373,11 +414,12 @@ export const BoardContent = ({
   const handleAssign = async (id, member) => {
     if (isViewer) return;
     try {
-      await updateCard(id, { assigned_to: member ? [member.id] : [] });
+      const memberId = member?.user_id || member?.id;
+      await updateCard(id, { assigned_to: member ? [memberId] : [] });
 
       if (member) {
         addNotification({
-          userId: member.id,
+          userId: memberId,
           message: `You were assigned to a task`,
           type: "assignment",
           taskId: id,
@@ -399,7 +441,7 @@ export const BoardContent = ({
     }
 
     // Calculate position (end of list)
-    const cardsInColumn = ideas.filter((i) => i.kanbanStatus === status);
+    const cardsInColumn = column.cards || [];
     const position =
       cardsInColumn.length > 0
         ? Math.max(...cardsInColumn.map((c) => c.position || 0)) + 1000
@@ -413,8 +455,10 @@ export const BoardContent = ({
     }
   };
 
-  const selectedIdea = ideas.find((idea) => idea.id === selectedIdeaId);
-  const selectedTask = ideas.find((idea) => idea.id === selectedTaskId) || null;
+  const selectedIdea =
+    flowIdeas.find((idea) => idea.id === selectedIdeaId) ||
+    cards.find((c) => c.id === selectedIdeaId);
+  const selectedTask = cards.find((c) => c.id === selectedTaskId) || null;
   const selectedTaskComments = selectedTaskId
     ? comments[selectedTaskId] || []
     : [];
@@ -423,18 +467,19 @@ export const BoardContent = ({
     <>
       {viewMode === "flow" && (
         <FlowContent
-          ideas={ideas}
-          onUpdateIdeas={onUpdateIdeas}
+          ideas={flowIdeas}
+          onUpdateIdeas={onUpdateFlowIdeas}
           isViewer={isViewer}
           currentBoard={currentBoard}
           onOpenComments={handleOpenComments}
           onOpenTask={handleOpenTask}
+          activeFlowId={activeFlowId}
         />
       )}
 
       {viewMode === "kanban" && (
         <KanbanView
-          ideas={ideas}
+          ideas={cards}
           columns={columns}
           onOpenComments={handleOpenComments}
           onMoveCard={handleMoveCard}
@@ -442,7 +487,7 @@ export const BoardContent = ({
           onAssign={handleAssign}
           onOpenTask={handleOpenTask}
           onAddTask={handleAddTask}
-          onReorderIdeas={onUpdateIdeas}
+          onReorderIdeas={onUpdateCards}
           canEdit={!isViewer}
         />
       )}
@@ -450,7 +495,7 @@ export const BoardContent = ({
       {viewMode === "table" && <TableView />}
       {viewMode === "list" && (
         <ListView
-          ideas={ideas}
+          ideas={cards}
           columns={columns}
           onAddTask={handleAddTask}
           onOpenTask={handleOpenTask}

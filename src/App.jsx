@@ -24,7 +24,9 @@ const PageLoader = () => (
   <div className="h-screen w-full flex items-center justify-center bg-neutral-50 dark:bg-neutral-950">
     <div className="flex flex-col items-center gap-4">
       <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
-      <p className="text-sm text-neutral-600 dark:text-neutral-400">Loading...</p>
+      <p className="text-sm text-neutral-600 dark:text-neutral-400">
+        Loading...
+      </p>
     </div>
   </div>
 );
@@ -55,35 +57,67 @@ const App = () => (
                     />
 
                     {/* Board Routes with dynamic IDs */}
-                    <Route path="/boards/:boardId" element={
+                    <Route
+                      path="/boards/:boardId"
+                      element={
                         <ProtectedRoute>
-                            <BoardPage />
+                          <BoardPage />
                         </ProtectedRoute>
-                    }>
+                      }
+                    >
                       <Route index element={<Navigate to="flow" replace />} />
-                      <Route path="flow" element={<BoardPage initialView="flow" />} />
-                      <Route path="kanban" element={<BoardPage initialView="kanban" />} />
-                      <Route path="table" element={<BoardPage initialView="table" />} />
+                      <Route
+                        path="flow"
+                        element={<BoardPage initialView="flow" />}
+                      />
+                      <Route
+                        path="flow/:flowId"
+                        element={<BoardPage initialView="flow" />}
+                      />
+                      <Route
+                        path="kanban"
+                        element={<BoardPage initialView="kanban" />}
+                      />
+                      <Route
+                        path="table"
+                        element={<BoardPage initialView="table" />}
+                      />
+                      <Route
+                        path="list"
+                        element={<BoardPage initialView="list" />}
+                      />
                     </Route>
 
-                    {/* Legacy routes - redirect to new structure */}
+                    {/* Legacy routes - redirect to home */}
                     <Route path="/flow" element={<Navigate to="/" replace />} />
-                    <Route path="/tasks" element={<Navigate to="/" replace />} />
+                    {/* <Route
+                      path="/board"
+                      element={<Navigate to="/" replace />}
+                    /> */}
+                    <Route
+                      path="/tasks"
+                      element={<Navigate to="/" replace />}
+                    />
 
                     {/* Global routes */}
-                    <Route path="/analytics" element={
+                    <Route
+                      path="/analytics"
+                      element={
                         <ProtectedRoute>
-                            <AnalyticsPage />
+                          <AnalyticsPage />
                         </ProtectedRoute>
-                    } />
-                    <Route path="/settings" element={
+                      }
+                    />
+                    <Route
+                      path="/settings"
+                      element={
                         <ProtectedRoute>
-                            <SettingsPage />
+                          <SettingsPage />
                         </ProtectedRoute>
-                    } />
+                      }
+                    />
 
-                    {/* 404 - Catch all */}
-                    <Route path="*" element={<NotFound />} />
+                    <Route path="*" element={<Navigate to="/" replace />} />
                   </Routes>
                 </Suspense>
               </ErrorBoundary>
@@ -96,5 +130,3 @@ const App = () => (
 );
 
 export default App;
-
-

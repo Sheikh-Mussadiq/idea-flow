@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useEffect } from "react";
 import { boardService } from "../services/boardService";
 import { cardService } from "../services/cardService";
 import { columnService } from "../services/columnService";
+import { flowService } from "../services/flowService";
 import { toast } from "sonner";
 import { supabase } from "../lib/supabaseClient";
 import { useAuth } from "./AuthContext";
@@ -52,6 +53,7 @@ export const BoardProvider = ({ children }) => {
       setLoading(true);
       const data = await boardService.getBoardDetails(boardId);
       setCurrentBoard(data);
+      console.log(data);
       return data;
     } catch (error) {
       console.error("Error fetching board details:", error);
@@ -179,7 +181,6 @@ export const BoardProvider = ({ children }) => {
           kanbanStatus:
             currentBoard.columns.find((c) => c.id === columnId)?.title ||
             "Backlog",
-          showInFlow: false,
           assignedTo: null,
           assignees: [],
           labels: [],
@@ -191,7 +192,7 @@ export const BoardProvider = ({ children }) => {
 
         setCurrentBoard((prev) => ({
           ...prev,
-          ideas: [...(prev.ideas || []), newIdea],
+          cards: [...(prev.cards || []), newIdea],
         }));
       }
 
@@ -209,8 +210,8 @@ export const BoardProvider = ({ children }) => {
       if (currentBoard) {
         setCurrentBoard((prev) => ({
           ...prev,
-          ideas: prev.ideas.map((idea) =>
-            idea.id === cardId ? { ...idea, ...updates } : idea
+          cards: prev.cards.map((card) =>
+            card.id === cardId ? { ...card, ...updates } : card
           ),
         }));
       }
@@ -247,7 +248,7 @@ export const BoardProvider = ({ children }) => {
       if (currentBoard) {
         setCurrentBoard((prev) => ({
           ...prev,
-          ideas: prev.ideas.filter((idea) => idea.id !== cardId),
+          cards: prev.cards.filter((card) => card.id !== cardId),
         }));
       }
 
@@ -270,10 +271,10 @@ export const BoardProvider = ({ children }) => {
         )?.title;
         setCurrentBoard((prev) => ({
           ...prev,
-          ideas: prev.ideas.map((idea) =>
-            idea.id === cardId
-              ? { ...idea, kanbanStatus: newStatus, position: newPosition }
-              : idea
+          cards: prev.cards.map((card) =>
+            card.id === cardId
+              ? { ...card, kanbanStatus: newStatus, position: newPosition }
+              : card
           ),
         }));
       }
@@ -399,7 +400,6 @@ export const BoardProvider = ({ children }) => {
           title: newIdea.title,
           description: newIdea.description,
           type: "ai",
-          showInFlow: false,
           boardId: currentBoard.id,
           flowId: flowId,
           parentId: parentId,
@@ -411,7 +411,7 @@ export const BoardProvider = ({ children }) => {
 
         setCurrentBoard((prev) => ({
           ...prev,
-          ideas: [...(prev.ideas || []), frontendIdea],
+          flowIdeas: [...(prev.flowIdeas || []), frontendIdea],
         }));
       }
       return newIdea;
@@ -428,13 +428,21 @@ export const BoardProvider = ({ children }) => {
       if (currentBoard) {
         setCurrentBoard((prev) => ({
           ...prev,
-          ideas: prev.ideas.map((idea) =>
+          flowIdeas: prev.flowIdeas.map((idea) =>
             idea.id === ideaId ? { ...idea, ...updates } : idea
           ),
         }));
       }
 
-      await flowService.updateIdea(ideaId, updates);
+      // Prepare backend updates
+      const backendUpdates = { ...updates };
+
+      if (backendUpdates.kanbanStatus !== undefined) {
+        backendUpdates.kanban_status = backendUpdates.kanbanStatus;
+        delete backendUpdates.kanbanStatus;
+      }
+
+      await flowService.updateIdea(ideaId, backendUpdates);
     } catch (error) {
       console.error("Error updating flow idea:", error);
       toast.error("Failed to update idea");
@@ -447,7 +455,7 @@ export const BoardProvider = ({ children }) => {
       if (currentBoard) {
         setCurrentBoard((prev) => ({
           ...prev,
-          ideas: prev.ideas.filter((idea) => idea.id !== ideaId),
+          flowIdeas: prev.flowIdeas.filter((idea) => idea.id !== ideaId),
         }));
       }
 

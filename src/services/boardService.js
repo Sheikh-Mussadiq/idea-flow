@@ -1,11 +1,12 @@
-import { supabase } from '../lib/supabaseClient';
+import { supabase } from "../lib/supabaseClient";
 
 export const boardService = {
   // Optimized fetch for sidebar/dashboard (lightweight)
   async getBoardsList() {
     const { data, error } = await supabase
-      .from('boards')
-      .select(`
+      .from("boards")
+      .select(
+        `
         id,
         name,
         description,
@@ -20,24 +21,37 @@ export const boardService = {
           role,
           user:users(avatar_url, full_name)
         ),
-        cards:cards(count)
-      `)
-      .order('created_at', { ascending: false });
+        cards:cards(count),
+        ai_flows(
+          id,
+          name,
+          description,
+          ideas:ai_ideas(count)
+        )
+      `
+      )
+      .order("created_at", { ascending: false });
 
     if (error) throw error;
 
-    // Transform data to include card count
-    return data.map(board => ({
+    // Transform data to include card count and flow ideas count
+    return data.map((board) => ({
       ...board,
-      cardCount: board.cards?.[0]?.count || 0
+      cardCount: board.cards?.[0]?.count || 0,
+      ai_flows: (board.ai_flows || []).map((flow) => ({
+        ...flow,
+        ideas: flow.ideas, // Keep the count object for now
+        ideasCount: flow.ideas?.[0]?.count || 0,
+      })),
     }));
   },
 
   // Get complete board details (cumulative fetch)
   async getBoardDetails(boardId) {
     const { data, error } = await supabase
-      .from('boards')
-      .select(`
+      .from("boards")
+      .select(
+        `
         *,
         owner:users!owner_id(*),
         members:board_members(
@@ -61,37 +75,42 @@ export const boardService = {
           *,
           ideas:ai_ideas(*)
         )
-      `)
-      .eq('id', boardId)
+      `
+      )
+      .eq("id", boardId)
       .single();
 
     if (error) throw error;
 
     // Transform data to match frontend expectations
-    const membersMap = new Map(data.members.map(m => [m.user.id, m.user]));
-    const tagsMap = new Map((data.tags || []).map(t => [t.id, t]));
+    const membersMap = new Map(data.members.map((m) => [m.user.id, m.user]));
+    const tagsMap = new Map((data.tags || []).map((t) => [t.id, t]));
 
-    const ideas = [];
+    const cards = [];
     if (data.columns) {
       data.columns.sort((a, b) => a.position - b.position);
 
-      data.columns.forEach(col => {
+      data.columns.forEach((col) => {
         if (col.cards) {
           col.cards.sort((a, b) => a.position - b.position);
 
-          col.cards.forEach(card => {
+          col.cards.forEach((card) => {
             // Map assigned_to UUIDs to user objects
-            const assignees = (card.assigned_to || []).map(uid => membersMap.get(uid)).filter(Boolean);
+            const assignees = (card.assigned_to || [])
+              .map((uid) => membersMap.get(uid))
+              .filter(Boolean);
 
             // Map tag UUIDs to tag objects
-            const labels = (card.tags || []).map(tagId => tagsMap.get(tagId)).filter(Boolean);
+            const labels = (card.tags || [])
+              .map((tagId) => tagsMap.get(tagId))
+              .filter(Boolean);
 
             // Sort subtasks
             if (card.subtasks) {
               card.subtasks.sort((a, b) => a.position - b.position);
             }
 
-            ideas.push({
+            cards.push({
               ...card,
               kanbanStatus: col.title, // Map column title to status
               assignedTo: assignees[0] || null, // Legacy support for single assignee
@@ -99,8 +118,7 @@ export const boardService = {
               labels: labels, // Map tags to labels
               dueDate: card.due_date,
               boardId: data.id,
-              type: 'manual', // Explicitly set type for cards
-              showInFlow: false // Default for cards, unless specified otherwise
+              type: "manual", // Explicitly set type for cards
             });
           });
         }
@@ -108,17 +126,17 @@ export const boardService = {
     }
 
     // Process AI Flows and Ideas
+    const flowIdeas = [];
     if (data.ai_flows) {
-      data.ai_flows.forEach(flow => {
+      data.ai_flows.forEach((flow) => {
         if (flow.ideas) {
-          flow.ideas.forEach(aiIdea => {
-            ideas.push({
+          flow.ideas.forEach((aiIdea) => {
+            flowIdeas.push({
               ...aiIdea,
               id: aiIdea.id,
               title: aiIdea.title,
               description: aiIdea.description,
-              type: 'ai',
-              showInFlow: true,
+              type: "ai",
               boardId: data.id,
               flowId: flow.id,
               parentId: aiIdea.parent_id,
@@ -126,7 +144,7 @@ export const boardService = {
               kanbanStatus: null,
               assignedTo: null,
               labels: [],
-              comments: []
+              comments: [],
             });
           });
         }
@@ -135,20 +153,21 @@ export const boardService = {
 
     return {
       ...data,
-      ideas: ideas,
+      cards: cards,
+      flowIdeas: flowIdeas,
       settings: {
         description: data.description,
         themeColor: data.color,
         icon: data.icon,
-        defaultLabels: data.tags || [] // Use board tags as labels
-      }
+        defaultLabels: data.tags || [], // Use board tags as labels
+      },
     };
   },
 
   async createBoard(board) {
     // 1. Create the board
     const { data: newBoard, error: boardError } = await supabase
-      .from('boards')
+      .from("boards")
       .insert(board)
       .select()
       .single();
@@ -158,13 +177,13 @@ export const boardService = {
     try {
       // 2. Create default columns
       const columns = [
-        { board_id: newBoard.id, title: 'To Do', position: 0 },
-        { board_id: newBoard.id, title: 'In Progress', position: 1 },
-        { board_id: newBoard.id, title: 'Done', position: 2 }
+        { board_id: newBoard.id, title: "To Do", position: 0 },
+        { board_id: newBoard.id, title: "In Progress", position: 1 },
+        { board_id: newBoard.id, title: "Done", position: 2 },
       ];
 
       const { error: columnsError } = await supabase
-        .from('board_columns')
+        .from("board_columns")
         .insert(columns);
 
       if (columnsError) throw columnsError;
@@ -172,12 +191,12 @@ export const boardService = {
       // 3. Create default AI Flow
       const defaultFlow = {
         board_id: newBoard.id,
-        name: 'Main Flow',
-        description: 'Default flow for AI ideas'
+        name: "Main Flow",
+        description: "Default flow for AI ideas",
       };
 
       const { error: flowError } = await supabase
-        .from('ai_flows')
+        .from("ai_flows")
         .insert(defaultFlow);
 
       if (flowError) throw flowError;
@@ -193,9 +212,9 @@ export const boardService = {
 
   async updateBoard(boardId, updates) {
     const { data, error } = await supabase
-      .from('boards')
+      .from("boards")
       .update(updates)
-      .eq('id', boardId)
+      .eq("id", boardId)
       .select()
       .single();
 
@@ -204,23 +223,20 @@ export const boardService = {
   },
 
   async deleteBoard(boardId) {
-    const { error } = await supabase
-      .from('boards')
-      .delete()
-      .eq('id', boardId);
+    const { error } = await supabase.from("boards").delete().eq("id", boardId);
 
     if (error) throw error;
   },
 
   async toggleFavorite(boardId, isFavorite) {
     const { data, error } = await supabase
-      .from('boards')
+      .from("boards")
       .update({ is_favorite: isFavorite })
-      .eq('id', boardId)
+      .eq("id", boardId)
       .select()
       .single();
 
     if (error) throw error;
     return data;
-  }
+  },
 };
