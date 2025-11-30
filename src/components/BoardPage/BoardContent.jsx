@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { CommentPanel } from "./Panels/CommentPanel.jsx";
-import { TaskModal } from "./TaskModal";
+import { TaskModal } from "./TaskModal/TaskModal.jsx";
 import { KanbanView } from "./Kanban/KanbanView.jsx";
 import { TableView } from "./Table/TableView.jsx";
 import { ListView } from "./List/ListView.jsx";

@@ -18,6 +18,7 @@ import { BoardSettingsModal } from "../Modals/BoardSettingsModal";
 import { ShareBoardModal } from "../Modals/ShareBoardModal";
 import { toast } from "sonner";
 import { useState } from "react";
+import { TruncatedText } from "../../ui/TruncatedText";
 
 export function BoardHeader({
   activeBoard,
@@ -53,16 +54,35 @@ export function BoardHeader({
       {/* Top Row */}
       <div className="flex items-center justify-between mb-6">
         {/* Title Area */}
-        <div className="flex items-center gap-3">
-          <div className="h-8 w-8 rounded-lg bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center text-xl">
+        <div className="flex items-start gap-3 flex-1 min-w-0 mr-4 max-w-xl">
+          <div className="h-8 w-8 rounded-lg bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center text-xl flex-shrink-0 mt-1">
             {activeBoard.icon || "🐳"}
           </div>
-          <h1 className="text-2xl font-bold text-neutral-900 dark:text-white">
-            {activeBoard.name}
-          </h1>
-          <button className="text-neutral-400 dark:text-neutral-500 hover:text-yellow-400 transition-colors">
-            <Star className="h-5 w-5" />
-          </button>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2">
+              <TruncatedText
+                as="h1"
+                onClick={() => setIsSettingsOpen(true)}
+                className="text-2xl font-bold text-neutral-900 dark:text-white cursor-pointer hover:opacity-70 transition-opacity truncate"
+                title={activeBoard.name}
+              >
+                {activeBoard.name}
+              </TruncatedText>
+              <button className="text-neutral-400 dark:text-neutral-500 hover:text-yellow-400 transition-colors flex-shrink-0">
+                <Star className="h-5 w-5" />
+              </button>
+            </div>
+            {activeBoard.description && (
+              <TruncatedText
+                as="p"
+                onClick={() => setIsSettingsOpen(true)}
+                className="text-sm text-neutral-500 dark:text-neutral-400 cursor-pointer hover:text-neutral-600 dark:hover:text-neutral-300 transition-colors truncate"
+                title={activeBoard.description}
+              >
+                {activeBoard.description}
+              </TruncatedText>
+            )}
+          </div>
         </div>
 
         {/* Actions Area */}

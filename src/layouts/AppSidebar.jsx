@@ -35,6 +35,7 @@ import {
   Settings as SettingsIcon,
 } from "lucide-react";
 import { toast } from "sonner";
+import { TruncatedText } from "../components/ui/TruncatedText";
 
 const PRIMARY_NAV = [
   { id: "home", icon: Home, label: "Home", to: "/" },
@@ -220,7 +221,13 @@ export const AppSidebar = () => {
                               <span className="text-base shrink-0">
                                 {board.icon}
                               </span>
-                              <span className="truncate">{board.name}</span>
+                              <TruncatedText
+                                as="span"
+                                className="truncate"
+                                title={board.name}
+                              >
+                                {board.name}
+                              </TruncatedText>
                             </button>
 
                             <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -293,12 +300,20 @@ export const AppSidebar = () => {
                                 : "text-neutral-600 hover:bg-white hover:shadow-sm hover:text-neutral-900"
                             }`}
                           >
-                            <div className="flex items-center gap-3">
-                              <span className="text-base">{board.icon}</span>
-                              <span className="truncate">{board.name}</span>
+                            <div className="flex items-center gap-3 min-w-0">
+                              <span className="text-base shrink-0">
+                                {board.icon}
+                              </span>
+                              <TruncatedText
+                                as="span"
+                                className="truncate"
+                                title={board.name}
+                              >
+                                {board.name}
+                              </TruncatedText>
                             </div>
                             {board.cardCount > 0 && (
-                              <span className="text-[10px] font-medium text-neutral-400">
+                              <span className="text-[10px] font-medium text-neutral-400 shrink-0 ml-2">
                                 {board.cardCount}
                               </span>
                             )}
@@ -396,22 +411,32 @@ export const AppSidebar = () => {
                                 : "hover:bg-white dark:hover:bg-neutral-800 hover:shadow-sm"
                             }`}
                           >
-                            <div className="flex items-center justify-between w-full">
-                              <div className="flex items-center gap-2">
-                                <Zap className="h-3.5 w-3.5 text-primary-500" />
-                                <span className="font-medium text-neutral-900 dark:text-white truncate">
+                            <div className="flex items-center justify-between w-full min-w-0 gap-2">
+                              <div className="flex items-center gap-2 min-w-0 flex-1">
+                                <Zap className="h-3.5 w-3.5 text-primary-500 shrink-0" />
+                                <TruncatedText
+                                  as="span"
+                                  className="font-medium text-neutral-900 dark:text-white truncate"
+                                  title={flow.name}
+                                >
                                   {flow.name}
-                                </span>
+                                </TruncatedText>
                               </div>
-                              <span className="text-[10px] font-medium text-neutral-400">
+                              <span className="text-[10px] font-medium text-neutral-400 shrink-0">
                                 {flow.ideasCount}
                               </span>
                             </div>
-                            <div className="flex items-center gap-1.5 text-[10px] text-neutral-500 dark:text-neutral-400">
+                            <div className="flex items-center gap-1.5 text-[10px] text-neutral-500 dark:text-neutral-400 min-w-0">
                               <span className="text-base shrink-0">
                                 {flow.boardIcon}
                               </span>
-                              <span className="truncate">{flow.boardName}</span>
+                              <TruncatedText
+                                as="span"
+                                className="truncate"
+                                title={flow.boardName}
+                              >
+                                {flow.boardName}
+                              </TruncatedText>
                             </div>
                           </button>
                         );

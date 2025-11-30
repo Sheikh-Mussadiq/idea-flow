@@ -1,24 +1,95 @@
-import { X, Lock, Globe, Users, Bell, Archive } from "lucide-react";
+import { X, Lock, Globe, Users, Bell, Archive, Smile } from "lucide-react";
 import { Button } from "../../ui/button";
 import { Input } from "../../ui/input";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
+import { useBoard } from "../../../context/BoardContext";
+
+const EMOJI_OPTIONS = [
+  "🐳",
+  "🚀",
+  "💡",
+  "🔥",
+  "🎨",
+  "💻",
+  "📈",
+  "📝",
+  "📅",
+  "⚙️",
+  "🌟",
+  "🎯",
+  "🧩",
+  "🎮",
+  "🎧",
+  "📸",
+  "🎥",
+  "🎤",
+  "🎵",
+  "📚",
+  "💼",
+  "💸",
+  "🏠",
+  "🚗",
+  "✈️",
+  "🌍",
+  "🍔",
+  "🍕",
+  "⚽",
+  "🏀",
+];
 
 export const BoardSettingsModal = ({ isOpen, onClose, board }) => {
+  const { updateBoard } = useBoard();
   const [settings, setSettings] = useState({
     name: board?.name || "",
     description: board?.description || "",
+    icon: board?.icon || "🐳",
     visibility: board?.visibility || "private",
     allowComments: board?.allowComments ?? true,
     allowInvites: board?.allowInvites ?? true,
     emailNotifications: board?.emailNotifications ?? true,
     autoArchive: board?.autoArchive ?? false,
   });
+  const [isSaving, setIsSaving] = useState(false);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
-  const handleSave = () => {
-    toast.success("Board settings saved successfully!");
-    console.log("Saved settings:", settings);
-    onClose();
+  // Update settings when board changes
+  useEffect(() => {
+    if (board) {
+      setSettings({
+        name: board.name || "",
+        description: board.description || "",
+        icon: board.icon || "🐳",
+        visibility: board.visibility || "private",
+        allowComments: board.allowComments ?? true,
+        allowInvites: board.allowInvites ?? true,
+        emailNotifications: board.emailNotifications ?? true,
+        autoArchive: board.autoArchive ?? false,
+      });
+    }
+  }, [board, isOpen]);
+
+  const handleSave = async () => {
+    if (!settings.name.trim()) {
+      toast.error("Board name cannot be empty");
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      await updateBoard(board.id, {
+        name: settings.name,
+        description: settings.description,
+        icon: settings.icon,
+      });
+      toast.success("Board settings saved successfully!");
+      onClose();
+    } catch (error) {
+      console.error("Error saving board settings:", error);
+      toast.error("Failed to save board settings");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   if (!isOpen) return null;
@@ -66,18 +137,59 @@ export const BoardSettingsModal = ({ isOpen, onClose, board }) => {
                 General
               </h3>
 
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
-                  Board Name
-                </label>
-                <Input
-                  value={settings.name}
-                  onChange={(e) =>
-                    setSettings({ ...settings, name: e.target.value })
-                  }
-                  placeholder="Enter board name"
-                  className="dark:bg-neutral-800 dark:border-neutral-700 dark:text-white"
-                />
+              <div className="flex gap-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                    Icon
+                  </label>
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                      className="h-10 w-10 text-2xl flex items-center justify-center rounded-lg border border-neutral-200 dark:border-neutral-700 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors"
+                    >
+                      {settings.icon}
+                    </button>
+
+                    {showEmojiPicker && (
+                      <>
+                        <div
+                          className="fixed inset-0 z-0"
+                          onClick={() => setShowEmojiPicker(false)}
+                        />
+                        <div className="absolute top-12 left-0 z-10 p-2 bg-white dark:bg-neutral-800 rounded-xl border border-neutral-200 dark:border-neutral-700 shadow-xl w-64 grid grid-cols-6 gap-1">
+                          {EMOJI_OPTIONS.map((emoji) => (
+                            <button
+                              key={emoji}
+                              type="button"
+                              onClick={() => {
+                                setSettings({ ...settings, icon: emoji });
+                                setShowEmojiPicker(false);
+                              }}
+                              className="h-8 w-8 flex items-center justify-center rounded hover:bg-neutral-100 dark:hover:bg-neutral-700 text-lg"
+                            >
+                              {emoji}
+                            </button>
+                          ))}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                <div className="space-y-2 flex-1">
+                  <label className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                    Board Name
+                  </label>
+                  <Input
+                    value={settings.name}
+                    onChange={(e) =>
+                      setSettings({ ...settings, name: e.target.value })
+                    }
+                    placeholder="Enter board name"
+                    className="dark:bg-neutral-800 dark:border-neutral-700 dark:text-white"
+                  />
+                </div>
               </div>
 
               <div className="space-y-2">
@@ -90,8 +202,8 @@ export const BoardSettingsModal = ({ isOpen, onClose, board }) => {
                     setSettings({ ...settings, description: e.target.value })
                   }
                   placeholder="Add a description for your board"
-                  rows={3}
-                  className="w-full px-3 py-2 text-sm rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 dark:text-white resize-none focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  rows={5}
+                  className="w-full px-3 py-2 text-sm rounded-lg border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-800 dark:text-white resize-y focus:outline-none focus:ring-2 focus:ring-primary-500 whitespace-pre-wrap"
                 />
               </div>
             </div>
@@ -243,14 +355,16 @@ export const BoardSettingsModal = ({ isOpen, onClose, board }) => {
               variant="ghost"
               onClick={onClose}
               className="dark:hover:bg-neutral-800"
+              disabled={isSaving}
             >
               Cancel
             </Button>
             <Button
               onClick={handleSave}
-              className="bg-primary-500 hover:bg-primary-600 text-white"
+              disabled={isSaving}
+              className="bg-primary-500 hover:bg-primary-600 text-white disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Save Changes
+              {isSaving ? "Saving..." : "Save Changes"}
             </Button>
           </div>
         </div>
