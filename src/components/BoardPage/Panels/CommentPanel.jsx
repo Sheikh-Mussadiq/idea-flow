@@ -1,9 +1,10 @@
-import { X, Send, ThumbsUp, Heart } from "lucide-react";
+import { X, Send, Trash2, Edit2 } from "lucide-react";
 import { Button } from "../../ui/button";
 import { Input } from "../../ui/input";
 import { Avatar, AvatarFallback } from "../../ui/avatar";
 import { useState } from "react";
 import { useNotifications } from "../../../context/NotificationsContext";
+import { useAuth } from "../../../context/AuthContext";
 
 export const CommentPanel = ({
   isOpen,
@@ -13,38 +14,93 @@ export const CommentPanel = ({
   assignedTo,
   comments,
   onAddComment,
+  onUpdateComment,
+  onDeleteComment,
   canComment,
 }) => {
   const { addNotification } = useNotifications();
+  const { authUser } = useAuth();
   const [newComment, setNewComment] = useState("");
+  const [editingCommentId, setEditingCommentId] = useState(null);
+  const [editText, setEditText] = useState("");
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!canComment) return;
     if (newComment.trim()) {
-      onAddComment(newComment);
+      try {
+        await onAddComment(newComment);
 
-      // Trigger notifications
-      if (newComment.includes("@")) {
-        // Mention notification
-        addNotification({
-          userId: "current-user",
-          message: `You were mentioned in a comment on '${ideaTitle}'`,
-          type: "mention",
-          taskId: ideaId,
-        });
-      } else {
-        // General comment notification
-        addNotification({
-          userId: "current-user",
-          message: `New comment on '${ideaTitle}'`,
-          type: "activity",
-          taskId: ideaId,
-        });
+        // Trigger notifications
+        if (newComment.includes("@")) {
+          // Mention notification
+          addNotification({
+            userId: "current-user",
+            message: `You were mentioned in a comment on '${ideaTitle}'`,
+            type: "mention",
+            taskId: ideaId,
+          });
+        } else {
+          // General comment notification
+          addNotification({
+            userId: "current-user",
+            message: `New comment on '${ideaTitle}'`,
+            type: "activity",
+            taskId: ideaId,
+          });
+        }
+
+        setNewComment("");
+      } catch (error) {
+        console.error("Error adding comment:", error);
       }
-
-      setNewComment("");
     }
+  };
+
+  const handleStartEdit = (comment) => {
+    setEditingCommentId(comment.id);
+    setEditText(comment.text);
+  };
+
+  const handleCancelEdit = () => {
+    setEditingCommentId(null);
+    setEditText("");
+  };
+
+  const handleSaveEdit = async (commentId) => {
+    if (!editText.trim()) return;
+    try {
+      await onUpdateComment(commentId, editText);
+      setEditingCommentId(null);
+      setEditText("");
+    } catch (error) {
+      console.error("Error updating comment:", error);
+    }
+  };
+
+  const handleDelete = async (commentId) => {
+    if (!window.confirm("Are you sure you want to delete this comment?")) return;
+    try {
+      await onDeleteComment(commentId);
+    } catch (error) {
+      console.error("Error deleting comment:", error);
+    }
+  };
+
+  const formatTimestamp = (timestamp) => {
+    if (!timestamp) return "Just now";
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diff = now - date;
+    const minutes = Math.floor(diff / 60000);
+    const hours = Math.floor(diff / 3600000);
+    const days = Math.floor(diff / 86400000);
+
+    if (minutes < 1) return "Just now";
+    if (minutes < 60) return `${minutes}m ago`;
+    if (hours < 24) return `${hours}h ago`;
+    if (days < 7) return `${days}d ago`;
+    return date.toLocaleDateString();
   };
 
   if (!isOpen) return null;
@@ -98,42 +154,94 @@ export const CommentPanel = ({
 
         {/* Comments List */}
         <div className="flex-1 overflow-y-auto p-8 space-y-8">
-          {comments.map((comment) => (
-            <div key={comment.id} className="space-y-3">
-              <div className="flex items-start gap-4">
-                <Avatar className="h-10 w-10 ring-2 ring-neutral-200">
-                  <AvatarFallback className="bg-primary-500/10 text-primary-500 text-sm font-medium">
-                    {comment.avatar}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="flex-1 space-y-2">
-                  <div className="flex items-center gap-2">
-                    <span className="font-semibold text-sm text-neutral-900">
-                      {comment.author}
-                    </span>
-                    <span className="text-xs text-neutral-500">
-                      {comment.timestamp}
-                    </span>
-                  </div>
-                  <p className="text-sm text-neutral-800 leading-relaxed">
-                    {comment.text}
-                  </p>
-                  {comment.reactions && (
-                    <div className="flex items-center gap-4 pt-1">
-                      <button className="flex items-center gap-1.5 text-xs text-neutral-500 hover:text-primary-500 transition-colors">
-                        <ThumbsUp className="h-4 w-4" />
-                        <span>{comment.reactions.thumbsUp}</span>
-                      </button>
-                      <button className="flex items-center gap-1.5 text-xs text-neutral-500 hover:text-error-500 transition-colors">
-                        <Heart className="h-4 w-4" />
-                        <span>{comment.reactions.heart}</span>
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </div>
+          {comments.length === 0 ? (
+            <div className="text-center text-neutral-500 text-sm py-8">
+              No comments yet. Be the first to comment!
             </div>
-          ))}
+          ) : (
+            comments.map((comment) => {
+              const isOwner = authUser?.id === comment.user_id;
+              const userFullName = comment.user?.full_name || "Unknown User";
+              const userInitials = userFullName
+                .split(" ")
+                .map((n) => n[0])
+                .join("")
+                .toUpperCase()
+                .slice(0, 2);
+
+              return (
+                <div key={comment.id} className="space-y-3">
+                  <div className="flex items-start gap-4">
+                    <Avatar className="h-10 w-10 ring-2 ring-neutral-200">
+                      <AvatarFallback className="bg-primary-500/10 text-primary-500 text-sm font-medium">
+                        {userInitials}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 space-y-2">
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold text-sm text-neutral-900">
+                            {userFullName}
+                          </span>
+                          <span className="text-xs text-neutral-500">
+                            {formatTimestamp(comment.created_at)}
+                          </span>
+                        </div>
+                        {isOwner && canComment && (
+                          <div className="flex items-center gap-1">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7"
+                              onClick={() => handleStartEdit(comment)}
+                            >
+                              <Edit2 className="h-3.5 w-3.5" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7 text-error-500 hover:text-error-600"
+                              onClick={() => handleDelete(comment.id)}
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                      {editingCommentId === comment.id ? (
+                        <div className="space-y-2">
+                          <Input
+                            value={editText}
+                            onChange={(e) => setEditText(e.target.value)}
+                            className="text-sm"
+                          />
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              onClick={() => handleSaveEdit(comment.id)}
+                            >
+                              Save
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={handleCancelEdit}
+                            >
+                              Cancel
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <p className="text-sm text-neutral-800 leading-relaxed">
+                          {comment.text}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })
+          )}
         </div>
 
         {/* Input */}

@@ -32,7 +32,18 @@ export const BoardContent = ({
 
   const [selectedIdeaId, setSelectedIdeaId] = useState(null);
   const [selectedTaskId, setSelectedTaskId] = useState(null);
-  const { createCard, updateCard, updateFlowIdea, currentBoard } = useBoard();
+  const { 
+    createCard, 
+    updateCard, 
+    updateFlowIdea, 
+    currentBoard,
+    addAiIdeaComment,
+    updateAiIdeaComment,
+    deleteAiIdeaComment,
+    addCardComment,
+    updateCardComment,
+    deleteCardComment,
+  } = useBoard();
 
   const currentUserName =
     currentUser?.user?.full_name || currentUser?.name || "You";
@@ -87,38 +98,44 @@ export const BoardContent = ({
     setSelectedIdeaId(ideaId);
   };
 
-  const handleAddComment = (text) => {
+  const handleAddComment = async (text) => {
     if (isViewer) return;
     if (!selectedIdeaId) return;
 
-    const newComment = {
-      id: Date.now().toString(),
-      author: "You",
-      avatar: "YO",
-      text,
-      timestamp: "Just now",
-      reactions: { thumbsUp: 0, heart: 0 },
-    };
+    try {
+      // Determine if it's an AI idea or a card
+      const isAiIdea = flowIdeas.some((idea) => idea.id === selectedIdeaId);
+      
+      if (isAiIdea) {
+        await addAiIdeaComment(selectedIdeaId, text);
+      } else {
+        await addCardComment(selectedIdeaId, text);
+      }
 
-    onUpdateComments((prevComments) => ({
-      ...prevComments,
-      [selectedIdeaId]: [...(prevComments[selectedIdeaId] || []), newComment],
-    }));
-
-    logActivity(selectedIdeaId, currentUserName, "Added a comment");
+      logActivity(selectedIdeaId, currentUserName, "Added a comment");
+    } catch (error) {
+      console.error("Error adding comment:", error);
+    }
   };
 
-  const handleDeleteComment = (ideaId, commentId) => {
+  const handleDeleteComment = async (commentId) => {
     if (isViewer) return;
-    onUpdateComments((prevComments) => {
-      const ideaComments = prevComments[ideaId] || [];
-      const updated = ideaComments.filter((c) => c.id !== commentId);
-      return {
-        ...prevComments,
-        [ideaId]: updated,
-      };
-    });
-    logActivity(ideaId, currentUserName, "Deleted a comment");
+    if (!selectedIdeaId) return;
+
+    try {
+      // Determine if it's an AI idea or a card
+      const isAiIdea = flowIdeas.some((idea) => idea.id === selectedIdeaId);
+      
+      if (isAiIdea) {
+        await deleteAiIdeaComment(selectedIdeaId, commentId);
+      } else {
+        await deleteCardComment(selectedIdeaId, commentId);
+      }
+
+      logActivity(selectedIdeaId, currentUserName, "Deleted a comment");
+    } catch (error) {
+      console.error("Error deleting comment:", error);
+    }
   };
 
   const handleAddCommentToIdea = (ideaId, text) => {
@@ -142,24 +159,24 @@ export const BoardContent = ({
     logActivity(ideaId, currentUserName, "Added a comment");
   };
 
-  const handleUpdateComment = (ideaId, commentId, text) => {
+  const handleUpdateComment = async (commentId, text) => {
     if (isViewer) return;
-    onUpdateComments((prevComments) => {
-      const ideaComments = prevComments[ideaId] || [];
-      const updated = ideaComments.map((c) =>
-        c.id === commentId
-          ? {
-              ...c,
-              text,
-            }
-          : c
-      );
-      return {
-        ...prevComments,
-        [ideaId]: updated,
-      };
-    });
-    logActivity(ideaId, currentUserName, "Edited a comment");
+    if (!selectedIdeaId) return;
+
+    try {
+      // Determine if it's an AI idea or a card
+      const isAiIdea = flowIdeas.some((idea) => idea.id === selectedIdeaId);
+      
+      if (isAiIdea) {
+        await updateAiIdeaComment(commentId, text);
+      } else {
+        await updateCardComment(commentId, text);
+      }
+
+      logActivity(selectedIdeaId, currentUserName, "Edited a comment");
+    } catch (error) {
+      console.error("Error updating comment:", error);
+    }
   };
 
   const handleDueDateChange = async (id, date) => {
@@ -460,7 +477,10 @@ export const BoardContent = ({
     cards.find((c) => c.id === selectedIdeaId);
   const selectedTask = cards.find((c) => c.id === selectedTaskId) || null;
   const selectedTaskComments = selectedTaskId
-    ? comments[selectedTaskId] || []
+    ? selectedTask?.comments || []
+    : [];
+  const selectedIdeaComments = selectedIdeaId
+    ? selectedIdea?.idea_comments || selectedIdea?.comments || []
     : [];
 
   return (
@@ -508,8 +528,10 @@ export const BoardContent = ({
         ideaTitle={selectedIdea?.title || ""}
         ideaId={selectedIdeaId}
         assignedTo={selectedIdea?.assignedTo}
-        comments={selectedIdeaId ? comments[selectedIdeaId] || [] : []}
+        comments={selectedIdeaComments}
         onAddComment={handleAddComment}
+        onUpdateComment={handleUpdateComment}
+        onDeleteComment={handleDeleteComment}
         canComment={!isViewer}
       />
 
@@ -532,7 +554,7 @@ export const BoardContent = ({
         onRemoveLabel={handleRemoveLabel}
         comments={selectedTaskComments}
         onAddCommentToIdea={handleAddCommentToIdea}
-        onDeleteComment={handleDeleteComment}
+        onDeleteComment={(commentId) => handleDeleteComment(commentId)}
         onUpdateComment={handleUpdateComment}
         onArchiveTask={handleArchiveTask}
         canEdit={!isViewer}

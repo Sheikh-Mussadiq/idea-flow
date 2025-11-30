@@ -1,10 +1,13 @@
 import { supabase } from '../lib/supabaseClient';
 
 export const commentService = {
-  async createComment(comment) {
+  async createComment(comment, userId) {
     const { data, error } = await supabase
       .from('comments')
-      .insert(comment)
+      .insert({
+        ...comment,
+        user_id: userId
+      })
       .select(`
         *,
         user:users(*)

@@ -73,7 +73,13 @@ export const boardService = {
         tags(*),
         ai_flows(
           *,
-          ideas:ai_ideas(*)
+          ideas:ai_ideas(
+            *,
+            idea_comments:ai_ideas_comments(
+              *,
+              user:users(*)
+            )
+          )
         )
       `
       )
@@ -144,7 +150,7 @@ export const boardService = {
               kanbanStatus: null,
               assignedTo: null,
               labels: [],
-              comments: [],
+              comments: aiIdea.idea_comments || [],
             });
           });
         }

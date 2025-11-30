@@ -4,6 +4,8 @@ import { cardService } from "../services/cardService";
 import { columnService } from "../services/columnService";
 import { flowService } from "../services/flowService";
 import { memberService } from "../services/memberService";
+import { aiIdeaCommentService } from "../services/aiIdeaCommentService";
+import { commentService } from "../services/commentService";
 import { toast } from "sonner";
 import { supabase } from "../lib/supabaseClient";
 import { useAuth } from "./AuthContext";
@@ -447,7 +449,7 @@ export const BoardProvider = ({ children }) => {
           kanbanStatus: null,
           assignedTo: null,
           labels: [],
-          comments: [],
+          idea_comments: [],
         };
 
         setCurrentBoard((prev) => ({
@@ -618,6 +620,190 @@ export const BoardProvider = ({ children }) => {
     }
   };
 
+  // --- AI Idea Comment Operations ---
+
+  const addAiIdeaComment = async (aiIdeaId, text) => {
+    try {
+      if (!authUser) throw new Error("User not authenticated");
+      
+      const newComment = await aiIdeaCommentService.createComment({
+        ai_idea_id: aiIdeaId,
+        text,
+      }, authUser.id);
+
+      // Update currentBoard flowIdeas with the new comment
+      if (currentBoard) {
+        setCurrentBoard((prev) => ({
+          ...prev,
+          flowIdeas: prev.flowIdeas.map((idea) =>
+            idea.id === aiIdeaId
+              ? {
+                  ...idea,
+                  idea_comments: [...(idea.idea_comments || []), newComment],
+                }
+              : idea
+          ),
+        }));
+      }
+
+      return newComment;
+    } catch (error) {
+      console.error("Error adding AI idea comment:", error);
+      toast.error("Failed to add comment");
+      throw error;
+    }
+  };
+
+  const updateAiIdeaComment = async (commentId, text) => {
+    try {
+      const updatedComment = await aiIdeaCommentService.updateComment(
+        commentId,
+        text
+      );
+
+      // Update currentBoard flowIdeas with the updated comment
+      if (currentBoard) {
+        setCurrentBoard((prev) => ({
+          ...prev,
+          flowIdeas: prev.flowIdeas.map((idea) => ({
+            ...idea,
+            idea_comments: (idea.idea_comments || []).map((comment) =>
+              comment.id === commentId ? updatedComment : comment
+            ),
+          })),
+        }));
+      }
+
+      toast.success("Comment updated");
+      return updatedComment;
+    } catch (error) {
+      console.error("Error updating AI idea comment:", error);
+      toast.error("Failed to update comment");
+      throw error;
+    }
+  };
+
+  const deleteAiIdeaComment = async (aiIdeaId, commentId) => {
+    try {
+      await aiIdeaCommentService.deleteComment(commentId);
+
+      // Update currentBoard flowIdeas by removing the comment
+      if (currentBoard) {
+        setCurrentBoard((prev) => ({
+          ...prev,
+          flowIdeas: prev.flowIdeas.map((idea) =>
+            idea.id === aiIdeaId
+              ? {
+                  ...idea,
+                  idea_comments: (idea.idea_comments || []).filter(
+                    (comment) => comment.id !== commentId
+                  ),
+                }
+              : idea
+          ),
+        }));
+      }
+
+      toast.success("Comment deleted");
+    } catch (error) {
+      console.error("Error deleting AI idea comment:", error);
+      toast.error("Failed to delete comment");
+      throw error;
+    }
+  };
+
+  // --- Card Comment Operations ---
+
+  const addCardComment = async (cardId, text) => {
+    try {
+      if (!authUser) throw new Error("User not authenticated");
+      
+      const newComment = await commentService.createComment({
+        card_id: cardId,
+        text,
+      }, authUser.id);
+
+      // Update currentBoard cards with the new comment
+      if (currentBoard) {
+        setCurrentBoard((prev) => ({
+          ...prev,
+          cards: prev.cards.map((card) =>
+            card.id === cardId
+              ? {
+                  ...card,
+                  comments: [...(card.comments || []), newComment],
+                }
+              : card
+          ),
+        }));
+      }
+
+      return newComment;
+    } catch (error) {
+      console.error("Error adding card comment:", error);
+      toast.error("Failed to add comment");
+      throw error;
+    }
+  };
+
+  const updateCardComment = async (commentId, text) => {
+    try {
+      const updatedComment = await commentService.updateComment(
+        commentId,
+        text
+      );
+
+      // Update currentBoard cards with the updated comment
+      if (currentBoard) {
+        setCurrentBoard((prev) => ({
+          ...prev,
+          cards: prev.cards.map((card) => ({
+            ...card,
+            comments: (card.comments || []).map((comment) =>
+              comment.id === commentId ? updatedComment : comment
+            ),
+          })),
+        }));
+      }
+
+      toast.success("Comment updated");
+      return updatedComment;
+    } catch (error) {
+      console.error("Error updating card comment:", error);
+      toast.error("Failed to update comment");
+      throw error;
+    }
+  };
+
+  const deleteCardComment = async (cardId, commentId) => {
+    try {
+      await commentService.deleteComment(commentId);
+
+      // Update currentBoard cards by removing the comment
+      if (currentBoard) {
+        setCurrentBoard((prev) => ({
+          ...prev,
+          cards: prev.cards.map((card) =>
+            card.id === cardId
+              ? {
+                  ...card,
+                  comments: (card.comments || []).filter(
+                    (comment) => comment.id !== commentId
+                  ),
+                }
+              : card
+          ),
+        }));
+      }
+
+      toast.success("Comment deleted");
+    } catch (error) {
+      console.error("Error deleting card comment:", error);
+      toast.error("Failed to delete comment");
+      throw error;
+    }
+  };
+
   return (
     <BoardContext.Provider
       value={{
@@ -649,6 +835,12 @@ export const BoardProvider = ({ children }) => {
         addMember,
         updateMemberRole,
         removeMember,
+        addAiIdeaComment,
+        updateAiIdeaComment,
+        deleteAiIdeaComment,
+        addCardComment,
+        updateCardComment,
+        deleteCardComment,
       }}
     >
       {children}
