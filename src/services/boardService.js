@@ -146,6 +146,8 @@ export const boardService = {
               boardId: data.id,
               flowId: flow.id,
               parentId: aiIdea.parent_id,
+              is_liked: aiIdea.is_liked || false,
+              is_disliked: aiIdea.is_disliked || false,
               // Add other fields as necessary to match 'Idea' shape if needed
               kanbanStatus: null,
               assignedTo: null,

@@ -125,17 +125,19 @@ export const IdeaNode = memo(({ data }) => {
             <Button
               variant="ghost"
               size="icon"
-              disabled={!data.onToggleLike}
               className={cn(
                 "h-7 w-7 transition-colors",
-                data.is_liked
-                  ? "text-primary-500 hover:text-primary-600 bg-primary-50 dark:bg-primary-900/20"
-                  : "text-neutral-600 dark:text-neutral-400 hover:text-primary-500 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800",
-                !data.onToggleLike && "opacity-40 cursor-not-allowed hover:bg-transparent hover:text-neutral-600 dark:hover:text-neutral-400"
+                data.is_liked && "text-primary-500 bg-primary-50 dark:bg-primary-900/20",
+                !data.is_liked && "text-neutral-600 dark:text-neutral-400",
+                data.onToggleLike && !data.is_liked && "hover:text-primary-500 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800",
+                data.onToggleLike && data.is_liked && "hover:text-primary-600 hover:bg-primary-100 dark:hover:bg-primary-900/30",
+                !data.onToggleLike && "cursor-not-allowed pointer-events-none opacity-70"
               )}
               onClick={(e) => {
                 e.stopPropagation();
-                data.onToggleLike?.(data.id);
+                if (data.onToggleLike) {
+                  data.onToggleLike(data.id);
+                }
               }}
               title={data.onToggleLike ? "Like this idea" : "Only the board owner can like ideas"}
             >
@@ -144,17 +146,19 @@ export const IdeaNode = memo(({ data }) => {
             <Button
               variant="ghost"
               size="icon"
-              disabled={!data.onToggleDislike}
               className={cn(
                 "h-7 w-7 transition-colors",
-                data.is_disliked
-                  ? "text-error-500 hover:text-error-600 bg-error-50 dark:bg-error-900/20"
-                  : "text-neutral-600 dark:text-neutral-400 hover:text-error-500 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800",
-                !data.onToggleDislike && "opacity-40 cursor-not-allowed hover:bg-transparent hover:text-neutral-600 dark:hover:text-neutral-400"
+                data.is_disliked && "text-error-500 bg-error-50 dark:bg-error-900/20",
+                !data.is_disliked && "text-neutral-600 dark:text-neutral-400",
+                data.onToggleDislike && !data.is_disliked && "hover:text-error-500 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800",
+                data.onToggleDislike && data.is_disliked && "hover:text-error-600 hover:bg-error-100 dark:hover:bg-error-900/30",
+                !data.onToggleDislike && "cursor-not-allowed pointer-events-none opacity-70"
               )}
               onClick={(e) => {
                 e.stopPropagation();
-                data.onToggleDislike?.(data.id);
+                if (data.onToggleDislike) {
+                  data.onToggleDislike(data.id);
+                }
               }}
               title={data.onToggleDislike ? "Dislike this idea" : "Only the board owner can dislike ideas"}
             >
