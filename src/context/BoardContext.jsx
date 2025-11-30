@@ -3,6 +3,7 @@ import { boardService } from "../services/boardService";
 import { cardService } from "../services/cardService";
 import { columnService } from "../services/columnService";
 import { flowService } from "../services/flowService";
+import { memberService } from "../services/memberService";
 import { toast } from "sonner";
 import { supabase } from "../lib/supabaseClient";
 import { useAuth } from "./AuthContext";
@@ -379,6 +380,46 @@ export const BoardProvider = ({ children }) => {
 
   // --- Flow Operations ---
 
+  const createFlow = async (boardId, name, description = "") => {
+    try {
+      const newFlow = await flowService.createFlow({
+        board_id: boardId,
+        name,
+        description,
+      });
+
+      // Update currentBoard if it's the same board
+      if (currentBoard?.id === boardId) {
+        setCurrentBoard((prev) => ({
+          ...prev,
+          ai_flows: [...(prev.ai_flows || []), { ...newFlow, ideas: [] }],
+        }));
+      }
+
+      // Update boards list to include the new flow
+      setBoards((prev) =>
+        prev.map((board) =>
+          board.id === boardId
+            ? {
+                ...board,
+                ai_flows: [
+                  ...(board.ai_flows || []),
+                  { ...newFlow, ideasCount: 0 },
+                ],
+              }
+            : board
+        )
+      );
+
+      toast.success(`Flow "${name}" created`);
+      return newFlow;
+    } catch (error) {
+      console.error("Error creating flow:", error);
+      toast.error("Failed to create flow");
+      throw error;
+    }
+  };
+
   const createFlowIdea = async (
     flowId,
     title,
@@ -468,6 +509,115 @@ export const BoardProvider = ({ children }) => {
     }
   };
 
+  // --- Member Operations ---
+
+  const addMember = async (boardId, userId, role = "viewer") => {
+    try {
+      const newMember = await memberService.addMember(boardId, userId, role);
+
+      // Update currentBoard if it's the same board
+      if (currentBoard?.id === boardId) {
+        setCurrentBoard((prev) => ({
+          ...prev,
+          members: [...(prev.members || []), newMember],
+        }));
+      }
+
+      // Update boards list
+      setBoards((prev) =>
+        prev.map((board) =>
+          board.id === boardId
+            ? { ...board, members: [...(board.members || []), newMember] }
+            : board
+        )
+      );
+
+      toast.success("Member added successfully");
+      return newMember;
+    } catch (error) {
+      console.error("Error adding member:", error);
+      if (error.code === "23505") {
+        toast.error("User is already a member of this board");
+      } else {
+        toast.error("Failed to add member");
+      }
+      throw error;
+    }
+  };
+
+  const updateMemberRole = async (boardId, userId, role) => {
+    try {
+      const updatedMember = await memberService.updateMemberRole(
+        boardId,
+        userId,
+        role
+      );
+
+      // Update currentBoard if it's the same board
+      if (currentBoard?.id === boardId) {
+        setCurrentBoard((prev) => ({
+          ...prev,
+          members: prev.members.map((m) =>
+            m.user?.id === userId ? { ...m, role } : m
+          ),
+        }));
+      }
+
+      // Update boards list
+      setBoards((prev) =>
+        prev.map((board) =>
+          board.id === boardId
+            ? {
+                ...board,
+                members: board.members.map((m) =>
+                  m.user?.id === userId ? { ...m, role } : m
+                ),
+              }
+            : board
+        )
+      );
+
+      toast.success("Member role updated");
+      return updatedMember;
+    } catch (error) {
+      console.error("Error updating member role:", error);
+      toast.error("Failed to update member role");
+      throw error;
+    }
+  };
+
+  const removeMember = async (boardId, userId) => {
+    try {
+      await memberService.removeMember(boardId, userId);
+
+      // Update currentBoard if it's the same board
+      if (currentBoard?.id === boardId) {
+        setCurrentBoard((prev) => ({
+          ...prev,
+          members: prev.members.filter((m) => m.user?.id !== userId),
+        }));
+      }
+
+      // Update boards list
+      setBoards((prev) =>
+        prev.map((board) =>
+          board.id === boardId
+            ? {
+                ...board,
+                members: board.members.filter((m) => m.user?.id !== userId),
+              }
+            : board
+        )
+      );
+
+      toast.success("Member removed from board");
+    } catch (error) {
+      console.error("Error removing member:", error);
+      toast.error("Failed to remove member");
+      throw error;
+    }
+  };
+
   return (
     <BoardContext.Provider
       value={{
@@ -492,9 +642,13 @@ export const BoardProvider = ({ children }) => {
         updateColumn,
         deleteColumn,
         updateColumnPositions,
+        createFlow,
         createFlowIdea,
         updateFlowIdea,
         deleteFlowIdea,
+        addMember,
+        updateMemberRole,
+        removeMember,
       }}
     >
       {children}

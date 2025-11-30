@@ -43,45 +43,9 @@ import {
   SheetDescription,
 } from "../components/ui/sheet";
 import { Avatar, AvatarFallback } from "../components/ui/avatar";
-import { mockUsers, mockLabels } from "../data/mockData.js";
 import { useBoard } from "../context/BoardContext";
 import { useActiveBoard } from "../hooks/useActiveBoard";
-
-const defaultMembers = mockUsers.map((user) => ({
-  user_id: user.id,
-  user: {
-    id: user.id,
-    full_name: user.name,
-    email: user.email,
-    avatar_url: user.avatar,
-  },
-  role: "editor", // Default role
-  created_at: new Date().toISOString(),
-}));
-
-const createEmptyBoard = (name, color = "#6366f1", icon = "📝") => ({
-  id: crypto.randomUUID(),
-  name,
-  description: "",
-  color,
-  icon,
-  is_archived: false,
-  is_favorite: false,
-  created_at: new Date().toISOString(),
-  updated_at: new Date().toISOString(),
-  owner_id: null, // Will be set by the backend with the current user's ID
-  columns: [],
-  members: [...defaultMembers],
-  tags: [],
-  ai_flows: [],
-  // For backward compatibility with existing code
-  settings: {
-    description: "",
-    themeColor: color,
-    icon,
-    defaultLabels: [],
-  },
-});
+import { useAuth } from "../context/AuthContext";
 
 export const IdeaBoardLayout = ({ initialView = "flow" }) => {
   const navigate = useNavigate();
@@ -98,6 +62,8 @@ export const IdeaBoardLayout = ({ initialView = "flow" }) => {
     duplicateBoard,
   } = useBoard();
 
+  const { authUser } = useAuth();
+
   // Use URL-based board selection
   const { activeBoard, boardId, notFound } = useActiveBoard();
 
@@ -109,10 +75,6 @@ export const IdeaBoardLayout = ({ initialView = "flow" }) => {
 
   // Local UI state
   const [isMembersOpen, setIsMembersOpen] = useState(false);
-
-  const [currentUserId, setCurrentUserId] = useState(
-    defaultMembers[0]?.user_id || defaultMembers[0]?.id
-  );
 
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -140,23 +102,32 @@ export const IdeaBoardLayout = ({ initialView = "flow" }) => {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isArchivedOpen, setIsArchivedOpen] = useState(false);
 
-  const currentUser =
-    defaultMembers.find((m) => m.user_id === currentUserId) ??
-    defaultMembers[0];
+  // Current user from auth context
+  const currentUser = useMemo(() => {
+    if (!authUser) return null;
+    return {
+      user_id: authUser.id,
+      user: {
+        id: authUser.id,
+        full_name: authUser.full_name,
+        email: authUser.email,
+        avatar_url: authUser.avatar_url,
+      },
+    };
+  }, [authUser]);
 
   // Check if current user is the board owner
-  const isOwner = activeBoard
-    ? activeBoard.owner_id === (currentUser?.user_id || currentUser?.id)
-    : false;
+  const isOwner =
+    activeBoard && authUser ? activeBoard.owner_id === authUser.id : false;
 
   // Check current user's member role
-  const currentMemberRole = activeBoard
-    ? (activeBoard.members || []).find(
-        (m) =>
-          m.user?.id === (currentUser?.user_id || currentUser?.id) ||
-          m.user_id === (currentUser?.user_id || currentUser?.id)
-      )?.role || null
-    : null;
+  const currentMemberRole = useMemo(() => {
+    if (!activeBoard || !authUser) return null;
+    const member = (activeBoard.members || []).find(
+      (m) => m.user?.id === authUser.id
+    );
+    return member?.role || null;
+  }, [activeBoard, authUser]);
 
   // User can edit if they are owner OR have editor role
   const canEdit = isOwner || currentMemberRole === "editor";
@@ -611,8 +582,6 @@ export const IdeaBoardLayout = ({ initialView = "flow" }) => {
         onOpenMembers={() => setIsMembersOpen(true)}
         currentUser={currentUser}
         currentMemberRole={currentMemberRole}
-        defaultMembers={defaultMembers}
-        onChangeUser={setCurrentUserId}
         searchQuery={searchQuery}
         onChangeSearch={handleSearchChange}
         searchInputRef={searchInputRef}

@@ -1,6 +1,7 @@
 import { useState, useCallback, useMemo } from "react";
 import { useReactFlow } from "reactflow";
 import { FlowView } from "./FlowView.jsx";
+import { FlowSelector } from "./FlowSelector.jsx";
 import { useIdeaFlowLayout } from "../hooks/useIdeaFlowLayout.js";
 import { toast } from "sonner";
 import { mockAIIdeas } from "../../../data/mockData.js";
@@ -291,13 +292,28 @@ export const FlowContent = ({
     !isViewer
   );
 
+  const flows = currentBoard?.ai_flows || [];
+
   return (
-    <FlowView
-      nodes={nodes}
-      edges={edges}
-      nodeTypes={nodeTypes}
-      onNodesChange={handleNodesChange}
-      canEdit={!isViewer}
-    />
+    <div className="relative h-full w-full">
+      {/* Flow Selector - positioned at top left */}
+      {flows.length > 0 && (
+        <div className="absolute top-4 left-4 z-10">
+          <FlowSelector
+            flows={flows}
+            activeFlowId={activeFlowId}
+            boardId={currentBoard?.id}
+          />
+        </div>
+      )}
+
+      <FlowView
+        nodes={nodes}
+        edges={edges}
+        nodeTypes={nodeTypes}
+        onNodesChange={handleNodesChange}
+        canEdit={!isViewer}
+      />
+    </div>
   );
 };

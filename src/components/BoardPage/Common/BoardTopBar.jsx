@@ -17,8 +17,9 @@ import { BoardActivityPanel } from "../Panels/BoardActivityPanel";
 import { BoardSettingsModal } from "../Modals/BoardSettingsModal";
 import { ShareBoardModal } from "../Modals/ShareBoardModal";
 import { toast } from "sonner";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { TruncatedText } from "../../ui/TruncatedText";
+import { useBoardPresence } from "../../../hooks/useBoardPresence";
 
 export function BoardHeader({
   activeBoard,
@@ -39,6 +40,15 @@ export function BoardHeader({
   const [isActivityOpen, setIsActivityOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isShareOpen, setIsShareOpen] = useState(false);
+
+  // Track online users on this board
+  const { onlineUsers } = useBoardPresence(activeBoard?.id);
+
+  // Create a set of online user IDs for quick lookup
+  const onlineUserIds = useMemo(
+    () => new Set(onlineUsers.map((u) => u.id)),
+    [onlineUsers]
+  );
 
   if (!activeBoard) return null;
 
@@ -87,24 +97,100 @@ export function BoardHeader({
 
         {/* Actions Area */}
         <div className="flex items-center gap-4">
-          <Button
+          {/* <Button
             size="icon"
             className="h-9 w-9 rounded-full bg-primary-500 hover:bg-primary-600 text-white shadow-lg shadow-primary-500/20"
           >
             <Plus className="h-5 w-5" />
-          </Button>
+          </Button> */}
 
-          <div className="flex -space-x-2">
-            {[1, 2, 3, 4, 5].map((i) => (
-              <Avatar
-                key={i}
-                className="h-8 w-8 border-2 border-white dark:border-neutral-950 ring-1 ring-neutral-100 dark:ring-neutral-800"
-              >
-                <AvatarImage src={`https://i.pravatar.cc/150?u=${i}`} />
-                <AvatarFallback>U{i}</AvatarFallback>
-              </Avatar>
-            ))}
-          </div>
+          {/* Board Members - Online users shown first */}
+          <button
+            onClick={() => setIsShareOpen(true)}
+            className="flex -space-x-2 hover:opacity-80 transition-opacity"
+            title={`${onlineUsers.length} user${
+              onlineUsers.length !== 1 ? "s" : ""
+            } online`}
+          >
+            {/* Show online users first (sorted by online status) */}
+            {(() => {
+              // Combine owner and members, mark online status
+              const allUsers = [];
+
+              if (activeBoard.owner) {
+                allUsers.push({
+                  id: activeBoard.owner.id,
+                  full_name: activeBoard.owner.full_name,
+                  avatar_url: activeBoard.owner.avatar_url,
+                  isOwner: true,
+                  isOnline: onlineUserIds.has(activeBoard.owner.id),
+                });
+              }
+
+              (activeBoard.members || []).forEach((member) => {
+                if (member.user?.id) {
+                  allUsers.push({
+                    id: member.user.id,
+                    full_name: member.user.full_name,
+                    avatar_url: member.user.avatar_url,
+                    isOwner: false,
+                    isOnline: onlineUserIds.has(member.user.id),
+                  });
+                }
+              });
+
+              // Sort: online users first
+              allUsers.sort((a, b) => {
+                if (a.isOnline && !b.isOnline) return -1;
+                if (!a.isOnline && b.isOnline) return 1;
+                return 0;
+              });
+
+              const displayUsers = allUsers.slice(0, 5);
+              const remainingCount = allUsers.length - 5;
+
+              return (
+                <>
+                  {displayUsers.map((user) => (
+                    <div key={user.id} className="relative">
+                      <Avatar
+                        className={`h-8 w-8 border-2 border-white dark:border-neutral-950 ring-1 ring-neutral-100 dark:ring-neutral-800 ${
+                          user.isOnline
+                            ? "ring-2 ring-green-400 ring-offset-1"
+                            : ""
+                        }`}
+                      >
+                        <AvatarImage src={user.avatar_url} />
+                        <AvatarFallback
+                          className={`text-xs font-medium ${
+                            user.isOwner
+                              ? "bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400"
+                              : "bg-neutral-100 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300"
+                          }`}
+                        >
+                          {(user.full_name || "U")
+                            .substring(0, 2)
+                            .toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      {/* Online indicator dot */}
+                      {user.isOnline && (
+                        <span className="absolute bottom-0 right-0 h-2.5 w-2.5 bg-green-500 border-2 border-white dark:border-neutral-950 rounded-full" />
+                      )}
+                    </div>
+                  ))}
+                  {/* Show +N if more users */}
+                  {remainingCount > 0 && (
+                    <div className="h-8 w-8 rounded-full border-2 border-white dark:border-neutral-950 ring-1 ring-neutral-100 dark:ring-neutral-800 bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center">
+                      <span className="text-xs font-medium text-neutral-600 dark:text-neutral-400">
+                        +{remainingCount}
+                      </span>
+                    </div>
+                  )}
+                </>
+              );
+            })()}
+          </button>
 
           <div className="h-6 w-px bg-neutral-200 dark:bg-neutral-800 mx-1" />
 
