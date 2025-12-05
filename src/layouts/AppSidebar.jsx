@@ -17,7 +17,6 @@ import {
 import { Button } from "../components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
 import { boardCategories } from "../data/mockData.js";
-import { ThemeToggle } from "../components/ThemeToggle";
 import { useBoard } from "../context/BoardContext";
 import {
   DropdownMenu,
@@ -81,17 +80,17 @@ export const AppSidebar = () => {
 
   return (
     <aside
-      className="h-full bg-white dark:bg-neutral-950 flex shrink-0 transition-all duration-300 ease-in-out p-2"
-      style={{ width: isExpanded ? "348px" : "96px" }}
+      className="h-full bg-white dark:bg-neutral-950 flex shrink-0 transition-all duration-300 ease-in-out p-1"
+      style={{ width: isExpanded ? "348px" : "72px" }}
       onMouseLeave={() => setIsExpanded(false)}
     >
       {/* Rounded Container for both sidebars */}
       <div
-        className="bg-primary-100 dark:bg-neutral-900 rounded-2xl p-2 flex h-full transition-all duration-300 ease-in-out"
-        style={{ width: isExpanded ? "324px" : "80px" }}
+        className="bg-primary-100 dark:bg-neutral-900 rounded-xl p-2 flex h-full transition-all duration-300 ease-in-out"
+        style={{ width: isExpanded ? "324px" : "64px" }}
       >
         {/* Primary Sidebar (Icons) */}
-        <div className="w-[64px] h-full rounded-xl flex flex-col items-center shrink-0">
+        <div className="w-12 h-full rounded-xl flex flex-col items-center shrink-0">
           {/* Logo */}
           <div className="mb-8">
             <div className="h-10 w-10 rounded-xl bg-primary-100 dark:bg-neutral-700 text-primary-900 dark:text-white flex items-center justify-center">
@@ -142,15 +141,11 @@ export const AppSidebar = () => {
             </button>
             <button
               onMouseEnter={() => setIsExpanded(false)}
+              onClick={() => navigate("/settings")}
               className="w-10 h-10 rounded-xl flex items-center justify-center text-neutral-400 dark:text-neutral-500 hover:text-neutral-600 dark:hover:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-700 transition-colors"
             >
               <Settings className="h-5 w-5" />
             </button>
-
-            {/* Theme Toggle */}
-            <div onMouseEnter={() => setIsExpanded(false)} className="scale-75">
-              <ThemeToggle />
-            </div>
 
             <div onMouseEnter={() => setIsExpanded(false)}>
               <Avatar className="h-9 w-9 border border-neutral-200 dark:border-neutral-700 cursor-pointer hover:ring-2 hover:ring-primary-100 dark:hover:ring-neutral-700 transition-all">
@@ -163,9 +158,9 @@ export const AppSidebar = () => {
 
         {/* Secondary Sidebar (Contextual) */}
         <div
-          className="h-full bg-white dark:bg-neutral-800 rounded-xl flex flex-col overflow-hidden transition-all duration-300 ease-in-out"
+          className="h-full ml-2 bg-white dark:bg-neutral-800 rounded-xl flex flex-col overflow-hidden transition-all duration-300 ease-in-out"
           style={{
-            width: isExpanded ? "244px" : "0px",
+            width: isExpanded ? "344px" : "0px",
             opacity: isExpanded ? 1 : 0,
             // marginLeft: isExpanded ? '8px' : '0px'
           }}

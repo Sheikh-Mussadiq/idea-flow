@@ -1,6 +1,6 @@
 import { memo } from "react";
 import { Handle, Position } from "reactflow";
-import { MessageSquare, Inbox, ThumbsUp, ThumbsDown } from "lucide-react";
+import { MessageCircle, Inbox, ThumbsUp, ThumbsDown } from "lucide-react";
 import { Button } from "../../ui/button";
 import { Badge } from "../../ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "../../ui/avatar";
@@ -73,7 +73,7 @@ export const IdeaNode = memo(({ data }) => {
 
           {/* Comment Icon and Count */}
           <div className="flex items-center gap-1 pl-1">
-            <MessageSquare className="h-3.5 w-3.5 text-neutral-500 dark:text-neutral-400 group-hover/comment:text-primary-500 dark:group-hover/comment:text-white transition-colors" />
+            {/* <MessageCircle className="h-3.5 w-3.5 text-neutral-500 dark:text-neutral-400 group-hover/comment:text-primary-500 dark:group-hover/comment:text-white transition-colors" /> */}
             <span className="text-xs font-medium text-neutral-600 dark:text-neutral-300 group-hover/comment:text-primary-600 dark:group-hover/comment:text-white">
               {commentCount}
             </span>
@@ -90,7 +90,7 @@ export const IdeaNode = memo(({ data }) => {
           }}
           className="absolute -top-2 -right-2 h-8 w-8 bg-white dark:bg-neutral-800 rounded-full shadow-md border border-neutral-200/60 dark:border-neutral-700/60 hover:shadow-lg hover:border-primary-300 dark:hover:border-primary-600 transition-all flex items-center justify-center group/comment"
         >
-          <MessageSquare className="h-4 w-4 text-neutral-400 dark:text-neutral-500 group-hover/comment:text-primary-500 dark:group-hover/comment:text-white transition-colors" />
+          <MessageCircle className="h-5 w-5 text-neutral-400 dark:text-neutral-500 group-hover/comment:text-primary-500 dark:group-hover/comment:text-white transition-colors" />
         </button>
       )}
 
@@ -128,14 +128,14 @@ export const IdeaNode = memo(({ data }) => {
               className={cn(
                 "h-7 w-7 transition-colors",
                 data.is_liked &&
-                  "text-success-500 bg-success-50 dark:bg-success-500/20",
+                  "text-success-500 bg-success-500/30 dark:bg-success-500/20",
                 !data.is_liked && "text-neutral-600 dark:text-neutral-400",
                 data.onToggleLike &&
                   !data.is_liked &&
-                  "hover:text-success-500 hover:bg-success-50 dark:hover:bg-success-500/10",
+                  "hover:text-success-500 hover:bg-success-500/30 dark:hover:bg-success-500/10",
                 data.onToggleLike &&
                   data.is_liked &&
-                  "hover:text-success-700 hover:bg-success-50 dark:hover:bg-success-500/30",
+                  "hover:text-success-500 hover:bg-success-500/50 dark:hover:bg-success-500/30",
                 !data.onToggleLike &&
                   "cursor-not-allowed pointer-events-none opacity-70"
               )}
@@ -161,14 +161,14 @@ export const IdeaNode = memo(({ data }) => {
               className={cn(
                 "h-7 w-7 transition-colors",
                 data.is_disliked &&
-                  "text-error-500 bg-error-50 dark:bg-error-900/20",
+                  "text-error-500 bg-error-500/30 dark:bg-error-900/20",
                 !data.is_disliked && "text-neutral-600 dark:text-neutral-400",
                 data.onToggleDislike &&
                   !data.is_disliked &&
-                  "hover:text-error-500 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800",
+                  "hover:text-error-500 dark:hover:text-white hover:bg-error-500/30 dark:hover:bg-error-900/20",
                 data.onToggleDislike &&
                   data.is_disliked &&
-                  "hover:text-error-600 hover:bg-error-100 dark:hover:bg-error-900/30",
+                  "hover:text-error-500 hover:bg-error-500/50 dark:hover:bg-error-900/30",
                 !data.onToggleDislike &&
                   "cursor-not-allowed pointer-events-none opacity-70"
               )}

@@ -40,7 +40,9 @@ export const FlowContent = ({
   const { fitView } = useReactFlow();
 
   // Check if current user is the board owner
-  const isOwner = currentBoard?.owner_id === currentUser?.user?.id || currentBoard?.owner_id === currentUser?.id;
+  const isOwner =
+    currentBoard?.owner_id === currentUser?.user?.id ||
+    currentBoard?.owner_id === currentUser?.id;
 
   const handleGenerate = useCallback(
     async (promptValue) => {
@@ -297,6 +299,22 @@ export const FlowContent = ({
     [isViewer, isOwner, toggleIdeaDislike]
   );
 
+  const handleNodeDragStop = useCallback(
+    async (id, position) => {
+      if (isViewer || !currentBoard) return;
+
+      try {
+        // Update the idea with the new position
+        // Assuming updateFlowIdea can handle arbitrary updates including position
+        await updateFlowIdea(id, { position });
+      } catch (error) {
+        console.error("Error saving node position:", error);
+        toast.error("Failed to save position");
+      }
+    },
+    [isViewer, currentBoard, updateFlowIdea]
+  );
+
   const inputNodeData = useMemo(
     () => ({
       mode,
@@ -321,7 +339,13 @@ export const FlowContent = ({
     ]
   );
 
-  const { nodeTypes, nodes, edges, handleNodesChange } = useIdeaFlowLayout(
+  const {
+    nodeTypes,
+    nodes,
+    edges,
+    handleNodesChange,
+    handleNodeDragStop: onNodeDragStop,
+  } = useIdeaFlowLayout(
     filteredIdeas || [],
     inputNodeData,
     onOpenComments,
@@ -332,7 +356,8 @@ export const FlowContent = ({
     handleToggleLike,
     handleToggleDislike,
     !isViewer,
-    isOwner
+    isOwner,
+    handleNodeDragStop // Pass the handler
   );
 
   const flows = currentBoard?.ai_flows || [];
@@ -355,6 +380,7 @@ export const FlowContent = ({
         edges={edges}
         nodeTypes={nodeTypes}
         onNodesChange={handleNodesChange}
+        onNodeDragStop={onNodeDragStop}
         canEdit={!isViewer}
       />
     </div>

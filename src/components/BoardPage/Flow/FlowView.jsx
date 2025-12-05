@@ -6,6 +6,7 @@ export const FlowView = ({
   nodeTypes,
   onNodesChange,
   canEdit,
+  onNodeDragStop, // New prop
 }) => {
   return (
     <ReactFlow
@@ -19,13 +20,14 @@ export const FlowView = ({
       defaultViewport={{ x: 0, y: 0, zoom: 0.7 }}
       nodesDraggable={canEdit}
       onNodesChange={canEdit ? onNodesChange : undefined}
+      onNodeDragStop={canEdit ? onNodeDragStop : undefined} // Pass to ReactFlow
       nodeOrigin={[0.5, 0]}
       className="transition-all duration-500 bg-white dark:bg-neutral-950"
     >
-      <Background 
-        color="#e4e4e7" 
+      <Background
+        color="#e4e4e7"
         className="dark:[--xy-background-color-props:#27272a]"
-        gap={16} 
+        gap={16}
       />
       <Controls className="dark:[&_button]:bg-neutral-800 dark:[&_button]:border-neutral-700 dark:[&_button]:text-neutral-300" />
       <MiniMap
