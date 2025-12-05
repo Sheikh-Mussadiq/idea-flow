@@ -43,58 +43,88 @@ export const KanbanBoard = ({
   };
 
   const handleDragOver = (event) => {
-    if (!canEdit) return;
     const { active, over } = event;
-
     if (!over) return;
 
     const activeId = active.id;
     const overId = over.id;
 
-    if (activeId === overId) return;
-
-    // Find the active and over ideas
+    // Find the active idea
     const activeIdea = ideas.find((i) => i.id === activeId);
-    const overIdea = ideas.find((i) => i.id === overId);
-
     if (!activeIdea) return;
 
-    // Check if over is a column
-    const isOverColumn = columns.some((col) => col.id === overId);
+    // Find over column (either directly or via card)
+    const overColumn =
+      columns.find((c) => c.id === overId) ||
+      columns.find(
+        (c) => c.title === ideas.find((i) => i.id === overId)?.kanbanStatus
+      );
 
-    if (isOverColumn) {
-      // Dragging over a column - just move to that column
-      if (
-        activeIdea.kanbanStatus !== columns.find((c) => c.id === overId)?.title
-      ) {
-        onMoveCard(activeId, overId); // Pass column ID
-      }
-    } else if (overIdea) {
-      // Dragging over another card
-      const activeStatus = activeIdea.kanbanStatus || "Backlog";
-      const overStatus = overIdea.kanbanStatus || "Backlog";
+    if (!overColumn) return;
 
-      if (activeStatus === overStatus) {
-        // Same column - reorder
-        const oldIndex = ideas.findIndex((i) => i.id === activeId);
-        const newIndex = ideas.findIndex((i) => i.id === overId);
+    const activeColumnTitle = activeIdea.kanbanStatus;
+    const overColumnTitle = overColumn.title;
 
-        if (oldIndex !== newIndex && onReorderIdeas) {
-          const reorderedIdeas = arrayMove(ideas, oldIndex, newIndex);
-          onReorderIdeas(() => reorderedIdeas);
+    if (activeColumnTitle !== overColumnTitle) {
+      const activeIndex = ideas.findIndex((i) => i.id === activeId);
+      const overIndex = ideas.findIndex((i) => i.id === overId);
+
+      onReorderIdeas((prev) => {
+        const newIdeas = [...prev];
+        // Update status
+        const updatedIdea = {
+          ...newIdeas[activeIndex],
+          kanbanStatus: overColumnTitle,
+        };
+
+        // Remove from old pos
+        newIdeas.splice(activeIndex, 1);
+
+        // Insert at new pos
+        if (columns.some((c) => c.id === overId)) {
+          // Dropped on column background -> append
+          newIdeas.push(updatedIdea);
+        } else {
+          // Dropped on a card
+          let insertIndex = overIndex;
+          if (activeIndex < overIndex) insertIndex--; // Adjust for removal
+          if (insertIndex < 0) insertIndex = 0;
+          newIdeas.splice(insertIndex, 0, updatedIdea);
         }
-      } else {
-        // Different column - move to the over card's column
-        const targetColumn = columns.find((c) => c.title === overStatus);
-        if (targetColumn) {
-          onMoveCard(activeId, targetColumn.id);
-        }
+        return newIdeas;
+      });
+    } else {
+      // Same column
+      if (columns.some((c) => c.id === overId)) return; // Over same column bg, do nothing
+
+      const activeIndex = ideas.findIndex((i) => i.id === activeId);
+      const overIndex = ideas.findIndex((i) => i.id === overId);
+
+      if (activeIndex !== overIndex) {
+        onReorderIdeas((prev) => arrayMove(prev, activeIndex, overIndex));
       }
     }
   };
 
   const handleDragEnd = (event) => {
+    const { active, over } = event;
     setActiveId(null);
+
+    if (!over) return;
+
+    const activeId = active.id;
+    const currentIdea = ideas.find((i) => i.id === activeId);
+    if (!currentIdea) return;
+
+    const column = columns.find((c) => c.title === currentIdea.kanbanStatus);
+    if (!column) return;
+
+    const columnCards = ideas.filter((i) => i.kanbanStatus === column.title);
+    const newIndex = columnCards.findIndex((i) => i.id === activeId);
+
+    if (newIndex !== -1) {
+      onMoveCard(activeId, column.id, newIndex);
+    }
   };
 
   const handleAddList = async () => {

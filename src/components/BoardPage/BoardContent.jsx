@@ -32,10 +32,10 @@ export const BoardContent = ({
 
   const [selectedIdeaId, setSelectedIdeaId] = useState(null);
   const [selectedTaskId, setSelectedTaskId] = useState(null);
-  const { 
-    createCard, 
-    updateCard, 
-    updateFlowIdea, 
+  const {
+    createCard,
+    updateCard,
+    updateFlowIdea,
     currentBoard,
     addAiIdeaComment,
     updateAiIdeaComment,
@@ -105,7 +105,7 @@ export const BoardContent = ({
     try {
       // Determine if it's an AI idea or a card
       const isAiIdea = flowIdeas.some((idea) => idea.id === selectedIdeaId);
-      
+
       if (isAiIdea) {
         await addAiIdeaComment(selectedIdeaId, text);
       } else {
@@ -125,7 +125,7 @@ export const BoardContent = ({
     try {
       // Determine if it's an AI idea or a card
       const isAiIdea = flowIdeas.some((idea) => idea.id === selectedIdeaId);
-      
+
       if (isAiIdea) {
         await deleteAiIdeaComment(selectedIdeaId, commentId);
       } else {
@@ -166,7 +166,7 @@ export const BoardContent = ({
     try {
       // Determine if it's an AI idea or a card
       const isAiIdea = flowIdeas.some((idea) => idea.id === selectedIdeaId);
-      
+
       if (isAiIdea) {
         await updateAiIdeaComment(commentId, text);
       } else {
@@ -404,20 +404,47 @@ export const BoardContent = ({
     handleCloseTask();
   };
 
-  const handleMoveCard = async (cardId, columnId) => {
+  const handleMoveCard = async (cardId, columnId, newIndex) => {
     if (isViewer || !currentBoard) return;
     try {
       const column = currentBoard.columns?.find((c) => c.id === columnId);
       if (!column) return;
 
-      // Calculate new position (end of column)
-      const cardsInColumn = column.cards || [];
-      const position =
-        cardsInColumn.length > 0
-          ? Math.max(...cardsInColumn.map((c) => c.position || 0)) + 1000
-          : 0;
+      // Get all cards currently in this column (excluding the moving one to find insertion point)
+      const cardsInColumn = cards
+        .filter((c) => c.column_id === columnId && c.id !== cardId)
+        .sort((a, b) => (a.position || 0) - (b.position || 0));
 
-      await updateCard(cardId, { column_id: columnId, position });
+      let position;
+      if (typeof newIndex === "number") {
+        if (cardsInColumn.length === 0) {
+          position = 1000;
+        } else if (newIndex === 0) {
+          // Top of list
+          position = (cardsInColumn[0].position || 0) / 2;
+        } else if (newIndex >= cardsInColumn.length) {
+          // End of list
+          position =
+            (cardsInColumn[cardsInColumn.length - 1].position || 0) + 1000;
+        } else {
+          // Middle
+          const prev = cardsInColumn[newIndex - 1];
+          const next = cardsInColumn[newIndex];
+          position = ((prev.position || 0) + (next.position || 0)) / 2;
+        }
+      } else {
+        // Default to end
+        position =
+          cardsInColumn.length > 0
+            ? Math.max(...cardsInColumn.map((c) => c.position || 0)) + 1000
+            : 1000;
+      }
+
+      await updateCard(cardId, {
+        column_id: columnId,
+        position,
+        kanbanStatus: column.title,
+      });
     } catch (error) {
       // Error handled in context
     }

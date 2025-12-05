@@ -165,6 +165,24 @@ export const BoardProvider = ({ children }) => {
 
   // --- Card Operations ---
 
+  const updateCurrentBoardCards = (updater) => {
+    if (!currentBoard) return;
+    setCurrentBoard((prev) => ({
+      ...prev,
+      cards:
+        typeof updater === "function" ? updater(prev.cards || []) : updater,
+    }));
+  };
+
+  const updateCurrentBoardFlowIdeas = (updater) => {
+    if (!currentBoard) return;
+    setCurrentBoard((prev) => ({
+      ...prev,
+      flowIdeas:
+        typeof updater === "function" ? updater(prev.flowIdeas || []) : updater,
+    }));
+  };
+
   const createCard = async (boardId, columnId, title, position) => {
     try {
       const newCard = await cardService.createCard({
@@ -230,6 +248,8 @@ export const BoardProvider = ({ children }) => {
         backendUpdates.due_date = updates.dueDate;
       if (updates.columnId !== undefined)
         backendUpdates.column_id = updates.columnId;
+      if (updates.column_id !== undefined)
+        backendUpdates.column_id = updates.column_id;
       if (updates.position !== undefined)
         backendUpdates.position = updates.position;
 
@@ -320,10 +340,19 @@ export const BoardProvider = ({ children }) => {
   const updateColumn = async (columnId, title) => {
     try {
       if (currentBoard) {
+        const oldColumn = currentBoard.columns.find((c) => c.id === columnId);
+        const oldTitle = oldColumn?.title;
+
         setCurrentBoard((prev) => ({
           ...prev,
           columns: prev.columns.map((col) =>
             col.id === columnId ? { ...col, title } : col
+          ),
+          // Also update the kanbanStatus of cards in this column
+          cards: prev.cards.map((card) =>
+            card.kanbanStatus === oldTitle
+              ? { ...card, kanbanStatus: title }
+              : card
           ),
         }));
       }
@@ -561,7 +590,11 @@ export const BoardProvider = ({ children }) => {
         }));
       }
 
-      await flowService.toggleIdeaDislike(ideaId, idea.is_disliked, authUser?.id);
+      await flowService.toggleIdeaDislike(
+        ideaId,
+        idea.is_disliked,
+        authUser?.id
+      );
     } catch (error) {
       console.error("Error toggling idea dislike:", error);
       toast.error("Failed to update reaction");
@@ -683,11 +716,14 @@ export const BoardProvider = ({ children }) => {
   const addAiIdeaComment = async (aiIdeaId, text) => {
     try {
       if (!authUser) throw new Error("User not authenticated");
-      
-      const newComment = await aiIdeaCommentService.createComment({
-        ai_idea_id: aiIdeaId,
-        text,
-      }, authUser.id);
+
+      const newComment = await aiIdeaCommentService.createComment(
+        {
+          ai_idea_id: aiIdeaId,
+          text,
+        },
+        authUser.id
+      );
 
       // Update currentBoard flowIdeas with the new comment
       if (currentBoard) {
@@ -775,11 +811,14 @@ export const BoardProvider = ({ children }) => {
   const addCardComment = async (cardId, text) => {
     try {
       if (!authUser) throw new Error("User not authenticated");
-      
-      const newComment = await commentService.createComment({
-        card_id: cardId,
-        text,
-      }, authUser.id);
+
+      const newComment = await commentService.createComment(
+        {
+          card_id: cardId,
+          text,
+        },
+        authUser.id
+      );
 
       // Update currentBoard cards with the new comment
       if (currentBoard) {
@@ -901,6 +940,8 @@ export const BoardProvider = ({ children }) => {
         addCardComment,
         updateCardComment,
         deleteCardComment,
+        updateCurrentBoardCards,
+        updateCurrentBoardFlowIdeas,
       }}
     >
       {children}

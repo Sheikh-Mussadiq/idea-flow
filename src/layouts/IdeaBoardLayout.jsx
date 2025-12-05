@@ -60,6 +60,8 @@ export const IdeaBoardLayout = ({ initialView = "flow" }) => {
     deleteBoard,
     archiveBoard,
     duplicateBoard,
+    updateCurrentBoardCards,
+    updateCurrentBoardFlowIdeas,
   } = useBoard();
 
   const { authUser } = useAuth();
@@ -276,49 +278,11 @@ export const IdeaBoardLayout = ({ initialView = "flow" }) => {
   };
 
   const handleUpdateCards = (updater) => {
-    if (!activeBoard) return;
-    setBoards((prev) =>
-      prev.map((board) => {
-        if (board.id !== activeBoard.id) return board;
-
-        // Create a deep copy of the board to avoid direct state mutation
-        const updatedBoard = { ...board };
-
-        // Update cards in their respective columns
-        if (updatedBoard.columns) {
-          updatedBoard.columns = updatedBoard.columns.map((column) => {
-            const updatedColumn = { ...column };
-            updatedColumn.cards = updater(updatedColumn.cards || []);
-            return updatedColumn;
-          });
-        }
-
-        return updatedBoard;
-      })
-    );
+    updateCurrentBoardCards(updater);
   };
 
   const handleUpdateFlowIdeas = (updater) => {
-    if (!activeBoard) return;
-    setBoards((prev) =>
-      prev.map((board) => {
-        if (board.id !== activeBoard.id) return board;
-
-        // Create a deep copy of the board to avoid direct state mutation
-        const updatedBoard = { ...board };
-
-        // Update ideas in their respective flows
-        if (updatedBoard.ai_flows) {
-          updatedBoard.ai_flows = updatedBoard.ai_flows.map((flow) => {
-            const updatedFlow = { ...flow };
-            updatedFlow.ideas = updater(updatedFlow.ideas || []);
-            return updatedFlow;
-          });
-        }
-
-        return updatedBoard;
-      })
-    );
+    updateCurrentBoardFlowIdeas(updater);
   };
 
   // Use the already-flattened cards and flowIdeas from boardService
