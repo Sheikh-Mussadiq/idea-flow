@@ -532,7 +532,7 @@ export const BoardProvider = ({ children }) => {
         }));
       }
 
-      await flowService.toggleIdeaLike(ideaId, idea.is_liked);
+      await flowService.toggleIdeaLike(ideaId, idea.is_liked, authUser?.id);
     } catch (error) {
       console.error("Error toggling idea like:", error);
       toast.error("Failed to update reaction");
@@ -561,7 +561,7 @@ export const BoardProvider = ({ children }) => {
         }));
       }
 
-      await flowService.toggleIdeaDislike(ideaId, idea.is_disliked);
+      await flowService.toggleIdeaDislike(ideaId, idea.is_disliked, authUser?.id);
     } catch (error) {
       console.error("Error toggling idea dislike:", error);
       toast.error("Failed to update reaction");

@@ -65,7 +65,7 @@ export const flowService = {
     if (error) throw error;
   },
 
-  async toggleIdeaLike(ideaId, currentlyLiked) {
+  async toggleIdeaLike(ideaId, currentlyLiked, userId) {
     const { data, error } = await supabase
       .from('ai_ideas')
       .update({
@@ -77,10 +77,26 @@ export const flowService = {
       .single();
 
     if (error) throw error;
+
+    // Call profile-updater edge function (fire and forget) when liking
+    if (data.is_liked && userId) {
+      const ideaText = data.title + (data.description ? `: ${data.description}` : '');
+      // Fire and forget - don't await
+      supabase.functions.invoke('profile-updater', {
+        body: {
+          user_id: userId,
+          idea: ideaText,
+          reaction: 'like'
+        }
+      }).catch(err => {
+        console.error('[flowService] Failed to update profile:', err);
+      });
+    }
+
     return data;
   },
 
-  async toggleIdeaDislike(ideaId, currentlyDisliked) {
+  async toggleIdeaDislike(ideaId, currentlyDisliked, userId) {
     const { data, error } = await supabase
       .from('ai_ideas')
       .update({
@@ -92,6 +108,22 @@ export const flowService = {
       .single();
 
     if (error) throw error;
+
+    // Call profile-updater edge function (fire and forget) when disliking
+    if (data.is_disliked && userId) {
+      const ideaText = data.title + (data.description ? `: ${data.description}` : '');
+      // Fire and forget - don't await
+      supabase.functions.invoke('profile-updater', {
+        body: {
+          user_id: userId,
+          idea: ideaText,
+          reaction: 'dislike'
+        }
+      }).catch(err => {
+        console.error('[flowService] Failed to update profile:', err);
+      });
+    }
+
     return data;
   }
 };

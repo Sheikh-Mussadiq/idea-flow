@@ -274,12 +274,16 @@ export const FlowContent = ({
         return;
       }
       try {
-        await toggleIdeaLike(ideaId);
+        const idea = filteredIdeas.find((i) => i.id === ideaId);
+        const userId = currentUser?.user?.id || currentUser?.id;
+        if (idea && userId) {
+          await toggleIdeaLike(ideaId, idea.is_liked, userId);
+        }
       } catch (error) {
         // Error handled in context
       }
     },
-    [isViewer, isOwner, toggleIdeaLike]
+    [isViewer, isOwner, toggleIdeaLike, filteredIdeas, currentUser]
   );
 
   const handleToggleDislike = useCallback(
@@ -291,12 +295,16 @@ export const FlowContent = ({
         return;
       }
       try {
-        await toggleIdeaDislike(ideaId);
+        const idea = filteredIdeas.find((i) => i.id === ideaId);
+        const userId = currentUser?.user?.id || currentUser?.id;
+        if (idea && userId) {
+          await toggleIdeaDislike(ideaId, idea.is_disliked, userId);
+        }
       } catch (error) {
         // Error handled in context
       }
     },
-    [isViewer, isOwner, toggleIdeaDislike]
+    [isViewer, isOwner, toggleIdeaDislike, filteredIdeas, currentUser]
   );
 
   const handleNodeDragStop = useCallback(

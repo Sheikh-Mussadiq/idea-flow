@@ -5,11 +5,21 @@ export const userService = {
     for (let i = 0; i < retries; i++) {
       const { data: profile, error } = await supabase
         .from('users')
-        .select('*')
+        .select(`
+          *,
+          user_profile:user_profiles(profile, updated_at)
+        `)
         .eq('id', userId)
         .single();
 
-      if (profile) return profile;
+      if (profile) {
+        // Flatten the user_profile data into the main profile object
+        return {
+          ...profile,
+          profile: profile.user_profile?.[0]?.profile || null,
+          profile_updated_at: profile.user_profile?.[0]?.updated_at || null
+        };
+      }
 
       // If error is not "PGRST116" (no rows returned), throw it
       if (error && error.code !== 'PGRST116') throw error;
@@ -21,15 +31,66 @@ export const userService = {
   },
 
   async updateProfile(userId, updates) {
-    const { data, error } = await supabase
-      .from('users')
-      .update(updates)
-      .eq('id', userId)
-      .select()
-      .single();
+    // Separate user updates from profile updates
+    const { profile, profile_updated_at, ...userUpdates } = updates;
+    
+    // Update user table if there are user fields to update
+    let userData = null;
+    if (Object.keys(userUpdates).length > 0) {
+      const { data, error } = await supabase
+        .from('users')
+        .update(userUpdates)
+        .eq('id', userId)
+        .select()
+        .single();
 
-    if (error) throw error;
-    return data;
+      if (error) throw error;
+      userData = data;
+    } else {
+      // If no user updates, fetch current user data
+      const { data, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', userId)
+        .single();
+      
+      if (error) throw error;
+      userData = data;
+    }
+
+    // Update user_profiles table if profile is provided
+    if (profile !== undefined) {
+      const { data: profileData, error: profileError } = await supabase
+        .from('user_profiles')
+        .upsert({
+          user_id: userId,
+          profile: profile
+        })
+        .select('profile, updated_at')
+        .single();
+
+      if (profileError) throw profileError;
+      
+      // Merge profile data into user data
+      return {
+        ...userData,
+        profile: profileData.profile,
+        profile_updated_at: profileData.updated_at
+      };
+    }
+
+    // Fetch profile if not updated
+    const { data: profileData } = await supabase
+      .from('user_profiles')
+      .select('profile, updated_at')
+      .eq('user_id', userId)
+      .maybeSingle();
+
+    return {
+      ...userData,
+      profile: profileData?.profile || null,
+      profile_updated_at: profileData?.updated_at || null
+    };
   },
 
   async uploadAvatar(userId, file) {
