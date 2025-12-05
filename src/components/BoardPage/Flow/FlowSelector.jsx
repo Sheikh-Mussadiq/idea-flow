@@ -89,11 +89,7 @@ export const FlowSelector = ({ flows = [], activeFlowId, boardId }) => {
     <DropdownMenu open={isOpen} onOpenChange={setIsOpen}>
       <DropdownMenuTrigger asChild>
         <button
-          className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-all ${
-            hasMultipleFlows
-              ? "hover:bg-neutral-100 dark:hover:bg-neutral-800 cursor-pointer"
-              : "cursor-default"
-          } bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700`}
+          className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-all hover:bg-neutral-100 dark:hover:bg-neutral-800 cursor-pointer bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700`}
         >
           <div className="flex items-center gap-2 min-w-0">
             <Zap className="h-4 w-4 text-primary-500 shrink-0" />
@@ -105,90 +101,83 @@ export const FlowSelector = ({ flows = [], activeFlowId, boardId }) => {
               {activeFlow?.name || "Select Flow"}
             </TruncatedText>
           </div>
-          {hasMultipleFlows && (
-            <ChevronDown
-              className={`h-4 w-4 text-neutral-400 shrink-0 transition-transform ${
-                isOpen ? "rotate-180" : ""
-              }`}
-            />
-          )}
-          {!hasMultipleFlows && (
-            <span className="text-xs text-neutral-400 shrink-0">
-              {flows.length} flow
-            </span>
-          )}
+          <ChevronDown
+            className={`h-4 w-4 text-neutral-400 shrink-0 transition-transform ${
+              isOpen ? "rotate-180" : ""
+            }`}
+          />
         </button>
       </DropdownMenuTrigger>
 
-      {hasMultipleFlows && (
-        <DropdownMenuContent
-          align="start"
-          className="w-64 bg-white dark:bg-neutral-900 border-neutral-200 dark:border-neutral-700"
+      <DropdownMenuContent
+        align="start"
+        className="w-64 bg-white dark:bg-neutral-900 border-neutral-200 dark:border-neutral-700"
+      >
+        <div className="px-2 py-1.5">
+          <p className="text-xs font-medium text-neutral-500 dark:text-neutral-400">
+            {hasMultipleFlows
+              ? `Switch Flow (${flows.length})`
+              : "Flow options"}
+          </p>
+        </div>
+        <DropdownMenuSeparator className="bg-neutral-200 dark:bg-neutral-700" />
+
+        <div className="max-h-64 overflow-y-auto py-1">
+          {flows.map((flow) => {
+            const isActive = flow.id === activeFlowId;
+            const ideasCount = flow.ideas?.length || flow.ideasCount || 0;
+
+            return (
+              <DropdownMenuItem
+                key={flow.id}
+                onClick={() => handleSelectFlow(flow.id)}
+                className={`flex items-center justify-between gap-2 px-2 py-2 cursor-pointer ${
+                  isActive
+                    ? "bg-primary-50 dark:bg-primary-900/20"
+                    : "hover:bg-neutral-100 dark:hover:bg-neutral-800"
+                }`}
+              >
+                <div className="flex items-center gap-2 min-w-0 flex-1">
+                  <Zap
+                    className={`h-4 w-4 shrink-0 ${
+                      isActive
+                        ? "text-primary-500"
+                        : "text-neutral-400 dark:text-neutral-500"
+                    }`}
+                  />
+                  <TruncatedText
+                    as="span"
+                    className={`text-sm truncate ${
+                      isActive
+                        ? "font-medium text-primary-600 dark:text-primary-400"
+                        : "text-neutral-700 dark:text-neutral-300"
+                    }`}
+                    title={flow.name}
+                  >
+                    {flow.name}
+                  </TruncatedText>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <span className="text-xs text-neutral-400">
+                    {ideasCount} ideas
+                  </span>
+                  {isActive && <Check className="h-4 w-4 text-primary-500" />}
+                </div>
+              </DropdownMenuItem>
+            );
+          })}
+        </div>
+
+        <DropdownMenuSeparator className="bg-neutral-200 dark:bg-neutral-700" />
+
+        <DropdownMenuItem
+          onClick={handleOpenCreateModal}
+          className="flex items-center gap-2 px-2 py-2 cursor-pointer text-primary-600 dark:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/20"
         >
-          <div className="px-2 py-1.5">
-            <p className="text-xs font-medium text-neutral-500 dark:text-neutral-400">
-              Switch Flow ({flows.length})
-            </p>
-          </div>
-          <DropdownMenuSeparator className="bg-neutral-200 dark:bg-neutral-700" />
-
-          <div className="max-h-64 overflow-y-auto py-1">
-            {flows.map((flow) => {
-              const isActive = flow.id === activeFlowId;
-              const ideasCount = flow.ideas?.length || flow.ideasCount || 0;
-
-              return (
-                <DropdownMenuItem
-                  key={flow.id}
-                  onClick={() => handleSelectFlow(flow.id)}
-                  className={`flex items-center justify-between gap-2 px-2 py-2 cursor-pointer ${
-                    isActive
-                      ? "bg-primary-50 dark:bg-primary-900/20"
-                      : "hover:bg-neutral-100 dark:hover:bg-neutral-800"
-                  }`}
-                >
-                  <div className="flex items-center gap-2 min-w-0 flex-1">
-                    <Zap
-                      className={`h-4 w-4 shrink-0 ${
-                        isActive
-                          ? "text-primary-500"
-                          : "text-neutral-400 dark:text-neutral-500"
-                      }`}
-                    />
-                    <TruncatedText
-                      as="span"
-                      className={`text-sm truncate ${
-                        isActive
-                          ? "font-medium text-primary-600 dark:text-primary-400"
-                          : "text-neutral-700 dark:text-neutral-300"
-                      }`}
-                      title={flow.name}
-                    >
-                      {flow.name}
-                    </TruncatedText>
-                  </div>
-                  <div className="flex items-center gap-2 shrink-0">
-                    <span className="text-xs text-neutral-400">
-                      {ideasCount} ideas
-                    </span>
-                    {isActive && <Check className="h-4 w-4 text-primary-500" />}
-                  </div>
-                </DropdownMenuItem>
-              );
-            })}
-          </div>
-
-          <DropdownMenuSeparator className="bg-neutral-200 dark:bg-neutral-700" />
-
-          <DropdownMenuItem
-            onClick={handleOpenCreateModal}
-            className="flex items-center gap-2 px-2 py-2 cursor-pointer text-primary-600 dark:text-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/20"
-          >
-            <Plus className="h-4 w-4" />
-            <span className="text-sm font-medium">Create New Flow</span>
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      )}
+          <Plus className="h-4 w-4" />
+          <span className="text-sm font-medium">Create New Flow</span>
+        </DropdownMenuItem>
+      </DropdownMenuContent>
 
       {/* Create Flow Modal */}
       <CreateFlowModal
