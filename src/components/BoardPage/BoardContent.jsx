@@ -31,7 +31,7 @@ export const BoardContent = ({
   const handleChangeView = onChangeView ?? setUncontrolledViewMode;
 
   const [selectedIdeaId, setSelectedIdeaId] = useState(null);
-  const [selectedTaskId, setSelectedTaskId] = useState(null);
+  const [selectedCardId, setSelectedCardId] = useState(null);
   const {
     createCard,
     updateCard,
@@ -194,12 +194,13 @@ export const BoardContent = ({
     }
   };
 
-  const handleOpenTask = (id) => {
-    setSelectedTaskId(id);
+  const handleOpenCard = (id) => {
+    if (selectedIdeaId) setSelectedIdeaId(null);
+    setSelectedCardId(id);
   };
 
-  const handleCloseTask = () => {
-    setSelectedTaskId(null);
+  const handleCloseCard = () => {
+    setSelectedCardId(null);
   };
 
   const handlePriorityChange = async (id, priority) => {
@@ -351,7 +352,7 @@ export const BoardContent = ({
       )
     );
     logActivity(id, currentUserName, "Archived task");
-    handleCloseTask();
+    handleCloseCard();
   };
 
   const handleMoveCard = async (cardId, columnId, newIndex) => {
@@ -360,41 +361,82 @@ export const BoardContent = ({
       const column = currentBoard.columns?.find((c) => c.id === columnId);
       if (!column) return;
 
-      // Get all cards currently in this column (excluding the moving one to find insertion point)
-      const cardsInColumn = cards
+      // Find the moving card
+      const movingCard =
+        cards.find((c) => c.id === cardId) ||
+        currentBoard.cards.find((c) => c.id === cardId);
+
+      if (!movingCard) return;
+
+      // Check if this is a cross-column move
+      const isColumnChange = movingCard.column_id !== columnId;
+
+      // Get all cards in the target column (excluding the moving one)
+      const targetColumnCards = cards
         .filter((c) => c.column_id === columnId && c.id !== cardId)
         .sort((a, b) => (a.position || 0) - (b.position || 0));
 
-      let position;
-      if (typeof newIndex === "number") {
-        if (cardsInColumn.length === 0) {
-          position = 1000;
-        } else if (newIndex === 0) {
-          // Top of list
-          position = (cardsInColumn[0].position || 0) / 2;
-        } else if (newIndex >= cardsInColumn.length) {
-          // End of list
-          position =
-            (cardsInColumn[cardsInColumn.length - 1].position || 0) + 1000;
-        } else {
-          // Middle
-          const prev = cardsInColumn[newIndex - 1];
-          const next = cardsInColumn[newIndex];
-          position = ((prev.position || 0) + (next.position || 0)) / 2;
+      // Construct the final ordered list for target column
+      const finalTargetCards = [...targetColumnCards];
+      let insertIndex =
+        typeof newIndex === "number" ? newIndex : finalTargetCards.length;
+
+      // Ensure index is within bounds
+      if (insertIndex < 0) insertIndex = 0;
+      if (insertIndex > finalTargetCards.length)
+        insertIndex = finalTargetCards.length;
+
+      finalTargetCards.splice(insertIndex, 0, movingCard);
+
+      // Prepare updates for target column
+      const targetUpdates = finalTargetCards.map((card, index) => {
+        const newPosition = index + 1;
+
+        // Always update the moved card to ensure column change is persisted
+        if (card.id === cardId) {
+          return updateCard(cardId, {
+            column_id: columnId,
+            position: newPosition,
+            kanbanStatus: column.title,
+          });
         }
-      } else {
-        // Default to end
-        position =
-          cardsInColumn.length > 0
-            ? Math.max(...cardsInColumn.map((c) => c.position || 0)) + 1000
-            : 1000;
+        // For other cards, only update if position doesn't match strict sequence
+        else if (card.position !== newPosition) {
+          return updateCard(card.id, { position: newPosition });
+        }
+        return Promise.resolve();
+      });
+
+      // If this is a cross-column move, also update the source column
+      const allUpdates = [...targetUpdates];
+
+      if (isColumnChange) {
+        const sourceColumn = currentBoard.columns?.find(
+          (c) => c.id === movingCard.column_id
+        );
+
+        if (sourceColumn) {
+          // Get all cards in the source column (excluding the moved card)
+          const sourceColumnCards = cards
+            .filter(
+              (c) => c.column_id === movingCard.column_id && c.id !== cardId
+            )
+            .sort((a, b) => (a.position || 0) - (b.position || 0));
+
+          // Resequence source column cards
+          const sourceUpdates = sourceColumnCards.map((card, index) => {
+            const newPosition = index + 1;
+            if (card.position !== newPosition) {
+              return updateCard(card.id, { position: newPosition });
+            }
+            return Promise.resolve();
+          });
+
+          allUpdates.push(...sourceUpdates);
+        }
       }
 
-      await updateCard(cardId, {
-        column_id: columnId,
-        position,
-        kanbanStatus: column.title,
-      });
+      await Promise.all(allUpdates);
     } catch (error) {
       // Error handled in context
     }
@@ -424,26 +466,26 @@ export const BoardContent = ({
     }
   };
 
-  const handleAddTask = async (status = "Backlog") => {
+  const handleAddCard = async (columnId) => {
     if (isViewer || !currentBoard) return;
 
     // Find column ID for the status
-    const column = currentBoard.columns?.find((c) => c.title === status);
+    const column = currentBoard.columns?.find((c) => c.id === columnId);
     if (!column) {
-      toast.error(`Column "${status}" not found`);
+      toast.error(`Column "${columnId}" not found`);
       return;
     }
 
     // Calculate position (end of list)
-    const cardsInColumn = column.cards || [];
+    const cardsInColumn = cards.filter((c) => c.column_id === column.id) || [];
     const position =
       cardsInColumn.length > 0
-        ? Math.max(...cardsInColumn.map((c) => c.position || 0)) + 1000
-        : 0;
+        ? Math.max(...cardsInColumn.map((c) => c.position || 0)) + 1
+        : 1;
 
     try {
-      await createCard(currentBoard.id, column.id, "New Task", position);
-      toast.success("Task added!");
+      await createCard(currentBoard.id, column.id, "New Card", position);
+      toast.success("Card added!");
     } catch (error) {
       // Error handled in context
     }
@@ -452,9 +494,9 @@ export const BoardContent = ({
   const selectedIdea =
     flowIdeas.find((idea) => idea.id === selectedIdeaId) ||
     cards.find((c) => c.id === selectedIdeaId);
-  const selectedTask = cards.find((c) => c.id === selectedTaskId) || null;
-  const selectedTaskComments = selectedTaskId
-    ? selectedTask?.comments || []
+  const selectedCard = cards.find((c) => c.id === selectedCardId) || null;
+  const selectedCardComments = selectedCardId
+    ? selectedCard?.comments || []
     : [];
   const selectedIdeaComments = selectedIdeaId
     ? selectedIdea?.idea_comments || selectedIdea?.comments || []
@@ -470,7 +512,7 @@ export const BoardContent = ({
           currentBoard={currentBoard}
           currentUser={currentUser}
           onOpenComments={handleOpenComments}
-          onOpenTask={handleOpenTask}
+          onOpenTask={handleOpenCard}
           activeFlowId={activeFlowId}
         />
       )}
@@ -483,8 +525,8 @@ export const BoardContent = ({
           onMoveCard={handleMoveCard}
           onViewInFlow={handleViewInFlow}
           onAssign={handleAssign}
-          onOpenTask={handleOpenTask}
-          onAddTask={handleAddTask}
+          onOpenTask={handleOpenCard}
+          onAddCard={handleAddCard}
           onReorderCards={onUpdateCards}
           canEdit={!isViewer}
         />
@@ -495,8 +537,10 @@ export const BoardContent = ({
         <ListView
           cards={cards}
           columns={columns}
-          onAddTask={handleAddTask}
-          onOpenTask={handleOpenTask}
+          onAddCard={handleAddCard}
+          onOpenTask={handleOpenCard}
+          onMoveCard={handleMoveCard}
+          onReorderCards={onUpdateCards}
         />
       )}
 
@@ -514,15 +558,15 @@ export const BoardContent = ({
       />
 
       <TaskModal
-        isOpen={!!selectedTask}
-        onClose={handleCloseTask}
-        idea={selectedTask}
+        isOpen={!!selectedCard}
+        onClose={handleCloseCard}
+        idea={selectedCard}
         columns={columns}
         teamMembers={teamMembers}
         availableTags={currentBoard?.tags || []}
         boardId={currentBoard?.id}
         onAssign={handleAssign}
-        onStatusChange={(columnId) => handleMoveCard(selectedTask.id, columnId)}
+        onStatusChange={(columnId) => handleMoveCard(selectedCard.id, columnId)}
         onChangeDueDate={handleDueDateChange}
         onChangePriority={handlePriorityChange}
         onAddSubtask={handleAddSubtask}
@@ -535,7 +579,7 @@ export const BoardContent = ({
         onAddLabel={handleAddLabel}
         onRemoveLabel={handleRemoveLabel}
         onCreateTag={createTag}
-        comments={selectedTaskComments}
+        comments={selectedCardComments}
         onAddCommentToIdea={handleAddCommentToCard}
         onDeleteComment={(commentId) => handleDeleteComment(commentId)}
         onUpdateComment={handleUpdateComment}

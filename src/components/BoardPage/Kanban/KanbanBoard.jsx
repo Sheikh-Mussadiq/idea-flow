@@ -20,7 +20,7 @@ export const KanbanBoard = ({
   columns = [],
   onMoveCard,
   onOpenTask,
-  onAddTask,
+  onAddCard,
   onReorderCards,
   canEdit,
 }) => {
@@ -138,8 +138,8 @@ export const KanbanBoard = ({
     try {
       const position =
         columns.length > 0
-          ? Math.max(...columns.map((c) => c.position)) + 1000
-          : 0;
+          ? Math.max(...columns.map((c) => c.position)) + 1
+          : 1;
       await createColumn(currentBoard.id, title, position);
       toast.success("List added");
     } catch (error) {
@@ -174,7 +174,7 @@ export const KanbanBoard = ({
               title={column.title}
               cards={cardsByColumnId[column.id] || []}
               onOpenTask={onOpenTask}
-              onAddTask={() => onAddTask(column.title)} // Pass title as status for now
+              onAddCard={() => onAddCard(column.id)}
             />
           ))}
 

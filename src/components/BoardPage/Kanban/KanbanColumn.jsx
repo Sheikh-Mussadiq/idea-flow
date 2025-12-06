@@ -15,7 +15,7 @@ import {
 import { useState } from "react";
 import { useBoard } from "../../../context/BoardContext";
 
-export const KanbanColumn = ({ id, title, cards, onOpenTask, onAddTask }) => {
+export const KanbanColumn = ({ id, title, cards, onOpenTask, onAddCard }) => {
   const { setNodeRef, isOver } = useDroppable({
     id: id,
   });
@@ -133,7 +133,7 @@ export const KanbanColumn = ({ id, title, cards, onOpenTask, onAddTask }) => {
       <div className="flex-shrink-0 pt-2 relative z-20">
         <Button
           variant="ghost"
-          onClick={() => onAddTask(id)}
+          onClick={() => onAddCard(id)}
           className="w-full justify-start text-neutral-500 dark:text-neutral-400 hover:text-neutral-800 dark:hover:text-neutral-100 hover:bg-white/50 dark:hover:bg-neutral-800/50 h-9 text-sm font-medium rounded-xl transition-all"
         >
           <Plus className="h-4 w-4 mr-2" />

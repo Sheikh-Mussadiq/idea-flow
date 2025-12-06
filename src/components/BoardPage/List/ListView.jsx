@@ -22,6 +22,8 @@ import {
   useDroppable,
 } from "@dnd-kit/core";
 import {
+  arrayMove,
+  sortableKeyboardCoordinates,
   SortableContext,
   verticalListSortingStrategy,
   useSortable,
@@ -72,13 +74,17 @@ const SortableTaskItem = ({
       id={task.id}
       style={style}
       {...attributes}
-      {...listeners}
       onClick={() => onOpenTask(task.id)}
       className="group relative bg-white dark:bg-neutral-800 border border-neutral-200/60 dark:border-neutral-700 rounded-xl p-3 hover:shadow-card-hover hover:border-neutral-300/80 dark:hover:border-neutral-600 transition-all duration-200 cursor-pointer flex items-center gap-4"
     >
       {/* Drag Handle */}
-      <div className="opacity-0 group-hover:opacity-100 text-neutral-300 dark:text-neutral-600 cursor-grab active:cursor-grabbing transition-opacity">
-        <GripVertical className="h-4 w-4" />
+      <div
+        {...listeners}
+        {...attributes}
+        onClick={(e) => e.stopPropagation()}
+        className="opacity-0 group-hover:opacity-100 text-neutral-400 dark:text-neutral-500 cursor-grab active:cursor-grabbing transition-opacity hover:text-neutral-600 dark:hover:text-neutral-400 flex-shrink-0"
+      >
+        <GripVertical className="h-5 w-5" />
       </div>
 
       {/* Priority Dot */}
@@ -148,39 +154,35 @@ const SortableTaskItem = ({
   );
 };
 
-// Droppable Status Group Component
-const StatusGroup = ({
-  status,
-  tasks,
-  onAddTask,
+// Droppable List Column Component (consistent with KanbanColumn)
+const ListColumn = ({
+  column,
+  cards,
+  onAddCard,
   onOpenTask,
   getStatusColor,
   getPriorityColor,
 }) => {
   const { setNodeRef, isOver } = useDroppable({
-    id: status,
-    data: {
-      type: "Column",
-      status,
-    },
+    id: column.id, // Use column.id like KanbanColumn
   });
 
   return (
     <div className="space-y-3 bg-neutral-100 dark:bg-neutral-900 p-2 rounded-2xl">
-      {/* Group Header */}
+      {/* Column Header */}
       <div className="flex items-center justify-between px-1">
         <div className="flex items-center gap-3">
           <h3 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100">
-            {status}
+            {column.title}
           </h3>
           <span className="text-xs font-medium text-neutral-700 dark:text-neutral-300 bg-white dark:bg-neutral-800 px-2 py-1 rounded-full">
-            {tasks.length}
+            {cards.length}
           </span>
         </div>
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => onAddTask(status)}
+          onClick={() => onAddCard(column.title)}
           className="h-6 text-xs font-medium text-neutral-900 dark:text-neutral-100 hover:text-neutral-900 dark:hover:text-neutral-100 hover:bg-neutral-200 dark:hover:bg-neutral-800"
         >
           <Plus className="h-3 w-3 mr-1.5" />
@@ -188,7 +190,7 @@ const StatusGroup = ({
         </Button>
       </div>
 
-      {/* Tasks List */}
+      {/* Cards List */}
       <div
         ref={setNodeRef}
         className={`space-y-2 min-h-[50px] rounded-xl transition-colors ${
@@ -198,18 +200,18 @@ const StatusGroup = ({
         }`}
       >
         <SortableContext
-          items={tasks.map((t) => t.id)}
+          items={cards.map((c) => c.id)}
           strategy={verticalListSortingStrategy}
         >
-          {tasks.length === 0 ? (
+          {cards.length === 0 ? (
             <div className="px-4 py-8 border border-dashed border-neutral-200 dark:border-neutral-700 rounded-xl flex flex-col items-center justify-center text-neutral-400 dark:text-neutral-500 bg-white/50 dark:bg-neutral-800/50">
-              <p className="text-sm">No tasks in {status}</p>
+              <p className="text-sm">No tasks in {column.title}</p>
             </div>
           ) : (
-            tasks.map((task) => (
+            cards.map((card) => (
               <SortableTaskItem
-                key={task.id}
-                task={task}
+                key={card.id}
+                task={card}
                 onOpenTask={onOpenTask}
                 getStatusColor={getStatusColor}
                 getPriorityColor={getPriorityColor}
@@ -225,31 +227,42 @@ const StatusGroup = ({
 export const ListView = ({
   cards = [],
   columns = [],
-  onAddTask,
+  onAddCard,
   onOpenTask,
+  onMoveCard,
+  onReorderCards,
 }) => {
   const { currentBoard, updateCard } = useBoard();
   const [activeDragItem, setActiveDragItem] = useState(null);
   const [activeDragWidth, setActiveDragWidth] = useState(null);
 
-  // Group tasks by status using actual board columns
-  const groupedTasks = useMemo(() => {
+  // Use cards from currentBoard for real-time updates, fallback to prop
+  const boardCards = currentBoard?.cards || cards;
+  const boardColumns = currentBoard?.columns || columns;
+
+  // Group cards by column ID (consistent with KanbanColumn)
+  const cardsByColumnId = useMemo(() => {
     const groups = {};
 
     // Initialize groups based on actual columns
-    columns.forEach((column) => {
-      groups[column.title] = [];
+    boardColumns.forEach((column) => {
+      groups[column.id] = [];
     });
 
-    // Group cards by their kanbanStatus
-    cards.forEach((card) => {
-      if (card.kanbanStatus && groups[card.kanbanStatus] !== undefined) {
-        groups[card.kanbanStatus].push(card);
+    // Group cards by their column_id
+    boardCards.forEach((card) => {
+      if (groups[card.column_id] !== undefined) {
+        groups[card.column_id].push(card);
       }
     });
 
+    // Sort cards by position within each column
+    Object.keys(groups).forEach((columnId) => {
+      groups[columnId].sort((a, b) => (a.position || 0) - (b.position || 0));
+    });
+
     return groups;
-  }, [cards, columns]);
+  }, [boardCards, boardColumns]);
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -296,83 +309,90 @@ export const ListView = ({
     }
   };
 
-  const handleDragEnd = async (event) => {
-    setActiveDragItem(null);
-    setActiveDragWidth(null);
+  const handleDragOver = (event) => {
     const { active, over } = event;
-
     if (!over) return;
 
     const activeId = active.id;
     const overId = over.id;
 
-    // Find the active task
-    const activeTask = cards.find((c) => c.id === activeId);
-    if (!activeTask) return;
+    // Find the active card
+    const activeCard = boardCards.find((c) => c.id === activeId);
+    if (!activeCard) return;
 
-    // Determine the target status
-    let targetStatus = null;
-
-    // If dropped over a column (status group)
-    if (over.data.current?.type === "Column") {
-      targetStatus = over.data.current.status;
-    }
-    // If dropped over another task
-    else if (over.data.current?.type === "Task") {
-      const overTask = cards.find((c) => c.id === overId);
-      if (overTask) {
-        targetStatus = overTask.kanbanStatus;
-      }
-    }
-
-    if (!targetStatus) return;
-
-    // Case 1: Moving to a different status
-    if (targetStatus !== activeTask.kanbanStatus) {
-      try {
-        // Find the column ID for the target status
-        const targetColumn = currentBoard?.columns?.find(
-          (c) => c.title === targetStatus
-        );
-        if (!targetColumn) return;
-
-        // Calculate new position (end of column)
-        const cardsInColumn = cards.filter(
-          (c) => c.kanbanStatus === targetStatus
-        );
-        const position =
-          cardsInColumn.length > 0
-            ? Math.max(...cardsInColumn.map((c) => c.position || 0)) + 1000
-            : 0;
-
-        await updateCard(activeId, {
-          column_id: targetColumn.id,
-          position,
-        });
-      } catch (error) {
-        console.error("Error moving card:", error);
-      }
-    }
-    // Case 2: Reordering within the same status - handled by backend via position updates
-    else if (activeId !== overId) {
-      // Get all tasks with the same status
-      const tasksInStatus = cards.filter(
-        (c) => c.kanbanStatus === targetStatus
+    // Find over column (either directly or via card)
+    const overColumn =
+      boardColumns.find((c) => c.id === overId) ||
+      boardColumns.find(
+        (c) => c.id === boardCards.find((card) => card.id === overId)?.column_id
       );
-      const activeIndex = tasksInStatus.findIndex((t) => t.id === activeId);
-      const overIndex = tasksInStatus.findIndex((t) => t.id === overId);
 
-      if (activeIndex !== -1 && overIndex !== -1) {
-        try {
-          // Calculate new position based on surrounding cards
-          const overTask = tasksInStatus[overIndex];
-          const position = overTask.position || 0;
+    if (!overColumn) return;
 
-          await updateCard(activeId, { position });
-        } catch (error) {
-          console.error("Error reordering card:", error);
+    const activeColumnId = activeCard.column_id;
+    const overColumnId = overColumn.id;
+
+    if (activeColumnId !== overColumnId) {
+      const activeIndex = boardCards.findIndex((c) => c.id === activeId);
+      const overIndex = boardCards.findIndex((c) => c.id === overId);
+
+      onReorderCards((prev) => {
+        const newCards = [...prev];
+        // Update column_id and kanbanStatus
+        const updatedCard = {
+          ...newCards[activeIndex],
+          column_id: overColumnId,
+          kanbanStatus: overColumn.title,
+        };
+
+        // Remove from old pos
+        newCards.splice(activeIndex, 1);
+
+        // Insert at new pos
+        if (boardColumns.some((c) => c.id === overId)) {
+          // Dropped on column background -> append
+          newCards.push(updatedCard);
+        } else {
+          // Dropped on a card
+          let insertIndex = overIndex;
+          if (activeIndex < overIndex) insertIndex--; // Adjust for removal
+          if (insertIndex < 0) insertIndex = 0;
+          newCards.splice(insertIndex, 0, updatedCard);
         }
+        return newCards;
+      });
+    } else {
+      // Same column
+      if (boardColumns.some((c) => c.id === overId)) return; // Over same column bg, do nothing
+
+      const activeIndex = boardCards.findIndex((c) => c.id === activeId);
+      const overIndex = boardCards.findIndex((c) => c.id === overId);
+
+      if (activeIndex !== overIndex) {
+        onReorderCards((prev) => arrayMove(prev, activeIndex, overIndex));
       }
+    }
+  };
+
+  const handleDragEnd = (event) => {
+    const { active, over } = event;
+    setActiveDragItem(null);
+    setActiveDragWidth(null);
+
+    if (!over) return;
+
+    const activeId = active.id;
+    const currentCard = boardCards.find((c) => c.id === activeId);
+    if (!currentCard) return;
+
+    const column = boardColumns.find((c) => c.id === currentCard.column_id);
+    if (!column) return;
+
+    const columnCards = boardCards.filter((c) => c.column_id === column.id);
+    const newIndex = columnCards.findIndex((c) => c.id === activeId);
+
+    if (newIndex !== -1) {
+      onMoveCard(activeId, column.id, newIndex);
     }
   };
 
@@ -381,17 +401,18 @@ export const ListView = ({
       sensors={sensors}
       collisionDetection={closestCorners}
       onDragStart={handleDragStart}
+      onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
     >
       <div className="h-full w-full bg-white dark:bg-neutral-950 flex flex-col overflow-hidden">
         {/* Content Area */}
         <div className="flex-1 overflow-y-auto custom-scrollbar px-6 py-4 space-y-3">
-          {Object.entries(groupedTasks).map(([status, tasks]) => (
-            <StatusGroup
-              key={status}
-              status={status}
-              tasks={tasks}
-              onAddTask={onAddTask}
+          {boardColumns.map((column) => (
+            <ListColumn
+              key={column.id}
+              column={column}
+              cards={cardsByColumnId[column.id] || []}
+              onAddCard={onAddCard}
               onOpenTask={onOpenTask}
               getStatusColor={getStatusColor}
               getPriorityColor={getPriorityColor}

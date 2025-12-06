@@ -9,7 +9,7 @@ export const KanbanView = ({
   onViewInFlow,
   onAssign,
   onOpenTask,
-  onAddTask,
+  onAddCard,
   onReorderCards,
   teamMembers,
   canEdit,
@@ -27,7 +27,7 @@ export const KanbanView = ({
           teamMembers={teamMembers}
           onAssign={onAssign}
           onOpenTask={onOpenTask}
-          onAddTask={onAddTask}
+          onAddCard={onAddCard}
           onReorderCards={onReorderCards}
           canEdit={canEdit}
         />

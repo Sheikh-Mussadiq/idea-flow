@@ -1,9 +1,9 @@
-import { supabase } from '../lib/supabaseClient';
+import { supabase } from "../lib/supabaseClient";
 
 export const cardService = {
   async createCard(card) {
     const { data, error } = await supabase
-      .from('cards')
+      .from("cards")
       .insert(card)
       .select()
       .single();
@@ -14,9 +14,9 @@ export const cardService = {
 
   async updateCard(cardId, updates) {
     const { data, error } = await supabase
-      .from('cards')
+      .from("cards")
       .update(updates)
-      .eq('id', cardId)
+      .eq("id", cardId)
       .select()
       .single();
 
@@ -25,10 +25,7 @@ export const cardService = {
   },
 
   async deleteCard(cardId) {
-    const { error } = await supabase
-      .from('cards')
-      .delete()
-      .eq('id', cardId);
+    const { error } = await supabase.from("cards").delete().eq("id", cardId);
 
     if (error) throw error;
   },
@@ -36,11 +33,11 @@ export const cardService = {
   async updateCardPositions(updates) {
     // updates is array of { id, position, column_id }
     const { data, error } = await supabase
-      .from('cards')
+      .from("cards")
       .upsert(updates)
       .select();
 
     if (error) throw error;
     return data;
-  }
+  },
 };

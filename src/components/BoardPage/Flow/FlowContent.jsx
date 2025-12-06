@@ -309,7 +309,7 @@ export const FlowContent = ({
 
   const handleNodeDragStop = useCallback(
     async (id, position) => {
-      if (isViewer || !currentBoard) return;
+      if (isViewer || !currentBoard || !isOwner) return;
 
       try {
         // Update the idea with the new position
@@ -320,7 +320,7 @@ export const FlowContent = ({
         toast.error("Failed to save position");
       }
     },
-    [isViewer, currentBoard, updateFlowIdea]
+    [isViewer, currentBoard, updateFlowIdea, isOwner]
   );
 
   const inputNodeData = useMemo(
