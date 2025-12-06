@@ -12,8 +12,12 @@ export const TaskModal = ({
   isOpen,
   onClose,
   idea,
+  columns,
   teamMembers,
+  availableTags = [],
+  boardId,
   onAssign,
+  onStatusChange,
   onChangeDueDate,
   onChangePriority,
   onAddSubtask,
@@ -25,6 +29,7 @@ export const TaskModal = ({
   onRemoveAttachment,
   onAddLabel,
   onRemoveLabel,
+  onCreateTag,
   comments,
   onAddCommentToIdea,
   onDeleteComment,
@@ -36,13 +41,33 @@ export const TaskModal = ({
   const [activeTab, setActiveTab] = useState("subtasks");
   const [isClosing, setIsClosing] = useState(false);
   const [localDescription, setLocalDescription] = useState("");
+  const [tagsState, setTagsState] = useState([]);
 
   useEffect(() => {
     if (idea) {
       setLocalDescription(idea.description || "");
       setActiveTab("subtasks");
+
+      // Recalculate tags whenever idea (card) or availableTags changes
+      // Cards use 'tags' field
+      const tagIds = idea.tags || [];
+      const newTags = tagIds
+        .map((tagIdOrObj) => {
+          if (
+            typeof tagIdOrObj === "object" &&
+            tagIdOrObj.id &&
+            tagIdOrObj.name
+          ) {
+            return tagIdOrObj;
+          }
+          const tagId =
+            typeof tagIdOrObj === "object" ? tagIdOrObj.id : tagIdOrObj;
+          return availableTags.find((t) => t.id === tagId);
+        })
+        .filter(Boolean);
+      setTagsState(newTags);
     }
-  }, [idea]);
+  }, [idea, availableTags]);
 
   useLayoutEffect(() => {
     if (isOpen) {
@@ -73,30 +98,32 @@ export const TaskModal = ({
     onUpdateDescription?.(idea.id, value);
   };
 
-  const handleStatusChange = () => {
-    // This would open a status picker - simplified for now
-    console.log("Status change clicked");
+  const handleStatusChange = (column) => {
+    onStatusChange?.(column.id);
     // Mock notification
     addNotification({
       userId: "current-user",
-      message: `Status updated for '${idea.title}'`,
+      message: `Status updated to '${column.title}' for '${idea.title}'`,
       type: "activity",
       taskId: idea.id,
       boardId: idea.boardId,
     });
   };
 
-  const handleAddMember = () => {
-    // This would open a member picker - using existing onAssign logic
-    console.log("Add member clicked");
+  const handleAddMember = (member) => {
+    onAssign?.(idea.id, member);
     // Mock notification
     addNotification({
       userId: "current-user",
-      message: `You were assigned to '${idea.title}'`,
+      message: `Assigned ${member.user?.full_name} to '${idea.title}'`,
       type: "assignment",
       taskId: idea.id,
       boardId: idea.boardId,
     });
+  };
+
+  const handleTitleSave = (newTitle) => {
+    onUpdateTitle?.(idea.id, newTitle);
   };
 
   const handleDueDateChange = (date) => {
@@ -135,8 +162,9 @@ export const TaskModal = ({
   };
 
   // Map idea data to sidebar props
-  const assignees = idea.assignedTo ? [idea.assignedTo] : [];
-  const tags = idea.labels || [];
+  const assignees =
+    idea.assignees || (idea.assignedTo ? [idea.assignedTo] : []);
+
   const attachments = (idea.attachments || []).map((att) => ({
     ...att,
     size: att.size || Math.floor(Math.random() * 500000), // Mock size if not available
@@ -166,16 +194,18 @@ export const TaskModal = ({
           onClose={handleClose}
           onEdit={() => console.log("Edit")}
           onExpand={() => console.log("Expand")}
+          onUpdateTitle={handleTitleSave}
+          canEdit={canEdit}
         />
 
         {/* Content Layout */}
         <div className="flex-1 overflow-y-auto min-h-0">
           {/* Sidebar (now top content) */}
           <TaskModalSidebar
-            status={idea.status || "In Progress"}
+            status={idea.kanbanStatus || "Backlog"}
             dueDate={idea.dueDate}
             assignees={assignees}
-            tags={tags}
+            tags={tagsState}
             description={localDescription}
             attachments={attachments}
             onStatusChange={handleStatusChange}
@@ -184,7 +214,15 @@ export const TaskModal = ({
             onDescriptionChange={handleDescriptionSave}
             onRemoveAttachment={(attId) => onRemoveAttachment?.(idea.id, attId)}
             onViewAttachment={(att) => window.open(att.url, "_blank")}
+            onAddAttachment={(file) => onAddAttachment?.(idea.id, file)}
+            onAddLabel={(tagId) => onAddLabel?.(idea.id, tagId)}
+            onRemoveLabel={(tagId) => onRemoveLabel?.(idea.id, tagId)}
+            onCreateTag={onCreateTag}
+            availableTags={availableTags}
+            boardId={boardId}
             canEdit={canEdit}
+            columns={columns}
+            teamMembers={teamMembers}
           />
 
           {/* Tabs Content */}

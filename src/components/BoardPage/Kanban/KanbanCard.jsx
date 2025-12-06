@@ -5,7 +5,7 @@ import { MessageSquare, Paperclip, MoreHorizontal } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "../../ui/avatar";
 
 export const KanbanCardContent = memo(
-  ({ idea, onClick, style, className, ...props }) => {
+  ({ card, onClick, style, className, ...props }) => {
     return (
       <div
         style={style}
@@ -14,47 +14,52 @@ export const KanbanCardContent = memo(
         {...props}
       >
         {/* Image / Cover */}
-        {idea.coverImage && (
+        {card.coverImage && (
           <div className="mb-3 rounded-lg overflow-hidden h-32 w-full relative group-hover:opacity-95 transition-opacity">
             <img
-              src={idea.coverImage}
+              src={card.coverImage}
               alt="Cover"
               className="h-full w-full object-cover"
             />
           </div>
         )}
 
-        {/* Header: Priority & Labels */}
+        {/* Header: Priority & Tags */}
         <div className="flex flex-wrap gap-1.5 mb-2.5">
-          {idea.priority && (
+          {card.priority && (
             <span
               className={`h-1.5 w-8 rounded-full ${
-                idea.priority.toLowerCase() === "high"
+                card.priority.toLowerCase() === "high"
                   ? "bg-red-400"
-                  : idea.priority.toLowerCase() === "medium"
+                  : card.priority.toLowerCase() === "medium"
                   ? "bg-orange-400"
                   : "bg-blue-400"
               }`}
             />
           )}
-          {idea.labels?.map((label, i) => (
-            <span
-              key={i}
-              className="px-2 py-0.5 rounded text-[10px] font-medium tracking-wide"
-              style={{
-                backgroundColor: label.color + "15",
-                color: label.color,
-              }}
-            >
-              {label.name}
-            </span>
-          ))}
+          {(card.tags || []).map((tag, i) => {
+            // Handle both tag objects and tag IDs
+            const tagObj = typeof tag === "object" ? tag : null;
+            if (!tagObj) return null;
+            return (
+              <span
+                key={tagObj.id || i}
+                className="px-2 py-0.5 rounded text-[10px] font-medium tracking-wide"
+                style={{
+                  backgroundColor: (tagObj.color || "#6366f1") + "15",
+                  color: tagObj.color || "#6366f1",
+                }}
+              >
+                {tagObj.name}
+              </span>
+            );
+          })}
         </div>
 
         {/* Title */}
         <div className="flex items-start justify-between gap-2 mb-1.5">
           <h3 className="text-[15px] font-medium text-neutral-800 dark:text-neutral-100 leading-snug group-hover:text-primary-600 dark:group-hover:text-white transition-colors">
-            {idea.title}
+            {card.title}
           </h3>
           <button className="opacity-0 group-hover:opacity-100 text-neutral-400 dark:text-neutral-500 hover:text-neutral-600 dark:hover:text-neutral-300 transition-all p-1 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded">
             <MoreHorizontal className="h-4 w-4" />
@@ -62,50 +67,50 @@ export const KanbanCardContent = memo(
         </div>
 
         {/* Description Preview */}
-        {idea.description && (
+        {card.description && (
           <p className="text-xs text-neutral-500 dark:text-neutral-400 line-clamp-2 mb-3 leading-relaxed">
-            {idea.description}
+            {card.description}
           </p>
         )}
 
         {/* Footer */}
         <div className="flex items-center justify-between pt-3 mt-1">
           <div className="flex items-center gap-3 text-neutral-400 dark:text-neutral-500">
-            {(idea.commentsCount > 0 ||
-              (idea.comments && Object.keys(idea.comments).length > 0)) && (
+            {(card.commentsCount > 0 ||
+              (card.comments && Object.keys(card.comments).length > 0)) && (
               <div className="flex items-center gap-1 text-xs font-medium hover:text-neutral-600 dark:hover:text-neutral-300 transition-colors">
                 <MessageSquare className="h-3.5 w-3.5" />
                 <span>
-                  {idea.commentsCount ||
-                    (idea.comments ? Object.keys(idea.comments).length : 0)}
+                  {card.commentsCount ||
+                    (card.comments ? Object.keys(card.comments).length : 0)}
                 </span>
               </div>
             )}
-            {idea.attachments?.length > 0 && (
+            {card.attachments?.length > 0 && (
               <div className="flex items-center gap-1 text-xs font-medium hover:text-neutral-600 dark:hover:text-neutral-300 transition-colors">
                 <Paperclip className="h-3.5 w-3.5" />
-                <span>{idea.attachments.length}</span>
+                <span>{card.attachments.length}</span>
               </div>
             )}
           </div>
 
           {/* Assignees */}
           <div className="flex -space-x-2">
-            {idea.assignedTo ? (
+            {card.assignedTo ? (
               <Avatar className="h-6 w-6 border-[1.5px] border-white dark:border-neutral-900 ring-1 ring-neutral-100 dark:ring-neutral-700">
                 <AvatarFallback className="text-[9px] bg-primary-50 dark:bg-neutral-700 text-primary-600 dark:text-neutral-200 font-semibold">
-                  {idea.assignedTo.avatar || idea.assignedTo.name[0]}
+                  {card.assignedTo.avatar || card.assignedTo.name?.[0] || "?"}
                 </AvatarFallback>
               </Avatar>
             ) : (
-              idea.members?.map((member, i) => (
+              card.members?.map((member, i) => (
                 <Avatar
                   key={i}
                   className="h-6 w-6 border-[1.5px] border-white dark:border-neutral-900 ring-1 ring-neutral-100 dark:ring-neutral-700"
                 >
                   <AvatarImage src={member.avatarUrl} />
                   <AvatarFallback className="text-[9px] bg-neutral-100 dark:bg-neutral-700 text-neutral-500 dark:text-neutral-300 font-semibold">
-                    {member.name[0]}
+                    {member.name?.[0] || "?"}
                   </AvatarFallback>
                 </Avatar>
               ))
@@ -117,7 +122,7 @@ export const KanbanCardContent = memo(
   }
 );
 
-export const KanbanCard = memo(({ idea, onClick }) => {
+export const KanbanCard = memo(({ card, onClick }) => {
   const {
     attributes,
     listeners,
@@ -126,10 +131,10 @@ export const KanbanCard = memo(({ idea, onClick }) => {
     transition,
     isDragging,
   } = useSortable({
-    id: idea.id,
+    id: card.id,
     data: {
-      type: "Idea",
-      idea,
+      type: "Card",
+      card,
     },
   });
 
@@ -150,7 +155,7 @@ export const KanbanCard = memo(({ idea, onClick }) => {
 
   return (
     <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
-      <KanbanCardContent idea={idea} onClick={onClick} />
+      <KanbanCardContent card={card} onClick={onClick} />
     </div>
   );
 });

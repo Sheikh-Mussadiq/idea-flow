@@ -223,7 +223,7 @@ const StatusGroup = ({
 };
 
 export const ListView = ({
-  ideas = [],
+  cards = [],
   columns = [],
   onAddTask,
   onOpenTask,
@@ -241,15 +241,15 @@ export const ListView = ({
       groups[column.title] = [];
     });
 
-    // Group ideas by their kanbanStatus
-    ideas.forEach((idea) => {
-      if (idea.kanbanStatus && groups[idea.kanbanStatus] !== undefined) {
-        groups[idea.kanbanStatus].push(idea);
+    // Group cards by their kanbanStatus
+    cards.forEach((card) => {
+      if (card.kanbanStatus && groups[card.kanbanStatus] !== undefined) {
+        groups[card.kanbanStatus].push(card);
       }
     });
 
     return groups;
-  }, [ideas, columns]);
+  }, [cards, columns]);
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -307,7 +307,7 @@ export const ListView = ({
     const overId = over.id;
 
     // Find the active task
-    const activeTask = ideas.find((i) => i.id === activeId);
+    const activeTask = cards.find((c) => c.id === activeId);
     if (!activeTask) return;
 
     // Determine the target status
@@ -319,7 +319,7 @@ export const ListView = ({
     }
     // If dropped over another task
     else if (over.data.current?.type === "Task") {
-      const overTask = ideas.find((i) => i.id === overId);
+      const overTask = cards.find((c) => c.id === overId);
       if (overTask) {
         targetStatus = overTask.kanbanStatus;
       }
@@ -337,8 +337,8 @@ export const ListView = ({
         if (!targetColumn) return;
 
         // Calculate new position (end of column)
-        const cardsInColumn = ideas.filter(
-          (i) => i.kanbanStatus === targetStatus
+        const cardsInColumn = cards.filter(
+          (c) => c.kanbanStatus === targetStatus
         );
         const position =
           cardsInColumn.length > 0
@@ -356,8 +356,8 @@ export const ListView = ({
     // Case 2: Reordering within the same status - handled by backend via position updates
     else if (activeId !== overId) {
       // Get all tasks with the same status
-      const tasksInStatus = ideas.filter(
-        (i) => i.kanbanStatus === targetStatus
+      const tasksInStatus = cards.filter(
+        (c) => c.kanbanStatus === targetStatus
       );
       const activeIndex = tasksInStatus.findIndex((t) => t.id === activeId);
       const overIndex = tasksInStatus.findIndex((t) => t.id === overId);

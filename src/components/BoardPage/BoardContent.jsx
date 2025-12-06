@@ -43,6 +43,15 @@ export const BoardContent = ({
     addCardComment,
     updateCardComment,
     deleteCardComment,
+    createSubtask,
+    updateSubtask,
+    deleteSubtask,
+    addAttachment,
+    deleteAttachment,
+    createTag,
+    deleteTag,
+    addTagToCard,
+    removeTagFromCard,
   } = useBoard();
 
   const currentUserName =
@@ -138,25 +147,17 @@ export const BoardContent = ({
     }
   };
 
-  const handleAddCommentToIdea = (ideaId, text) => {
+  const handleAddCommentToCard = async (cardId, text) => {
     if (isViewer) return;
     if (!text.trim()) return;
 
-    const newComment = {
-      id: Date.now().toString(),
-      author: "You",
-      avatar: "YO",
-      text,
-      timestamp: "Just now",
-      reactions: { thumbsUp: 0, heart: 0 },
-    };
-
-    onUpdateComments((prevComments) => ({
-      ...prevComments,
-      [ideaId]: [...(prevComments[ideaId] || []), newComment],
-    }));
-
-    logActivity(ideaId, currentUserName, "Added a comment");
+    try {
+      await addCardComment(cardId, text);
+      logActivity(cardId, currentUserName, "Added a comment");
+    } catch (error) {
+      console.error("Error adding comment:", error);
+      toast.error("Failed to add comment");
+    }
   };
 
   const handleUpdateComment = async (commentId, text) => {
@@ -182,7 +183,7 @@ export const BoardContent = ({
   const handleDueDateChange = async (id, date) => {
     if (isViewer) return;
     try {
-      await updateCard(id, { due_date: date });
+      await updateCard(id, { dueDate: date });
       logActivity(
         id,
         currentUserName,
@@ -216,82 +217,50 @@ export const BoardContent = ({
     }
   };
 
-  const handleAddSubtask = (id, text) => {
+  const handleAddSubtask = async (id, text) => {
     if (isViewer) return;
     if (!text.trim()) return;
 
-    // Subtasks are usually for cards
-    onUpdateCards((prevCards) =>
-      prevCards.map((card) =>
-        card.id === id
-          ? {
-              ...card,
-              subtasks: [
-                ...card.subtasks,
-                {
-                  id: Date.now().toString(),
-                  text,
-                  completed: false,
-                },
-              ],
-            }
-          : card
-      )
-    );
-
-    logActivity(id, currentUserName, `Added subtask: ${text}`);
+    try {
+      await createSubtask(id, text);
+      logActivity(id, currentUserName, `Added subtask: ${text}`);
+    } catch (error) {
+      console.error("Error adding subtask:", error);
+    }
   };
 
-  const handleToggleSubtask = (id, subtaskId) => {
+  const handleToggleSubtask = async (id, subtaskId) => {
     if (isViewer) return;
-    onUpdateCards((prevCards) => {
-      let toggledText = null;
 
-      const updated = prevCards.map((card) => {
-        if (card.id !== id) return card;
+    // Find current status to toggle it
+    const card = cards.find((c) => c.id === id);
+    const subtask = card?.subtasks?.find((st) => st.id === subtaskId);
+    if (!subtask) return;
 
-        const subtasks = card.subtasks.map((st) => {
-          if (st.id !== subtaskId) return st;
-          toggledText = st.text;
-          return { ...st, completed: !st.completed };
-        });
-
-        return { ...card, subtasks };
-      });
-
-      if (toggledText) {
-        logActivity(id, currentUserName, `Toggled subtask: ${toggledText}`);
-      }
-
-      return updated;
-    });
+    try {
+      // Backend uses is_completed, but we need to send isCompleted for the context to map it
+      const currentCompleted =
+        subtask.is_completed || subtask.isCompleted || false;
+      await updateSubtask(id, subtaskId, { isCompleted: !currentCompleted });
+      logActivity(
+        id,
+        currentUserName,
+        `Toggled subtask: ${subtask.title || subtask.text}`
+      );
+    } catch (error) {
+      console.error("Error toggling subtask:", error);
+    }
   };
 
-  const handleRemoveSubtask = (id, subtaskId) => {
+  const handleRemoveSubtask = async (id, subtaskId) => {
     if (isViewer) return;
-    onUpdateCards((prevCards) => {
-      let removedText = null;
 
-      const updated = prevCards.map((card) => {
-        if (card.id !== id) return card;
-
-        const subtasks = card.subtasks.filter((st) => {
-          if (st.id === subtaskId) {
-            removedText = st.text;
-            return false;
-          }
-          return true;
-        });
-
-        return { ...card, subtasks };
-      });
-
-      if (removedText) {
-        logActivity(id, currentUserName, `Removed subtask: ${removedText}`);
-      }
-
-      return updated;
-    });
+    try {
+      await deleteSubtask(id, subtaskId);
+      logActivity(id, currentUserName, "Removed subtask");
+    } catch (error) {
+      console.error("Error removing subtask:", error);
+    }
   };
 
   const handleUpdateTitle = async (id, title) => {
@@ -324,65 +293,46 @@ export const BoardContent = ({
     }
   };
 
-  const handleAddAttachment = (id, attachment) => {
+  const handleAddAttachment = async (id, file) => {
     if (isViewer) return;
-    // Assuming attachments are for cards for now
-    onUpdateCards((prevCards) =>
-      prevCards.map((card) =>
-        card.id === id
-          ? {
-              ...card,
-              attachments: [...card.attachments, attachment],
-            }
-          : card
-      )
-    );
-    logActivity(id, currentUserName, `Added attachment: ${attachment.name}`);
+    try {
+      await addAttachment(id, file);
+      logActivity(id, currentUserName, `Added attachment: ${file.name}`);
+    } catch (error) {
+      console.error("Error adding attachment:", error);
+    }
   };
 
-  const handleRemoveAttachment = (id, attachmentId) => {
+  const handleRemoveAttachment = async (id, attachmentId) => {
     if (isViewer) return;
-    onUpdateCards((prevCards) =>
-      prevCards.map((card) =>
-        card.id === id
-          ? {
-              ...card,
-              attachments: card.attachments.filter(
-                (a) => a.id !== attachmentId
-              ),
-            }
-          : card
-      )
-    );
-    logActivity(id, currentUserName, "Removed attachment");
+    try {
+      await deleteAttachment(id, attachmentId);
+      logActivity(id, currentUserName, "Removed attachment");
+    } catch (error) {
+      console.error("Error removing attachment:", error);
+    }
   };
 
   const handleAddLabel = async (id, labelId) => {
     if (isViewer) return;
     try {
-      const card = cards.find((i) => i.id === id);
-      const currentTags = card?.tags || [];
-      // Ensure we're adding UUIDs, not objects
+      // Ensure we're adding UUIDs, not objects, but the context helper handles it
       const tagId = typeof labelId === "string" ? labelId : labelId.id;
-      if (!currentTags.includes(tagId)) {
-        await updateCard(id, { tags: [...currentTags, tagId] });
-        logActivity(id, currentUserName, "Added label");
-      }
+      await addTagToCard(id, tagId);
+      logActivity(id, currentUserName, "Added label");
     } catch (error) {
-      // Error handled in context
+      console.error("Error adding label:", error);
     }
   };
 
   const handleRemoveLabel = async (id, labelId) => {
     if (isViewer) return;
     try {
-      const card = cards.find((i) => i.id === id);
-      const currentTags = card?.tags || [];
       const tagId = typeof labelId === "string" ? labelId : labelId.id;
-      await updateCard(id, { tags: currentTags.filter((t) => t !== tagId) });
+      await removeTagFromCard(id, tagId);
       logActivity(id, currentUserName, "Removed label");
     } catch (error) {
-      // Error handled in context
+      console.error("Error removing label:", error);
     }
   };
 
@@ -527,7 +477,7 @@ export const BoardContent = ({
 
       {viewMode === "kanban" && (
         <KanbanView
-          ideas={cards}
+          cards={cards}
           columns={columns}
           onOpenComments={handleOpenComments}
           onMoveCard={handleMoveCard}
@@ -535,7 +485,7 @@ export const BoardContent = ({
           onAssign={handleAssign}
           onOpenTask={handleOpenTask}
           onAddTask={handleAddTask}
-          onReorderIdeas={onUpdateCards}
+          onReorderCards={onUpdateCards}
           canEdit={!isViewer}
         />
       )}
@@ -543,7 +493,7 @@ export const BoardContent = ({
       {viewMode === "table" && <TableView />}
       {viewMode === "list" && (
         <ListView
-          ideas={cards}
+          cards={cards}
           columns={columns}
           onAddTask={handleAddTask}
           onOpenTask={handleOpenTask}
@@ -567,8 +517,12 @@ export const BoardContent = ({
         isOpen={!!selectedTask}
         onClose={handleCloseTask}
         idea={selectedTask}
+        columns={columns}
         teamMembers={teamMembers}
+        availableTags={currentBoard?.tags || []}
+        boardId={currentBoard?.id}
         onAssign={handleAssign}
+        onStatusChange={(columnId) => handleMoveCard(selectedTask.id, columnId)}
         onChangeDueDate={handleDueDateChange}
         onChangePriority={handlePriorityChange}
         onAddSubtask={handleAddSubtask}
@@ -580,8 +534,9 @@ export const BoardContent = ({
         onRemoveAttachment={handleRemoveAttachment}
         onAddLabel={handleAddLabel}
         onRemoveLabel={handleRemoveLabel}
+        onCreateTag={createTag}
         comments={selectedTaskComments}
-        onAddCommentToIdea={handleAddCommentToIdea}
+        onAddCommentToIdea={handleAddCommentToCard}
         onDeleteComment={(commentId) => handleDeleteComment(commentId)}
         onUpdateComment={handleUpdateComment}
         onArchiveTask={handleArchiveTask}

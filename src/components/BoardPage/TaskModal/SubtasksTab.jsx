@@ -18,7 +18,9 @@ export const SubtasksTab = ({
     }
   };
 
-  const completedCount = subtasks.filter((st) => st.completed).length;
+  const completedCount = subtasks.filter(
+    (st) => st.is_completed || st.completed
+  ).length;
 
   return (
     <div className="space-y-4">
@@ -64,21 +66,23 @@ export const SubtasksTab = ({
               onClick={() => onToggle?.(subtask.id)}
               disabled={!canEdit}
               className={`flex-shrink-0 h-5 w-5 rounded border-2 flex items-center justify-center transition-all ${
-                subtask.completed
+                subtask.is_completed || subtask.completed
                   ? "bg-primary-500 border-primary-500"
                   : "border-neutral-300 hover:border-primary-400"
               }`}
             >
-              {subtask.completed && <Check className="h-3 w-3 text-white" />}
+              {(subtask.is_completed || subtask.completed) && (
+                <Check className="h-3 w-3 text-white" />
+              )}
             </button>
             <span
               className={`flex-1 text-sm ${
-                subtask.completed
+                subtask.is_completed || subtask.completed
                   ? "line-through text-neutral-400"
                   : "text-neutral-900"
               }`}
             >
-              {subtask.text}
+              {subtask.title || subtask.text}
             </span>
             {canEdit && (
               <Button

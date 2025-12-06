@@ -2,7 +2,7 @@ import { KanbanBoard } from "./KanbanBoard.jsx";
 import { SynthAIChat } from "../Panels/SynthAIChat.jsx";
 
 export const KanbanView = ({
-  ideas,
+  cards,
   columns,
   onOpenComments,
   onMoveCard,
@@ -10,7 +10,7 @@ export const KanbanView = ({
   onAssign,
   onOpenTask,
   onAddTask,
-  onReorderIdeas,
+  onReorderCards,
   teamMembers,
   canEdit,
 }) => {
@@ -19,7 +19,7 @@ export const KanbanView = ({
       {/* Main Board Area */}
       <div className="flex-1 overflow-hidden">
         <KanbanBoard
-          ideas={ideas}
+          cards={cards}
           columns={columns}
           onOpenComments={onOpenComments}
           onMoveCard={onMoveCard}
@@ -28,7 +28,7 @@ export const KanbanView = ({
           onAssign={onAssign}
           onOpenTask={onOpenTask}
           onAddTask={onAddTask}
-          onReorderIdeas={onReorderIdeas}
+          onReorderCards={onReorderCards}
           canEdit={canEdit}
         />
       </div>

@@ -6,6 +6,9 @@ import { flowService } from "../services/flowService";
 import { memberService } from "../services/memberService";
 import { aiIdeaCommentService } from "../services/aiIdeaCommentService";
 import { commentService } from "../services/commentService";
+import { subtaskService } from "../services/subtaskService";
+import { attachmentService } from "../services/attachmentService";
+import { tagService } from "../services/tagService";
 import { toast } from "sonner";
 import { supabase } from "../lib/supabaseClient";
 import { useAuth } from "./AuthContext";
@@ -253,8 +256,9 @@ export const BoardProvider = ({ children }) => {
       if (updates.position !== undefined)
         backendUpdates.position = updates.position;
 
-      // Handle special fields like assigned_to, tags if needed
-      // For now assuming simple updates
+      if (updates.assigned_to !== undefined)
+        backendUpdates.assigned_to = updates.assigned_to;
+      if (updates.tags !== undefined) backendUpdates.tags = updates.tags;
 
       await cardService.updateCard(cardId, backendUpdates);
     } catch (error) {
@@ -309,6 +313,292 @@ export const BoardProvider = ({ children }) => {
     } catch (error) {
       console.error("Error moving card:", error);
       toast.error("Failed to move card");
+      if (currentBoard) fetchBoardDetails(currentBoard.id);
+    }
+  };
+
+  // --- Subtask Operations ---
+
+  const createSubtask = async (cardId, title) => {
+    try {
+      const newSubtask = await subtaskService.createSubtask({
+        card_id: cardId,
+        title,
+        is_completed: false,
+        position: 0, // You might want to calculate this based on existing subtasks
+      });
+
+      // Update local state
+      if (currentBoard) {
+        setCurrentBoard((prev) => ({
+          ...prev,
+          cards: prev.cards.map((card) =>
+            card.id === cardId
+              ? { ...card, subtasks: [...(card.subtasks || []), newSubtask] }
+              : card
+          ),
+        }));
+      }
+
+      return newSubtask;
+    } catch (error) {
+      console.error("Error creating subtask:", error);
+      toast.error("Failed to create subtask");
+      throw error;
+    }
+  };
+
+  const updateSubtask = async (cardId, subtaskId, updates) => {
+    try {
+      // Map frontend to backend if needed
+      const backendUpdates = { ...updates };
+      if (updates.isCompleted !== undefined) {
+        backendUpdates.is_completed = updates.isCompleted;
+        delete backendUpdates.isCompleted;
+      }
+
+      // Optimistic update - use both field names for compatibility
+      if (currentBoard) {
+        setCurrentBoard((prev) => ({
+          ...prev,
+          cards: prev.cards.map((card) =>
+            card.id === cardId
+              ? {
+                  ...card,
+                  subtasks: (card.subtasks || []).map((st) =>
+                    st.id === subtaskId
+                      ? {
+                          ...st,
+                          ...updates,
+                          // Also update is_completed for backend field
+                          is_completed:
+                            backendUpdates.is_completed !== undefined
+                              ? backendUpdates.is_completed
+                              : st.is_completed,
+                        }
+                      : st
+                  ),
+                }
+              : card
+          ),
+        }));
+      }
+
+      await subtaskService.updateSubtask(subtaskId, backendUpdates);
+    } catch (error) {
+      console.error("Error updating subtask:", error);
+      toast.error("Failed to update subtask");
+      if (currentBoard) fetchBoardDetails(currentBoard.id);
+    }
+  };
+
+  const deleteSubtask = async (cardId, subtaskId) => {
+    try {
+      // Optimistic update
+      if (currentBoard) {
+        setCurrentBoard((prev) => ({
+          ...prev,
+          cards: prev.cards.map((card) =>
+            card.id === cardId
+              ? {
+                  ...card,
+                  subtasks: (card.subtasks || []).filter(
+                    (st) => st.id !== subtaskId
+                  ),
+                }
+              : card
+          ),
+        }));
+      }
+
+      await subtaskService.deleteSubtask(subtaskId);
+    } catch (error) {
+      console.error("Error deleting subtask:", error);
+      toast.error("Failed to delete subtask");
+      if (currentBoard) fetchBoardDetails(currentBoard.id);
+    }
+  };
+
+  // --- Attachment Operations ---
+
+  const addAttachment = async (cardId, file) => {
+    try {
+      const newAttachment = await attachmentService.uploadAttachment(
+        cardId,
+        file
+      );
+
+      // Update local state
+      if (currentBoard) {
+        setCurrentBoard((prev) => ({
+          ...prev,
+          cards: prev.cards.map((card) =>
+            card.id === cardId
+              ? {
+                  ...card,
+                  attachments: [...(card.attachments || []), newAttachment],
+                }
+              : card
+          ),
+        }));
+      }
+
+      return newAttachment;
+    } catch (error) {
+      console.error("Error uploading attachment:", error);
+      toast.error("Failed to upload attachment");
+      throw error;
+    }
+  };
+
+  const deleteAttachment = async (cardId, attachmentId) => {
+    try {
+      // Optimistic update
+      if (currentBoard) {
+        setCurrentBoard((prev) => ({
+          ...prev,
+          cards: prev.cards.map((card) =>
+            card.id === cardId
+              ? {
+                  ...card,
+                  attachments: (card.attachments || []).filter(
+                    (att) => att.id !== attachmentId
+                  ),
+                }
+              : card
+          ),
+        }));
+      }
+
+      await attachmentService.deleteAttachment(attachmentId);
+      toast.success("Attachment deleted");
+    } catch (error) {
+      console.error("Error deleting attachment:", error);
+      toast.error("Failed to delete attachment");
+      if (currentBoard) fetchBoardDetails(currentBoard.id);
+    }
+  };
+
+  // --- Tag Operations ---
+
+  const createTag = async (boardId, name, color) => {
+    try {
+      const newTag = await tagService.createTag({
+        board_id: boardId,
+        name,
+        color,
+      });
+
+      // Update local state (add to board tags)
+      if (currentBoard?.id === boardId) {
+        setCurrentBoard((prev) => ({
+          ...prev,
+          tags: [...(prev.tags || []), newTag],
+        }));
+      }
+
+      return newTag;
+    } catch (error) {
+      console.error("Error creating tag:", error);
+      toast.error("Failed to create tag");
+      throw error;
+    }
+  };
+
+  const deleteTag = async (tagId) => {
+    try {
+      // Optimistic update
+      if (currentBoard) {
+        setCurrentBoard((prev) => ({
+          tags: (prev.tags || []).filter((t) => t.id !== tagId),
+          // Also remove this tag from all cards that have it
+          cards: prev.cards.map((card) => ({
+            ...card,
+            tags: (card.tags || []).filter(
+              (t) => t !== tagId && t.id !== tagId
+            ),
+          })),
+        }));
+      }
+
+      await tagService.deleteTag(tagId);
+      toast.success("Tag deleted");
+    } catch (error) {
+      console.error("Error deleting tag:", error);
+      toast.error("Failed to delete tag");
+      if (currentBoard) fetchBoardDetails(currentBoard.id);
+    }
+  };
+
+  const addTagToCard = async (cardId, tagId) => {
+    try {
+      const tag = currentBoard?.tags?.find((t) => t.id === tagId);
+      if (!tag && typeof tagId !== "string") return; // Can't add if we don't have the tag object unless it's just ID based
+
+      // Optimistic update
+      if (currentBoard) {
+        setCurrentBoard((prev) => ({
+          ...prev,
+          cards: prev.cards.map((card) => {
+            if (card.id !== cardId) return card;
+            const currentTags = card.tags || [];
+            // Avoid duplicates
+            if (currentTags.some((t) => t.id === tagId || t === tagId))
+              return card;
+            return {
+              ...card,
+              tags: [...currentTags, tag || tagId],
+            };
+          }),
+        }));
+      }
+
+      // Get current tags as IDs for backend
+      const card = currentBoard?.cards.find((c) => c.id === cardId);
+      const currentTagIds = (card?.tags || []).map((t) =>
+        typeof t === "object" ? t.id : t
+      );
+      // Add new ID if not present (optimistic update might have added it, so be careful)
+      // Safer to calculate from what we know
+      const newTagIds = [...new Set([...currentTagIds, tagId])];
+
+      await cardService.updateCard(cardId, { tags: newTagIds });
+    } catch (error) {
+      console.error("Error adding tag to card:", error);
+      toast.error("Failed to add tag");
+      if (currentBoard) fetchBoardDetails(currentBoard.id);
+    }
+  };
+
+  const removeTagFromCard = async (cardId, tagId) => {
+    try {
+      // Optimistic update
+      if (currentBoard) {
+        setCurrentBoard((prev) => ({
+          ...prev,
+          cards: prev.cards.map((card) => {
+            if (card.id !== cardId) return card;
+            return {
+              ...card,
+              tags: (card.tags || []).filter(
+                (t) => t !== tagId && t.id !== tagId
+              ),
+            };
+          }),
+        }));
+      }
+
+      // Calculate new IDs
+      const card = currentBoard?.cards.find((c) => c.id === cardId);
+      const currentTagIds = (card?.tags || []).map((t) =>
+        typeof t === "object" ? t.id : t
+      );
+      const newTagIds = currentTagIds.filter((id) => id !== tagId);
+
+      await cardService.updateCard(cardId, { tags: newTagIds });
+    } catch (error) {
+      console.error("Error removing tag from card:", error);
+      toast.error("Failed to remove tag");
       if (currentBoard) fetchBoardDetails(currentBoard.id);
     }
   };
@@ -940,6 +1230,15 @@ export const BoardProvider = ({ children }) => {
         addCardComment,
         updateCardComment,
         deleteCardComment,
+        createSubtask,
+        updateSubtask,
+        deleteSubtask,
+        addAttachment,
+        deleteAttachment,
+        createTag,
+        deleteTag,
+        addTagToCard,
+        removeTagFromCard,
         updateCurrentBoardCards,
         updateCurrentBoardFlowIdeas,
       }}

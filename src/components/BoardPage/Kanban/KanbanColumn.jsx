@@ -15,7 +15,7 @@ import {
 import { useState } from "react";
 import { useBoard } from "../../../context/BoardContext";
 
-export const KanbanColumn = ({ id, title, ideas, onOpenTask, onAddTask }) => {
+export const KanbanColumn = ({ id, title, cards, onOpenTask, onAddTask }) => {
   const { setNodeRef, isOver } = useDroppable({
     id: id,
   });
@@ -70,7 +70,7 @@ export const KanbanColumn = ({ id, title, ideas, onOpenTask, onAddTask }) => {
                 {title}
               </h2>
               <span className="flex items-center justify-center h-5 min-w-5 px-1.5 rounded-full bg-neutral-200/60 dark:bg-neutral-700/60 text-[10px] font-semibold text-neutral-500 dark:text-neutral-300">
-                {ideas.length}
+                {cards.length}
               </span>
             </>
           )}
@@ -110,15 +110,15 @@ export const KanbanColumn = ({ id, title, ideas, onOpenTask, onAddTask }) => {
           }`}
         >
           <SortableContext
-            items={ideas.map((idea) => idea.id)}
+            items={cards.map((card) => card.id)}
             strategy={verticalListSortingStrategy}
           >
             <div className="flex flex-col gap-1 pt-2 pb-2">
-              {ideas.map((idea) => (
+              {cards.map((card) => (
                 <KanbanCard
-                  key={idea.id}
-                  idea={idea}
-                  onClick={() => onOpenTask(idea.id)}
+                  key={card.id}
+                  card={card}
+                  onClick={() => onOpenTask(card.id)}
                 />
               ))}
             </div>

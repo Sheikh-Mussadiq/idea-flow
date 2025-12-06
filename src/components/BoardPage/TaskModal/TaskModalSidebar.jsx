@@ -1,7 +1,15 @@
-import { Calendar, Tag, Download } from "lucide-react";
+import { Calendar, Tag, Download, Check } from "lucide-react";
 import { StatusBadge } from "./StatusBadge";
 import { AvatarGroup } from "./AvatarGroup";
 import { AttachmentCard } from "./AttachmentCard";
+import { TagPicker } from "./TagPicker";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "../../ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "../../ui/avatar";
 
 export const TaskModalSidebar = ({
   status,
@@ -16,8 +24,24 @@ export const TaskModalSidebar = ({
   onDescriptionChange,
   onRemoveAttachment,
   onViewAttachment,
+  onAddAttachment,
+  onAddLabel,
+  onRemoveLabel,
+  onCreateTag,
+  availableTags = [],
+  boardId,
   canEdit = true,
+  columns = [],
+  teamMembers = [],
 }) => {
+  const handleFileChange = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      onAddAttachment?.(file);
+      e.target.value = ""; // Reset
+    }
+  };
+
   return (
     <div className="w-full p-6">
       <div className="space-y-6">
@@ -30,7 +54,27 @@ export const TaskModalSidebar = ({
             <span>Status</span>
           </div>
           <div>
-            <StatusBadge status={status} onClick={onStatusChange} />
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild disabled={!canEdit}>
+                <div className="inline-block">
+                  <StatusBadge status={status} />
+                </div>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start">
+                {columns.map((col) => (
+                  <DropdownMenuItem
+                    key={col.id}
+                    onClick={() => onStatusChange?.(col)}
+                    className="gap-2"
+                  >
+                    {status === col.title && <Check className="h-4 w-4" />}
+                    <span className={status === col.title ? "ml-0" : "ml-6"}>
+                      {col.title}
+                    </span>
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
 
           {/* Due Date */}
@@ -49,7 +93,9 @@ export const TaskModalSidebar = ({
               />
             ) : (
               <button
-                onClick={() => onDueDateChange?.(new Date().toISOString().split("T")[0])}
+                onClick={() =>
+                  onDueDateChange?.(new Date().toISOString().split("T")[0])
+                }
                 disabled={!canEdit}
                 className="text-neutral-400 hover:text-primary-500 transition-colors"
               >
@@ -81,22 +127,67 @@ export const TaskModalSidebar = ({
             <AvatarGroup
               members={assignees || []}
               maxDisplay={4}
-              onAddMember={canEdit ? onAddMember : undefined}
+              onAddMember={undefined} // Handled by separate button or dropdown
             />
             {canEdit && (
-              <button
-                onClick={onAddMember}
-                className="px-3 py-1 text-xs font-medium text-neutral-600 bg-neutral-100 hover:bg-neutral-200 rounded-full transition-colors"
-              >
-                Add members +
-              </button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="px-3 py-1 text-xs font-medium text-neutral-600 bg-neutral-100 hover:bg-neutral-200 rounded-full transition-colors">
+                    Add +
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-56">
+                  {teamMembers.map((member) => {
+                    const isAssigned = assignees?.some(
+                      (a) =>
+                        (a.user_id || a.id) === (member.user_id || member.id)
+                    );
+                    return (
+                      <DropdownMenuItem
+                        key={member.id}
+                        onClick={() => onAddMember?.(member)}
+                        className="gap-2"
+                      >
+                        <div className="relative">
+                          <Avatar className="h-6 w-6">
+                            <AvatarImage src={member.user?.avatar_url} />
+                            <AvatarFallback>
+                              {member.user?.full_name?.[0]}
+                            </AvatarFallback>
+                          </Avatar>
+                          {isAssigned && (
+                            <div className="absolute -bottom-1 -right-1 bg-green-500 rounded-full p-0.5 border border-white">
+                              <Check className="h-2 w-2 text-white" />
+                            </div>
+                          )}
+                        </div>
+                        <span className="flex-1 truncate">
+                          {member.user?.full_name || member.user?.email}
+                        </span>
+                      </DropdownMenuItem>
+                    );
+                  })}
+                </DropdownMenuContent>
+              </DropdownMenu>
             )}
           </div>
 
           {/* Tags */}
-          <div className="flex items-center gap-2 text-sm text-neutral-500">
-            <Tag className="h-4 w-4" />
-            <span>Tags</span>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 text-sm text-neutral-500">
+              <Tag className="h-4 w-4" />
+              <span>Tags</span>
+            </div>
+            <TagPicker
+              availableTags={availableTags}
+              selectedTagIds={(tags || []).map((t) =>
+                typeof t === "object" ? t.id : t
+              )}
+              onAddTag={onAddLabel}
+              onCreateTag={onCreateTag}
+              boardId={boardId}
+              canEdit={canEdit}
+            />
           </div>
           <div className="flex flex-wrap gap-2">
             {tags?.map((tag, index) => (
@@ -169,12 +260,30 @@ export const TaskModalSidebar = ({
               </div>
               <span>Attachment ({attachments?.length || 0})</span>
             </div>
-            {attachments && attachments.length > 0 && (
-              <button className="text-xs text-primary-500 hover:text-primary-600 flex items-center gap-1">
-                <Download className="h-3 w-3" />
-                Download All
-              </button>
-            )}
+            <div className="flex items-center gap-2">
+              {canEdit && (
+                <div className="relative">
+                  <input
+                    type="file"
+                    id="file-upload"
+                    className="hidden"
+                    onChange={handleFileChange}
+                  />
+                  <label
+                    htmlFor="file-upload"
+                    className="text-xs text-primary-500 hover:text-primary-600 flex items-center gap-1 cursor-pointer"
+                  >
+                    Add +
+                  </label>
+                </div>
+              )}
+              {attachments && attachments.length > 0 && (
+                <button className="text-xs text-primary-500 hover:text-primary-600 flex items-center gap-1">
+                  <Download className="h-3 w-3" />
+                  Download All
+                </button>
+              )}
+            </div>
           </div>
           <div className="space-y-2">
             {attachments?.map((attachment) => (

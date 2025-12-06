@@ -16,12 +16,12 @@ import { useBoard } from "../../../context/BoardContext";
 import { toast } from "sonner";
 
 export const KanbanBoard = ({
-  ideas,
+  cards,
   columns = [],
   onMoveCard,
   onOpenTask,
   onAddTask,
-  onReorderIdeas,
+  onReorderCards,
   canEdit,
 }) => {
   const [activeId, setActiveId] = useState(null);
@@ -49,59 +49,60 @@ export const KanbanBoard = ({
     const activeId = active.id;
     const overId = over.id;
 
-    // Find the active idea
-    const activeIdea = ideas.find((i) => i.id === activeId);
-    if (!activeIdea) return;
+    // Find the active card
+    const activeCard = cards.find((c) => c.id === activeId);
+    if (!activeCard) return;
 
     // Find over column (either directly or via card)
     const overColumn =
       columns.find((c) => c.id === overId) ||
       columns.find(
-        (c) => c.title === ideas.find((i) => i.id === overId)?.kanbanStatus
+        (c) =>
+          c.title === cards.find((card) => card.id === overId)?.kanbanStatus
       );
 
     if (!overColumn) return;
 
-    const activeColumnTitle = activeIdea.kanbanStatus;
+    const activeColumnTitle = activeCard.kanbanStatus;
     const overColumnTitle = overColumn.title;
 
     if (activeColumnTitle !== overColumnTitle) {
-      const activeIndex = ideas.findIndex((i) => i.id === activeId);
-      const overIndex = ideas.findIndex((i) => i.id === overId);
+      const activeIndex = cards.findIndex((c) => c.id === activeId);
+      const overIndex = cards.findIndex((c) => c.id === overId);
 
-      onReorderIdeas((prev) => {
-        const newIdeas = [...prev];
+      onReorderCards((prev) => {
+        const newCards = [...prev];
         // Update status
-        const updatedIdea = {
-          ...newIdeas[activeIndex],
+        const updatedCard = {
+          ...newCards[activeIndex],
           kanbanStatus: overColumnTitle,
         };
 
         // Remove from old pos
-        newIdeas.splice(activeIndex, 1);
+        newCards.splice(activeIndex, 1);
 
         // Insert at new pos
         if (columns.some((c) => c.id === overId)) {
           // Dropped on column background -> append
-          newIdeas.push(updatedIdea);
+          newCards.push(updatedCard);
         } else {
           // Dropped on a card
           let insertIndex = overIndex;
           if (activeIndex < overIndex) insertIndex--; // Adjust for removal
           if (insertIndex < 0) insertIndex = 0;
-          newIdeas.splice(insertIndex, 0, updatedIdea);
+          newCards.splice(insertIndex, 0, updatedCard);
         }
-        return newIdeas;
+        return newCards;
       });
     } else {
       // Same column
       if (columns.some((c) => c.id === overId)) return; // Over same column bg, do nothing
 
-      const activeIndex = ideas.findIndex((i) => i.id === activeId);
-      const overIndex = ideas.findIndex((i) => i.id === overId);
+      const activeIndex = cards.findIndex((c) => c.id === activeId);
+      const overIndex = cards.findIndex((c) => c.id === overId);
 
       if (activeIndex !== overIndex) {
-        onReorderIdeas((prev) => arrayMove(prev, activeIndex, overIndex));
+        onReorderCards((prev) => arrayMove(prev, activeIndex, overIndex));
       }
     }
   };
@@ -113,14 +114,14 @@ export const KanbanBoard = ({
     if (!over) return;
 
     const activeId = active.id;
-    const currentIdea = ideas.find((i) => i.id === activeId);
-    if (!currentIdea) return;
+    const currentCard = cards.find((c) => c.id === activeId);
+    if (!currentCard) return;
 
-    const column = columns.find((c) => c.title === currentIdea.kanbanStatus);
+    const column = columns.find((c) => c.title === currentCard.kanbanStatus);
     if (!column) return;
 
-    const columnCards = ideas.filter((i) => i.kanbanStatus === column.title);
-    const newIndex = columnCards.findIndex((i) => i.id === activeId);
+    const columnCards = cards.filter((c) => c.kanbanStatus === column.title);
+    const newIndex = columnCards.findIndex((c) => c.id === activeId);
 
     if (newIndex !== -1) {
       onMoveCard(activeId, column.id, newIndex);
@@ -146,15 +147,15 @@ export const KanbanBoard = ({
     }
   };
 
-  // Group ideas by status (column title)
-  const ideasByColumnId = {};
+  // Group cards by status (column title)
+  const cardsByColumnId = {};
   columns.forEach((col) => {
-    ideasByColumnId[col.id] = ideas.filter(
-      (idea) => idea.kanbanStatus === col.title
+    cardsByColumnId[col.id] = cards.filter(
+      (card) => card.kanbanStatus === col.title
     );
   });
 
-  const activeIdea = activeId ? ideas.find((i) => i.id === activeId) : null;
+  const activeCard = activeId ? cards.find((c) => c.id === activeId) : null;
 
   return (
     <div className="h-full w-full overflow-x-auto overflow-y-hidden bg-white dark:bg-neutral-950 px-6 pb-2 pt-4 mb-6">
@@ -171,7 +172,7 @@ export const KanbanBoard = ({
               key={column.id}
               id={column.id}
               title={column.title}
-              ideas={ideasByColumnId[column.id] || []}
+              cards={cardsByColumnId[column.id] || []}
               onOpenTask={onOpenTask}
               onAddTask={() => onAddTask(column.title)} // Pass title as status for now
             />
@@ -190,7 +191,7 @@ export const KanbanBoard = ({
 
         {createPortal(
           <DragOverlay>
-            {activeIdea ? <KanbanCardContent idea={activeIdea} /> : null}
+            {activeCard ? <KanbanCardContent card={activeCard} /> : null}
           </DragOverlay>,
           document.body
         )}

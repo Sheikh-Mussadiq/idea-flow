@@ -15,12 +15,57 @@ export const CommentsTab = ({
   const [editingId, setEditingId] = useState(null);
   const [editText, setEditText] = useState("");
 
+  // Transform comments to have the fields we need
+  const transformedComments = comments.map((comment) => ({
+    ...comment,
+    author: comment.user?.full_name || comment.author || "Unknown",
+    avatar: comment.user?.avatar_url
+      ? comment.user.avatar_url[0]
+      : comment.avatar || "U",
+    timestamp: comment.created_at
+      ? new Date(comment.created_at).toLocaleDateString()
+      : comment.timestamp || "Just now",
+  }));
+
   const handleAdd = () => {
     if (newComment.trim()) {
       onAdd?.(newComment.trim());
       setNewComment("");
     }
   };
+
+  // Show empty state if no comments
+  if (transformedComments.length === 0 && !newComment) {
+    return (
+      <div className="space-y-4">
+        <div className="py-8 text-center text-neutral-500 text-sm">
+          No comments yet. Be the first to comment!
+        </div>
+        {canEdit && (
+          <div className="flex items-center gap-2 pt-2">
+            <input
+              type="text"
+              value={newComment}
+              onChange={(e) => setNewComment(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") handleAdd();
+              }}
+              placeholder="Add a comment..."
+              className="flex-1 px-3 py-2 text-sm border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            />
+            <Button
+              onClick={handleAdd}
+              disabled={!newComment.trim()}
+              size="sm"
+              className="px-4 h-9 bg-primary-500 hover:bg-primary-600 text-white"
+            >
+              Comment
+            </Button>
+          </div>
+        )}
+      </div>
+    );
+  }
 
   const handleUpdate = (id) => {
     if (editText.trim()) {
@@ -32,14 +77,14 @@ export const CommentsTab = ({
 
   const startEdit = (comment) => {
     setEditingId(comment.id);
-    setEditText(comment.text);
+    setEditText(comment.text || comment.content || "");
   };
 
   return (
     <div className="space-y-4">
       {/* Comments list */}
       <div className="space-y-4">
-        {comments.map((comment) => (
+        {transformedComments.map((comment) => (
           <div
             key={comment.id}
             className="group flex items-start gap-3 p-4 bg-white border border-neutral-200 rounded-lg hover:border-neutral-300 transition-colors"
@@ -151,7 +196,10 @@ export const CommentsTab = ({
             className="w-full px-4 py-3 text-sm focus:outline-none resize-none rounded-t-lg"
             rows={3}
           />
-          <CommentToolbar onAskAI={() => console.log("Ask AI")} disabled={!canEdit} />
+          <CommentToolbar
+            onAskAI={() => console.log("Ask AI")}
+            disabled={!canEdit}
+          />
           <div className="px-4 py-3 flex items-center justify-end gap-2 border-t border-neutral-200">
             <Button
               onClick={handleAdd}
