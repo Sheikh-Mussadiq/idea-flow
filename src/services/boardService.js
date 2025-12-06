@@ -96,11 +96,11 @@ export const boardService = {
     if (data.columns) {
       data.columns.sort((a, b) => a.position - b.position);
 
-      data.columns.forEach((col) => {
+      for (const col of data.columns) {
         if (col.cards) {
           col.cards.sort((a, b) => a.position - b.position);
 
-          col.cards.forEach((card) => {
+          for (const card of col.cards) {
             // Map assigned_to UUIDs to user objects
             const assignees = (card.assigned_to || [])
               .map((uid) => membersMap.get(uid))
@@ -125,10 +125,11 @@ export const boardService = {
               dueDate: card.due_date,
               boardId: data.id,
               type: "manual", // Explicitly set type for cards
+              // Attachments are kept as-is - signed URLs will be generated lazily when TaskModal opens
             });
-          });
+          }
         }
-      });
+      }
     }
 
     // Process AI Flows and Ideas

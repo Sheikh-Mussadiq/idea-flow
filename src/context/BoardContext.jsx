@@ -260,7 +260,13 @@ export const BoardProvider = ({ children }) => {
         backendUpdates.assigned_to = updates.assigned_to;
       if (updates.tags !== undefined) backendUpdates.tags = updates.tags;
 
-      await cardService.updateCard(cardId, backendUpdates);
+      // Only call API if there are actual backend fields to update
+      // Frontend-only fields like 'attachments' (with signed URLs) should only update local state
+      if (Object.keys(backendUpdates).length > 0) {
+        await cardService.updateCard(cardId, backendUpdates);
+      }
+      // If only frontend-only fields were updated (like attachments with signed URLs),
+      // we just update the local state and skip the API call
     } catch (error) {
       console.error("Error updating card:", error);
       toast.error("Failed to update card");

@@ -206,10 +206,12 @@ export const ShareBoardModal = ({ isOpen, onClose, board }) => {
                           </Avatar>
                           <div>
                             <p className="text-sm font-medium text-neutral-900 dark:text-white">
-                              {user.full_name || user.username}
+                              {/* {user.full_name || user.username} */}
+                              {user.username}
                             </p>
                             <p className="text-xs text-neutral-500 dark:text-neutral-400">
-                              @{user.username}
+                              {/* {user.username} */}
+                              {user.email}
                             </p>
                           </div>
                         </div>

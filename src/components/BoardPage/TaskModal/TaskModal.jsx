@@ -7,6 +7,7 @@ import { CommentsTab } from "./CommentsTab";
 import { ActivitiesTab } from "./ActivitiesTab";
 import { TeamTab } from "./TeamTab";
 import { useNotifications } from "../../../context/NotificationsContext";
+import { attachmentService } from "../../../services/attachmentService";
 
 export const TaskModal = ({
   isOpen,
@@ -35,6 +36,7 @@ export const TaskModal = ({
   onDeleteComment,
   onUpdateComment,
   onArchiveTask,
+  onUpdateCard,
   canEdit,
 }) => {
   const { addNotification } = useNotifications();
@@ -42,32 +44,71 @@ export const TaskModal = ({
   const [isClosing, setIsClosing] = useState(false);
   const [localDescription, setLocalDescription] = useState("");
   const [tagsState, setTagsState] = useState([]);
+  const [attachmentsWithUrls, setAttachmentsWithUrls] = useState([]);
 
+  // Generate signed URLs for attachments when modal opens (lazy loading)
   useEffect(() => {
-    if (idea) {
-      setLocalDescription(idea.description || "");
-      setActiveTab("subtasks");
-
-      // Recalculate tags whenever idea (card) or availableTags changes
-      // Cards use 'tags' field
-      const tagIds = idea.tags || [];
-      const newTags = tagIds
-        .map((tagIdOrObj) => {
-          if (
-            typeof tagIdOrObj === "object" &&
-            tagIdOrObj.id &&
-            tagIdOrObj.name
-          ) {
-            return tagIdOrObj;
-          }
-          const tagId =
-            typeof tagIdOrObj === "object" ? tagIdOrObj.id : tagIdOrObj;
-          return availableTags.find((t) => t.id === tagId);
-        })
-        .filter(Boolean);
-      setTagsState(newTags);
+    if (!isOpen || !idea) {
+      setAttachmentsWithUrls([]);
+      return;
     }
-  }, [idea, availableTags]);
+
+    const attachments = idea.attachments || [];
+    if (attachments.length === 0) {
+      setAttachmentsWithUrls([]);
+      return;
+    }
+
+    const generateUrls = async () => {
+      // Check which attachments need URLs (don't regenerate if already have one)
+      const attachmentsNeedingUrls = attachments.filter(
+        (att) => !att.url && att.file_url
+      );
+
+      if (attachmentsNeedingUrls.length === 0) {
+        // All attachments already have URLs, use them as-is
+        setAttachmentsWithUrls(attachments);
+        return;
+      }
+
+      // Generate URLs for attachments that need them
+      try {
+        const urls = await Promise.all(
+          attachmentsNeedingUrls.map(async (att) => {
+            try {
+              const signedUrl = await attachmentService.getAttachmentUrl(
+                att.file_url,
+                3600 // 1 hour expiration
+              );
+              return { ...att, url: signedUrl };
+            } catch (error) {
+              console.error(`Error generating URL for attachment ${att.id}:`, error);
+              return { ...att, url: null };
+            }
+          })
+        );
+
+        // Merge with attachments that already had URLs
+        const attachmentsWithExistingUrls = attachments.filter(
+          (att) => att.url
+        );
+        const allAttachments = [...attachmentsWithExistingUrls, ...urls];
+
+        // Update the card in the board context with the new URLs (cache them)
+        if (onUpdateCard) {
+          onUpdateCard(idea.id, { attachments: allAttachments });
+        }
+
+        setAttachmentsWithUrls(allAttachments);
+      } catch (error) {
+        console.error("Error generating attachment URLs:", error);
+        setAttachmentsWithUrls(attachments);
+      }
+    };
+
+    generateUrls();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, idea?.id]);
 
   useLayoutEffect(() => {
     if (isOpen) {
@@ -165,9 +206,10 @@ export const TaskModal = ({
   const assignees =
     idea.assignees || (idea.assignedTo ? [idea.assignedTo] : []);
 
-  const attachments = (idea.attachments || []).map((att) => ({
+  // Use attachmentsWithUrls if available (has signed URLs), otherwise fallback to idea.attachments
+  const attachments = (attachmentsWithUrls.length > 0 ? attachmentsWithUrls : idea.attachments || []).map((att) => ({
     ...att,
-    size: att.size || Math.floor(Math.random() * 500000), // Mock size if not available
+    size: att.file_size || att.size || 0,
   }));
 
   return (

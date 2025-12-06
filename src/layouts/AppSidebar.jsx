@@ -35,6 +35,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { TruncatedText } from "../components/ui/TruncatedText";
+import { useAuth } from "../context/AuthContext";
 
 const PRIMARY_NAV = [
   { id: "home", icon: Home, label: "Home", to: "/" },
@@ -53,6 +54,14 @@ export const AppSidebar = () => {
   });
   const [previewPrimary, setPreviewPrimary] = useState(activePrimary);
   const [isExpanded, setIsExpanded] = useState(false);
+  const { currentUser } = useAuth();
+  const initials =
+    currentUser?.full_name
+      ?.split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2) || "UU";
 
   const { boards, archiveBoard, deleteBoard, duplicateBoard, toggleFavorite } =
     useBoard();
@@ -149,8 +158,8 @@ export const AppSidebar = () => {
 
             <div onMouseEnter={() => setIsExpanded(false)}>
               <Avatar className="h-9 w-9 border border-neutral-200 dark:border-neutral-700 cursor-pointer hover:ring-2 hover:ring-primary-100 dark:hover:ring-neutral-700 transition-all">
-                <AvatarImage src="https://github.com/shadcn.png" />
-                <AvatarFallback>JD</AvatarFallback>
+                <AvatarImage src={currentUser?.avatar_url} />
+                <AvatarFallback>{initials}</AvatarFallback>
               </Avatar>
             </div>
           </div>

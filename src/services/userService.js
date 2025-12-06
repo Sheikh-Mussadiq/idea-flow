@@ -152,7 +152,7 @@ export const userService = {
   async searchUsers(query) {
     const { data, error } = await supabase
       .from('users')
-      .select('id, username, full_name, avatar_url')
+      .select('id,email, username, full_name, avatar_url')
       .or(`username.ilike.%${query}%,full_name.ilike.%${query}%,email.ilike.%${query}%`)
       .limit(10);
 

@@ -5,10 +5,10 @@ import { Button } from "../components/ui/button";
 import { useAuth } from "../context/AuthContext";
 
 const SettingsPage = () => {
-  const { authUser } = useAuth();
+  const { currentUser } = useAuth();
 
   const initials =
-    authUser?.full_name
+    currentUser?.full_name
       ?.split(" ")
       .map((n) => n[0])
       .join("")
@@ -34,17 +34,17 @@ const SettingsPage = () => {
           {/* Profile Card */}
           <div className="bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 rounded-2xl p-4 flex items-center gap-4 shadow-sm">
             <Avatar className="h-12 w-12 border border-neutral-200 dark:border-neutral-700">
-              <AvatarImage src={authUser?.avatar_url} />
+              <AvatarImage src={currentUser?.avatar_url} />
               <AvatarFallback className="bg-primary-900 text-white text-sm font-semibold">
                 {initials}
               </AvatarFallback>
             </Avatar>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-neutral-900 dark:text-white truncate">
-                {authUser?.full_name || "User"}
+                {currentUser?.full_name || "User"}
               </p>
               <p className="text-xs text-neutral-500 dark:text-neutral-400 truncate">
-                {authUser?.email || "Email not available"}
+                {currentUser?.email || "Email not available"}
               </p>
             </div>
             <Button variant="outline" size="sm" className="text-xs">

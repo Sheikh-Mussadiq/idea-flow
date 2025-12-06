@@ -540,6 +540,7 @@ export const BoardContent = ({
         onDeleteComment={(commentId) => handleDeleteComment(commentId)}
         onUpdateComment={handleUpdateComment}
         onArchiveTask={handleArchiveTask}
+        onUpdateCard={updateCard}
         canEdit={!isViewer}
       />
     </>
