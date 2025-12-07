@@ -44,6 +44,18 @@ export const flowService = {
     return data;
   },
 
+  async updateFlowInput(flowId, inputField) {
+    const { data, error } = await supabase
+      .from('ai_flows')
+      .update({ input_field: inputField })
+      .eq('id', flowId)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  },
+
   async updateIdea(ideaId, updates) {
     const { data, error } = await supabase
       .from('ai_ideas')

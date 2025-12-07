@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate, useSearchParams, useParams } from "react-router-dom";
+import { useNavigate, useSearchParams, useParams, useLocation } from "react-router-dom";
 
 import { BoardContent } from "../components/BoardPage/BoardContent.jsx";
 import { ArchivedTasksPanel } from "../components/BoardPage/Panels/ArchivedTasksPanel.jsx";
@@ -49,6 +49,7 @@ import { useAuth } from "../context/AuthContext";
 
 export const IdeaBoardLayout = ({ initialView = "flow" }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
   const { flowId } = useParams(); // Get flowId from URL if present
 
@@ -64,7 +65,7 @@ export const IdeaBoardLayout = ({ initialView = "flow" }) => {
     updateCurrentBoardFlowIdeas,
   } = useBoard();
 
-  const { authUser } = useAuth();
+  const { currentUser } = useAuth();
 
   // Use URL-based board selection
   const { activeBoard, boardId, notFound } = useActiveBoard();
@@ -74,6 +75,30 @@ export const IdeaBoardLayout = ({ initialView = "flow" }) => {
     if (flowId) return flowId;
     return activeBoard?.ai_flows?.[0]?.id || null;
   }, [flowId, activeBoard?.ai_flows]);
+
+  // Redirect to include flow ID in URL when on flow view without flowId
+  useEffect(() => {
+    if (notFound || !activeBoard || !boardId) return;
+    
+    // Wait for flows to be loaded
+    if (!activeBoard.ai_flows || activeBoard.ai_flows.length === 0) return;
+    
+    // Don't redirect if we already have the correct flowId in URL
+    if (flowId === activeFlowId) return;
+    
+    // Check if we're on a flow route (either /flow or /flow/:flowId)
+    const isFlowRoute = location.pathname.includes('/flow');
+    // Check if we're on the board index route (just /boards/:boardId)
+    const isBoardIndexRoute = location.pathname === `/boards/${boardId}` || 
+                              location.pathname === `/boards/${boardId}/`;
+    
+    // If we have flows and are on flow view (or board index which redirects to flow), redirect to include flow ID
+    if (activeFlowId && (isFlowRoute || isBoardIndexRoute)) {
+      const currentParams = searchParams.toString();
+      const queryString = currentParams ? `?${currentParams}` : "";
+      navigate(`/boards/${boardId}/flow/${activeFlowId}${queryString}`, { replace: true });
+    }
+  }, [flowId, activeFlowId, boardId, navigate, notFound, activeBoard, activeBoard?.ai_flows, searchParams, location.pathname]);
 
   // Local UI state
   const [isMembersOpen, setIsMembersOpen] = useState(false);
@@ -104,32 +129,19 @@ export const IdeaBoardLayout = ({ initialView = "flow" }) => {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isArchivedOpen, setIsArchivedOpen] = useState(false);
 
-  // Current user from auth context
-  const currentUser = useMemo(() => {
-    if (!authUser) return null;
-    return {
-      user_id: authUser.id,
-      user: {
-        id: authUser.id,
-        full_name: authUser.full_name,
-        email: authUser.email,
-        avatar_url: authUser.avatar_url,
-      },
-    };
-  }, [authUser]);
 
   // Check if current user is the board owner
   const isOwner =
-    activeBoard && authUser ? activeBoard.owner_id === authUser.id : false;
+    activeBoard && currentUser ? activeBoard.owner_id === currentUser.id : false;
 
   // Check current user's member role
   const currentMemberRole = useMemo(() => {
-    if (!activeBoard || !authUser) return null;
+    if (!activeBoard || !currentUser) return null;
     const member = (activeBoard.members || []).find(
-      (m) => m.user?.id === authUser.id
+      (m) => m.user?.id === currentUser.id
     );
     return member?.role || null;
-  }, [activeBoard, authUser]);
+  }, [activeBoard, currentUser]);
 
   // User can edit if they are owner OR have editor role
   const canEdit = isOwner || currentMemberRole === "editor";
@@ -197,7 +209,13 @@ export const IdeaBoardLayout = ({ initialView = "flow" }) => {
     // Navigate to the new view URL while preserving search params
     const currentParams = searchParams.toString();
     const queryString = currentParams ? `?${currentParams}` : "";
-    navigate(`/boards/${activeBoard.id}/${newViewMode}${queryString}`);
+    
+    // If switching to flow view and we have an active flow ID, include it in URL
+    if (newViewMode === "flow" && activeFlowId) {
+      navigate(`/boards/${activeBoard.id}/flow/${activeFlowId}${queryString}`);
+    } else {
+      navigate(`/boards/${activeBoard.id}/${newViewMode}${queryString}`);
+    }
   };
 
   // Handler to update search in URL

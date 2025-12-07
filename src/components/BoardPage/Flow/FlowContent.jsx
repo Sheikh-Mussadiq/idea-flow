@@ -6,6 +6,7 @@ import { useIdeaFlowLayout } from "../hooks/useIdeaFlowLayout.js";
 import { toast } from "sonner";
 import { mockAIIdeas } from "../../../data/mockData.js";
 import { useBoard } from "../../../context/BoardContext";
+import { supabase } from "../../../lib/supabaseClient";
 
 export const FlowContent = ({
   ideas,
@@ -35,7 +36,14 @@ export const FlowContent = ({
     updateFlowIdea,
     toggleIdeaLike,
     toggleIdeaDislike,
+    updateFlowInput,
   } = useBoard();
+
+  // Get the current flow's input_field
+  const currentFlow = useMemo(() => {
+    if (!currentBoard?.ai_flows || !activeFlowId) return null;
+    return currentBoard.ai_flows.find((flow) => flow.id === activeFlowId);
+  }, [currentBoard, activeFlowId]);
 
   const { fitView } = useReactFlow();
 
@@ -56,33 +64,59 @@ export const FlowContent = ({
         return;
       }
 
+      // Check if flow already has input (one-time use)
+      if (currentFlow?.input_field) {
+        toast.error("This flow has already been generated. Create a new flow to generate more ideas.");
+        return;
+      }
+
       setIsGenerating(true);
 
       try {
-        // Simulate AI generation delay (replace with real AI call later)
-        await new Promise((resolve) => setTimeout(resolve, 1500));
+        // Get user profile from currentUser
+        const userProfile = currentUser?.profile || {};
+        
+        // Call the idea-generator edge function
+        const { data, error } = await supabase.functions.invoke('idea-generator', {
+          body: {
+            idea_input: promptValue.trim(),
+            user_profile: userProfile,
+          },
+        });
 
-        // Generate mock ideas (will be replaced with real AI backend later)
-        const mockIdeas = mockAIIdeas.slice(0, 3);
+        if (error) {
+          console.error("Edge function error:", error);
+          throw error;
+        }
 
-        // Save each idea to database using context method
-        for (const mockIdea of mockIdeas) {
-          const title = mockIdea.title;
-          const description = mockIdea.description || promptValue;
+        if (!data || !data.ideas || !Array.isArray(data.ideas)) {
+          throw new Error("Invalid response from idea generator");
+        }
 
-          await createFlowIdea(flowId, title, description);
+        // Save the input_field to the flow
+        await updateFlowInput(flowId, promptValue.trim());
+
+        // Create ideas from the response
+        for (const idea of data.ideas) {
+          await createFlowIdea(
+            flowId,
+            idea.title,
+            idea.description || "",
+            null,
+            idea.tags || []
+          );
         }
 
         toast.success("Ideas generated successfully!");
         setTimeout(() => fitView({ padding: 0.2, duration: 800 }), 100);
       } catch (error) {
         console.error("Error generating ideas:", error);
-        toast.error("Failed to generate ideas");
+        toast.error(error.message || "Failed to generate ideas");
       } finally {
         setIsGenerating(false);
       }
     },
-    [fitView, isViewer, currentBoard, createFlowIdea, activeFlowId]
+    [fitView, isViewer, currentBoard, createFlowIdea, activeFlowId, currentFlow, currentUser, updateFlowInput]
   );
 
   const handleRegenerate = useCallback(async () => {
@@ -334,6 +368,7 @@ export const FlowContent = ({
       isGenerating,
       hasIdeas: filteredIdeas && filteredIdeas.length > 0,
       canEdit: !isViewer,
+      storedInput: currentFlow?.input_field || null,
     }),
     [
       handleAddManualIdea,
@@ -344,6 +379,7 @@ export const FlowContent = ({
       isGenerating,
       mode,
       isViewer,
+      currentFlow?.input_field,
     ]
   );
 

@@ -19,7 +19,7 @@ export const BoardProvider = ({ children }) => {
   const [boards, setBoards] = useState([]);
   const [loading, setLoading] = useState(true);
   const [currentBoard, setCurrentBoard] = useState(null);
-  const { authUser } = useAuth();
+  const { currentUser } = useAuth();
 
   // Fetch boards list on mount
   useEffect(() => {
@@ -72,12 +72,12 @@ export const BoardProvider = ({ children }) => {
 
   const createBoard = async (name, description = "") => {
     try {
-      if (!authUser) throw new Error("User not authenticated");
+      if (!currentUser) throw new Error("User not authenticated");
 
       const newBoard = await boardService.createBoard({
         name,
         description,
-        owner_id: authUser.id,
+        owner_id: currentUser.id,
         is_favorite: false,
         is_archived: false,
       });
@@ -747,11 +747,34 @@ export const BoardProvider = ({ children }) => {
     }
   };
 
+  const updateFlowInput = async (flowId, inputField) => {
+    try {
+      const updatedFlow = await flowService.updateFlowInput(flowId, inputField);
+
+      // Update currentBoard if it has this flow
+      if (currentBoard) {
+        setCurrentBoard((prev) => ({
+          ...prev,
+          ai_flows: (prev.ai_flows || []).map((flow) =>
+            flow.id === flowId ? { ...flow, input_field: inputField } : flow
+          ),
+        }));
+      }
+
+      return updatedFlow;
+    } catch (error) {
+      console.error("Error updating flow input:", error);
+      toast.error("Failed to update flow input");
+      throw error;
+    }
+  };
+
   const createFlowIdea = async (
     flowId,
     title,
     description = "",
-    parentId = null
+    parentId = null,
+    tags = []
   ) => {
     try {
       const newIdea = await flowService.createIdea({
@@ -759,6 +782,7 @@ export const BoardProvider = ({ children }) => {
         title,
         description,
         parent_id: parentId,
+        tags: tags || [],
       });
 
       if (currentBoard) {
@@ -767,6 +791,7 @@ export const BoardProvider = ({ children }) => {
           id: newIdea.id,
           title: newIdea.title,
           description: newIdea.description,
+          tags: newIdea.tags || [],
           type: "ai",
           boardId: currentBoard.id,
           flowId: flowId,
@@ -857,7 +882,7 @@ export const BoardProvider = ({ children }) => {
         }));
       }
 
-      await flowService.toggleIdeaLike(ideaId, idea.is_liked, authUser?.id);
+      await flowService.toggleIdeaLike(ideaId, idea.is_liked, currentUser?.id);
     } catch (error) {
       console.error("Error toggling idea like:", error);
       toast.error("Failed to update reaction");
@@ -889,7 +914,7 @@ export const BoardProvider = ({ children }) => {
       await flowService.toggleIdeaDislike(
         ideaId,
         idea.is_disliked,
-        authUser?.id
+        currentUser?.id
       );
     } catch (error) {
       console.error("Error toggling idea dislike:", error);
@@ -1011,14 +1036,14 @@ export const BoardProvider = ({ children }) => {
 
   const addAiIdeaComment = async (aiIdeaId, text) => {
     try {
-      if (!authUser) throw new Error("User not authenticated");
+      if (!currentUser) throw new Error("User not authenticated");
 
       const newComment = await aiIdeaCommentService.createComment(
         {
           ai_idea_id: aiIdeaId,
           text,
         },
-        authUser.id
+        currentUser.id
       );
 
       // Update currentBoard flowIdeas with the new comment
@@ -1106,14 +1131,14 @@ export const BoardProvider = ({ children }) => {
 
   const addCardComment = async (cardId, text) => {
     try {
-      if (!authUser) throw new Error("User not authenticated");
+      if (!currentUser) throw new Error("User not authenticated");
 
       const newComment = await commentService.createComment(
         {
           card_id: cardId,
           text,
         },
-        authUser.id
+        currentUser.id
       );
 
       // Update currentBoard cards with the new comment
@@ -1222,6 +1247,7 @@ export const BoardProvider = ({ children }) => {
         deleteColumn,
         updateColumnPositions,
         createFlow,
+        updateFlowInput,
         createFlowIdea,
         updateFlowIdea,
         deleteFlowIdea,

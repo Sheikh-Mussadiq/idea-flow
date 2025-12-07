@@ -8,16 +8,16 @@ import { useAuth } from "../context/AuthContext";
  */
 export function useBoardPresence(boardId) {
   const [onlineUsers, setOnlineUsers] = useState([]);
-  const { authUser } = useAuth();
+  const { currentUser } = useAuth();
 
   useEffect(() => {
-    if (!boardId || !authUser) return;
+    if (!boardId || !currentUser) return;
 
     // Create a unique channel for this board's presence
     const channel = supabase.channel(`board-presence:${boardId}`, {
       config: {
         presence: {
-          key: authUser.id,
+          key: currentUser.id,
         },
       },
     });
@@ -60,10 +60,10 @@ export function useBoardPresence(boardId) {
     channel.subscribe(async (status) => {
       if (status === "SUBSCRIBED") {
         await channel.track({
-          user_id: authUser.id,
-          full_name: authUser.full_name,
-          avatar_url: authUser.avatar_url,
-          email: authUser.email,
+          user_id: currentUser.id,
+          full_name: currentUser.full_name,
+          avatar_url: currentUser.avatar_url,
+          email: currentUser.email,
           online_at: new Date().toISOString(),
         });
       }
@@ -73,7 +73,7 @@ export function useBoardPresence(boardId) {
     return () => {
       channel.unsubscribe();
     };
-  }, [boardId, authUser]);
+  }, [boardId, currentUser]);
 
   return { onlineUsers };
 }

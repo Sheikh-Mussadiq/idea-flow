@@ -15,6 +15,9 @@ export const InputNode = ({ data }) => {
   const promptRef = useRef(null);
   const manualRef = useRef(null);
 
+  // Check if input already exists (one-time use)
+  const hasStoredInput = !!data.storedInput;
+
   const handleGenerate = () => {
     if (promptRef.current) {
       const value = promptRef.current.value.trim();
@@ -34,6 +37,7 @@ export const InputNode = ({ data }) => {
   };
 
   const handleKeyDown = (e) => {
+    if (hasStoredInput) return; // Disable if input already exists
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       if (data.mode === "ai") {
@@ -69,69 +73,82 @@ export const InputNode = ({ data }) => {
           onPointerDown={(e) => e.stopPropagation()}
           onKeyDown={handleKeyDown}
           placeholder={
-            data.mode === "ai" ? "Ask anything..." : "Write your idea..."
+            hasStoredInput
+              ? data.storedInput
+              : data.mode === "ai"
+              ? "Ask anything..."
+              : "Write your idea..."
           }
-          className="w-full h-32 px-6 pt-6 pb-20 text-base text-neutral-700 dark:text-neutral-200 placeholder:text-neutral-400 dark:placeholder:text-neutral-500 bg-transparent resize-none focus:outline-none nopan nowheel nodrag"
+          value={hasStoredInput ? data.storedInput : undefined}
+          readOnly={hasStoredInput}
+          disabled={hasStoredInput}
+          className={`w-full h-32 px-6 pt-6 text-base text-neutral-700 dark:text-neutral-200 placeholder:text-neutral-400 dark:placeholder:text-neutral-500 bg-transparent resize-none focus:outline-none nopan nowheel nodrag disabled:opacity-60 disabled:cursor-not-allowed ${
+            hasStoredInput ? "pb-6" : "pb-20"
+          }`}
           rows={4}
         />
 
         {/* Bottom Controls */}
-        <div className="absolute bottom-0 left-0 right-0 px-6 py-4 flex items-center justify-between">
-          {/* Left Side - Mode Toggle Buttons */}
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() =>
-                data.onModeChange(data.mode === "ai" ? "manual" : "ai")
-              }
-              className="p-2.5 rounded-full hover:bg-neutral-200/60 dark:hover:bg-neutral-700/60 transition-colors text-neutral-600 dark:text-neutral-400"
-              title="Add manual idea"
-            >
-              <Plus className="h-5 w-5" />
-            </button>
-            <button
-              onClick={() => data.onModeChange("ai")}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-all flex items-center gap-2 ${
-                data.mode === "ai"
-                  ? "bg-neutral-200 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-200"
-                  : "text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200/60 dark:hover:bg-neutral-700/60"
-              }`}
-            >
-              <Sparkles className="h-4 w-4" />
-              Tools
-            </button>
-          </div>
+        {!hasStoredInput && (
+          <div className="absolute bottom-0 left-0 right-0 px-6 py-4 flex items-center justify-between">
+            {/* Left Side - Mode Toggle Buttons */}
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() =>
+                  data.onModeChange(data.mode === "ai" ? "manual" : "ai")
+                }
+                className="p-2.5 rounded-full hover:bg-neutral-200/60 dark:hover:bg-neutral-700/60 transition-colors text-neutral-600 dark:text-neutral-400"
+                title="Add manual idea"
+              >
+                <Plus className="h-5 w-5" />
+              </button>
+              <button
+                onClick={() => data.onModeChange("ai")}
+                className={`px-4 py-2 rounded-full text-sm font-medium transition-all flex items-center gap-2 ${
+                  data.mode === "ai"
+                    ? "bg-neutral-200 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-200"
+                    : "text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200/60 dark:hover:bg-neutral-700/60"
+                }`}
+              >
+                <Sparkles className="h-4 w-4" />
+                Tools
+              </button>
+            </div>
 
-          {/* Right Side - Action Buttons */}
-          <div className="flex items-center gap-2">
-            <button className="px-4 py-2 rounded-full text-sm font-medium text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200/60 dark:hover:bg-neutral-700/60 transition-all flex items-center gap-2">
-              <Mic className="h-4 w-4" />
-              Voice
-            </button>
-            <button
-              onClick={data.mode === "ai" ? handleGenerate : handleAddManual}
-              disabled={data.isGenerating}
-              className="p-3 rounded-full bg-blue-500 hover:bg-blue-600 disabled:bg-blue-400 text-white transition-all shadow-md hover:shadow-lg disabled:cursor-not-allowed"
-              title={data.mode === "ai" ? "Generate ideas" : "Add idea"}
-            >
-              <Send className="h-5 w-5" />
-            </button>
+            {/* Right Side - Action Buttons */}
+            <div className="flex items-center gap-2">
+              <button className="px-4 py-2 rounded-full text-sm font-medium text-neutral-600 dark:text-neutral-400 hover:bg-neutral-200/60 dark:hover:bg-neutral-700/60 transition-all flex items-center gap-2">
+                <Mic className="h-4 w-4" />
+                Voice
+              </button>
+              <button
+                onClick={data.mode === "ai" ? handleGenerate : handleAddManual}
+                disabled={data.isGenerating}
+                className="p-3 rounded-full bg-blue-500 hover:bg-blue-600 disabled:bg-blue-400 text-white transition-all shadow-md hover:shadow-lg disabled:cursor-not-allowed"
+                title={data.mode === "ai" ? "Generate ideas" : "Add idea"}
+              >
+                <Send className="h-5 w-5" />
+              </button>
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* Quick Action Chips */}
-      <div className="px-6 pb-6 flex items-center gap-3 flex-wrap">
-        {quickActions.map((action, index) => (
-          <button
-            key={index}
-            onClick={action.action}
-            className="px-4 py-2.5 rounded-full bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 text-neutral-700 dark:text-neutral-300 text-sm font-medium transition-all flex items-center gap-2 border border-neutral-200/60 dark:border-neutral-700/60"
-          >
-            <action.icon className="h-4 w-4" />
-            {action.label}
-          </button>
-        ))}
-      </div>
+      {!hasStoredInput && (
+        <div className="px-6 pb-6 flex items-center gap-3 flex-wrap">
+          {quickActions.map((action, index) => (
+            <button
+              key={index}
+              onClick={action.action}
+              className="px-4 py-2.5 rounded-full bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 text-neutral-700 dark:text-neutral-300 text-sm font-medium transition-all flex items-center gap-2 border border-neutral-200/60 dark:border-neutral-700/60"
+            >
+              <action.icon className="h-4 w-4" />
+              {action.label}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* Bottom Handle for connections */}
       <Handle

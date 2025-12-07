@@ -16,10 +16,10 @@ export const boardService = {
         is_archived,
         owner_id,
         updated_at,
-        owner:users!owner_id(avatar_url, full_name),
+        owner:users!owner_id(id,avatar_url, full_name, email),
         members:board_members(
           role,
-          user:users(avatar_url, full_name)
+          user:users(id,avatar_url, full_name, email)
         ),
         cards:cards(count),
         ai_flows(

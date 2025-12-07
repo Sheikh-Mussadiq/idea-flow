@@ -38,7 +38,7 @@ export const BranchingIdeaCard = ({
           <h3 className="text-lg font-semibold text-neutral-900 dark:text-white leading-snug">
             {idea.title}
           </h3>
-          <p className="text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed line-clamp-3">
+          <p className="text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed">
             {idea.description}
           </p>
         </div>

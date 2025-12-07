@@ -112,7 +112,7 @@ export const IdeaNode = memo(({ data }) => {
             </div>
           </div>
         )}
-        <p className="text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed line-clamp-3">
+        <p className="text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed ">
           {data.description}
         </p>
       </div>

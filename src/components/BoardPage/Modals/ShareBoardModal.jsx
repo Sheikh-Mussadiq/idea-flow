@@ -23,12 +23,12 @@ export const ShareBoardModal = ({ isOpen, onClose, board }) => {
   const [isAddingMember, setIsAddingMember] = useState(false);
 
   const { addMember, updateMemberRole, removeMember } = useBoard();
-  const { authUser } = useAuth();
+  const { currentUser } = useAuth();
   const { onlineUsers } = useBoardPresence(board?.id);
 
   // Get members from board prop
   const members = board?.members || [];
-  const isOwner = board?.owner_id === authUser?.id;
+  const isOwner = board?.owner_id === currentUser?.id;
 
   // Create a set of online user IDs for quick lookup
   const onlineUserIds = new Set(onlineUsers.map((u) => u.id));
@@ -280,7 +280,7 @@ export const ShareBoardModal = ({ isOpen, onClose, board }) => {
                     <div>
                       <p className="text-sm font-medium text-neutral-900 dark:text-white flex items-center gap-2">
                         {board.owner.full_name}
-                        {board.owner.id === authUser?.id && (
+                        {board.owner.id === currentUser?.id && (
                           <span className="text-neutral-400 font-normal">
                             (you)
                           </span>
@@ -362,7 +362,7 @@ export const ShareBoardModal = ({ isOpen, onClose, board }) => {
                         <div>
                           <p className="text-sm font-medium text-neutral-900 dark:text-white flex items-center gap-2">
                             {member.user?.full_name}
-                            {member.user?.id === authUser?.id && (
+                            {member.user?.id === currentUser?.id && (
                               <span className="text-neutral-400 font-normal">
                                 (you)
                               </span>

@@ -18,7 +18,7 @@ export const CommentPanel = ({
   canComment,
 }) => {
   const { addNotification } = useNotifications();
-  const { authUser } = useAuth();
+  const { currentUser } = useAuth();
   const [newComment, setNewComment] = useState("");
   const [editingCommentId, setEditingCommentId] = useState(null);
   const [editText, setEditText] = useState("");
@@ -34,7 +34,7 @@ export const CommentPanel = ({
 
   // Get current user initials and avatar
   const currentUserInitials =
-    authUser?.full_name
+    currentUser?.full_name
       ?.split(" ")
       .map((n) => n[0])
       .join("")
@@ -175,7 +175,7 @@ export const CommentPanel = ({
           ) : (
             <div className="space-y-1">
               {comments.map((comment, index) => {
-                const isOwner = authUser?.id === comment.user_id;
+                const isOwner = currentUser?.id === comment.user_id;
                 const userFullName = comment.user?.full_name || "Unknown User";
                 const userAvatar = comment.user?.avatar_url;
                 const userInitials = userFullName
@@ -296,10 +296,10 @@ export const CommentPanel = ({
               {/* Current User Avatar */}
               <div className="flex-shrink-0 pt-1">
                 <Avatar className="h-9 w-9 border-2 border-white dark:border-neutral-800 shadow-sm">
-                  {authUser?.avatar_url ? (
+                  {currentUser?.avatar_url ? (
                     <AvatarImage
-                      src={authUser.avatar_url}
-                      alt={authUser?.full_name}
+                      src={currentUser.avatar_url}
+                      alt={currentUser?.full_name}
                     />
                   ) : null}
                   <AvatarFallback className="bg-primary-900 text-white text-xs font-semibold">
