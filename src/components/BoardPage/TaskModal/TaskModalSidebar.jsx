@@ -21,6 +21,7 @@ export const TaskModalSidebar = ({
   onStatusChange,
   onDueDateChange,
   onAddMember,
+  onRemoveMember,
   onDescriptionChange,
   onRemoveAttachment,
   onViewAttachment,
@@ -128,6 +129,8 @@ export const TaskModalSidebar = ({
               members={assignees || []}
               maxDisplay={4}
               onAddMember={undefined} // Handled by separate button or dropdown
+              onRemoveMember={onRemoveMember}
+              canEdit={canEdit}
             />
             {canEdit && (
               <DropdownMenu>
@@ -138,13 +141,17 @@ export const TaskModalSidebar = ({
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start" className="w-56">
                   {teamMembers.map((member) => {
+                    const memberId = member.user?.id || member.user_id || member.id;
+                    // Assignees are user objects, so check a.id directly
                     const isAssigned = assignees?.some(
-                      (a) =>
-                        (a.user_id || a.id) === (member.user_id || member.id)
+                      (a) => {
+                        const assigneeId = a.id || a.user?.id || a.user_id;
+                        return assigneeId === memberId;
+                      }
                     );
                     return (
                       <DropdownMenuItem
-                        key={member.id}
+                        key={memberId}
                         onClick={() => onAddMember?.(member)}
                         className="gap-2"
                       >

@@ -1,5 +1,22 @@
 import { supabase } from "../lib/supabaseClient";
 
+// Helper function to fetch user details for assignee UUIDs
+async function fetchAssigneeUsers(assigneeIds) {
+  if (!assigneeIds || assigneeIds.length === 0) return [];
+  
+  const { data: users, error } = await supabase
+    .from("users")
+    .select("id, full_name, email, avatar_url")
+    .in("id", assigneeIds);
+  
+  if (error) {
+    console.error("Error fetching assignee users:", error);
+    return [];
+  }
+  
+  return users || [];
+}
+
 export const boardService = {
   // Optimized fetch for sidebar/dashboard (lightweight)
   async getBoardsList() {
@@ -88,9 +105,39 @@ export const boardService = {
 
     if (error) throw error;
 
+    // Add owner to members array if owner exists
+    if (data.owner) {
+      // Check if owner is already in members to avoid duplicates
+      const ownerInMembers = data.members?.some(
+        (m) => m.user?.id === data.owner.id
+      );
+      if (!ownerInMembers) {
+        data.members = [
+          { role: "owner", user: data.owner },
+          ...(data.members || []),
+        ];
+      }
+    }
+
     // Transform data to match frontend expectations
     const membersMap = new Map(data.members.map((m) => [m.user.id, m.user]));
     const tagsMap = new Map((data.tags || []).map((t) => [t.id, t]));
+
+    // Collect all unique assignee IDs from all cards
+    const allAssigneeIds = new Set();
+    if (data.columns) {
+      for (const col of data.columns) {
+        if (col.cards) {
+          for (const card of col.cards) {
+            (card.assigned_to || []).forEach((uid) => allAssigneeIds.add(uid));
+          }
+        }
+      }
+    }
+
+    // Fetch user details for all assignees (including those not in board members)
+    const assigneeUsers = await fetchAssigneeUsers(Array.from(allAssigneeIds));
+    const assigneeUsersMap = new Map(assigneeUsers.map((u) => [u.id, u]));
 
     const cards = [];
     if (data.columns) {
@@ -101,9 +148,9 @@ export const boardService = {
           col.cards.sort((a, b) => a.position - b.position);
 
           for (const card of col.cards) {
-            // Map assigned_to UUIDs to user objects
+            // Map assigned_to UUIDs to user objects (from fetched users, not just members)
             const assignees = (card.assigned_to || [])
-              .map((uid) => membersMap.get(uid))
+              .map((uid) => assigneeUsersMap.get(uid))
               .filter(Boolean);
 
             // Map tag UUIDs to tag objects

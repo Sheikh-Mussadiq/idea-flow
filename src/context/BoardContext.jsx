@@ -12,6 +12,8 @@ import { tagService } from "../services/tagService";
 import { toast } from "sonner";
 import { supabase } from "../lib/supabaseClient";
 import { useAuth } from "./AuthContext";
+import { useFlowsAndIdeasRealtime } from "../hooks/useFlowsAndIdeasRealtime";
+import { useCardsRealtime } from "../hooks/useCardsRealtime";
 
 const BoardContext = createContext(null);
 
@@ -69,6 +71,12 @@ export const BoardProvider = ({ children }) => {
       setLoading(false);
     }
   };
+
+  // Set up realtime subscriptions for flows and ideas
+  useFlowsAndIdeasRealtime(currentBoard, setCurrentBoard);
+
+  // Set up realtime subscriptions for cards (excluding position updates)
+  useCardsRealtime(currentBoard, setCurrentBoard);
 
   const createBoard = async (name, description = "") => {
     try {
@@ -232,12 +240,80 @@ export const BoardProvider = ({ children }) => {
     try {
       // Optimistic update
       if (currentBoard) {
-        setCurrentBoard((prev) => ({
-          ...prev,
-          cards: prev.cards.map((card) =>
-            card.id === cardId ? { ...card, ...updates } : card
-          ),
-        }));
+        setCurrentBoard((prev) => {
+          // If assigned_to is being updated, also update assignees with full user info
+          if (updates.assigned_to !== undefined) {
+            const membersMap = new Map(
+              (prev.members || []).map((m) => [m.user?.id, m.user])
+            );
+            
+            // For optimistic update, use membersMap (realtime hook will fetch missing users)
+            const assignees = (updates.assigned_to || [])
+              .map((uid) => membersMap.get(uid))
+              .filter(Boolean);
+            
+            // Fetch user details for assignees not in membersMap (async, will update when fetched)
+            const missingAssigneeIds = (updates.assigned_to || []).filter(
+              (uid) => !membersMap.has(uid)
+            );
+            
+            if (missingAssigneeIds.length > 0) {
+              // Fetch missing users asynchronously
+              supabase
+                .from("users")
+                .select("id, full_name, email, avatar_url")
+                .in("id", missingAssigneeIds)
+                .then(({ data: users, error }) => {
+                  if (!error && users) {
+                    setCurrentBoard((current) => {
+                      const updatedMembersMap = new Map(
+                        (current.members || []).map((m) => [m.user?.id, m.user])
+                      );
+                      users.forEach((u) => updatedMembersMap.set(u.id, u));
+                      
+                      const updatedAssignees = (updates.assigned_to || [])
+                        .map((uid) => updatedMembersMap.get(uid))
+                        .filter(Boolean);
+                      
+                      return {
+                        ...current,
+                        cards: current.cards.map((card) =>
+                          card.id === cardId
+                            ? {
+                                ...card,
+                                assignedTo: updatedAssignees[0] || null,
+                                assignees: updatedAssignees,
+                              }
+                            : card
+                        ),
+                      };
+                    });
+                  }
+                });
+            }
+            
+            return {
+              ...prev,
+              cards: prev.cards.map((card) =>
+                card.id === cardId
+                  ? {
+                      ...card,
+                      ...updates,
+                      assignedTo: assignees[0] || null,
+                      assignees: assignees,
+                    }
+                  : card
+              ),
+            };
+          }
+          
+          return {
+            ...prev,
+            cards: prev.cards.map((card) =>
+              card.id === cardId ? { ...card, ...updates } : card
+            ),
+          };
+        });
       }
 
       // Map frontend fields to backend fields if necessary

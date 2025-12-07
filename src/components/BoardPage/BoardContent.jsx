@@ -8,6 +8,7 @@ import { FlowContent } from "./Flow/FlowContent.jsx";
 import { toast } from "sonner";
 import { useNotifications } from "../../context/NotificationsContext";
 import { useBoard } from "../../context/BoardContext";
+import { useAiIdeaCommentsRealtime } from "../../hooks/useAiIdeaCommentsRealtime";
 
 export const BoardContent = ({
   cards,
@@ -57,6 +58,10 @@ export const BoardContent = ({
   const currentUserName =
     currentUser?.user?.full_name || currentUser?.name || "You";
   const isViewer = currentRole === "viewer";
+
+  // Set up realtime subscription for ALL AI idea comments
+  // This ensures comments update in flowIdeas even when panel is closed
+  useAiIdeaCommentsRealtime(flowIdeas, onUpdateFlowIdeas);
 
   const logActivity = (itemId, user, action) => {
     // Check if item is a card or flow idea
@@ -450,10 +455,23 @@ export const BoardContent = ({
   const handleAssign = async (id, member) => {
     if (isViewer) return;
     try {
-      const memberId = member?.user_id || member?.id;
-      await updateCard(id, { assigned_to: member ? [memberId] : [] });
+      const memberId = member?.user?.id || member?.user_id || member?.id;
+      if (!memberId) return;
 
-      if (member) {
+      // Get current card to check existing assignees
+      const currentCard = cards.find((c) => c.id === id);
+      const currentAssignees = currentCard?.assigned_to || [];
+      
+      // Toggle: if already assigned, remove; otherwise add
+      const isAlreadyAssigned = currentAssignees.includes(memberId);
+      const newAssignees = isAlreadyAssigned
+        ? currentAssignees.filter((uid) => uid !== memberId)
+        : [...currentAssignees, memberId];
+
+      await updateCard(id, { assigned_to: newAssignees });
+
+      // Send notification only when adding (not removing)
+      if (!isAlreadyAssigned && member) {
         addNotification({
           userId: memberId,
           message: `You were assigned to a task`,

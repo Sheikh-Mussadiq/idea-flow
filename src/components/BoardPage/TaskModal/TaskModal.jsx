@@ -156,11 +156,15 @@ export const TaskModal = ({
     // Mock notification
     addNotification({
       userId: "current-user",
-      message: `Assigned ${member.user?.full_name} to '${idea.title}'`,
+      message: `Assigned ${member.user?.full_name || member.user?.email} to '${idea.title}'`,
       type: "assignment",
       taskId: idea.id,
       boardId: idea.boardId,
     });
+  };
+
+  const handleRemoveMember = (member) => {
+    onAssign?.(idea.id, member); // Toggle will handle removal
   };
 
   const handleTitleSave = (newTitle) => {
@@ -253,6 +257,7 @@ export const TaskModal = ({
             onStatusChange={handleStatusChange}
             onDueDateChange={handleDueDateChange}
             onAddMember={handleAddMember}
+            onRemoveMember={handleRemoveMember}
             onDescriptionChange={handleDescriptionSave}
             onRemoveAttachment={(attId) => onRemoveAttachment?.(idea.id, attId)}
             onViewAttachment={(att) => window.open(att.url, "_blank")}
