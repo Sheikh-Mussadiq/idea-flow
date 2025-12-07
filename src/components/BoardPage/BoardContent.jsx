@@ -461,7 +461,7 @@ export const BoardContent = ({
       // Get current card to check existing assignees
       const currentCard = cards.find((c) => c.id === id);
       const currentAssignees = currentCard?.assigned_to || [];
-      
+
       // Toggle: if already assigned, remove; otherwise add
       const isAlreadyAssigned = currentAssignees.includes(memberId);
       const newAssignees = isAlreadyAssigned
@@ -578,7 +578,7 @@ export const BoardContent = ({
       <TaskModal
         isOpen={!!selectedCard}
         onClose={handleCloseCard}
-        idea={selectedCard}
+        card={selectedCard}
         columns={columns}
         teamMembers={teamMembers}
         availableTags={currentBoard?.tags || []}
@@ -598,7 +598,7 @@ export const BoardContent = ({
         onRemoveLabel={handleRemoveLabel}
         onCreateTag={createTag}
         comments={selectedCardComments}
-        onAddCommentToIdea={handleAddCommentToCard}
+        onAddComment={handleAddCommentToCard}
         onDeleteComment={(commentId) => handleDeleteComment(commentId)}
         onUpdateComment={handleUpdateComment}
         onArchiveTask={handleArchiveTask}

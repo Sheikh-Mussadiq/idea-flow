@@ -18,7 +18,7 @@ export const IdeaNode = memo(({ data }) => {
   return (
     <div
       onClick={() => data.onOpenTask?.(data.id)}
-      className="group relative bg-white dark:bg-neutral-900 rounded-2xl p-6 shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer w-[320px] border border-neutral-200/60 dark:border-neutral-700/60 animate-fade-in"
+      className="group relative bg-white dark:bg-neutral-900 rounded-2xl p-6 shadow-md hover:shadow-xl transition-all duration-300 cursor-pointer w-[380px] border border-neutral-200/60 dark:border-neutral-700/60 animate-fade-in"
     >
       {/* Top Handle for connections */}
       <Handle
@@ -112,7 +112,7 @@ export const IdeaNode = memo(({ data }) => {
             </div>
           </div>
         )}
-        <p className="text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed ">
+        <p className="text-md text-neutral-600 dark:text-neutral-400 leading-relaxed ">
           {data.description}
         </p>
       </div>

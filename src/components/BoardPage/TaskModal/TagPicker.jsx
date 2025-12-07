@@ -8,6 +8,7 @@ import {
   DropdownMenuSeparator,
 } from "../../ui/dropdown-menu";
 import { Input } from "../../ui/input";
+import { Button } from "../../ui/button";
 
 export const TagPicker = ({
   availableTags = [],
@@ -73,7 +74,7 @@ export const TagPicker = ({
               {availableTags.map((tag) => {
                 const isSelected = selectedTagIds.includes(tag.id);
                 return (
-                  <button
+                  <Button
                     key={tag.id}
                     onClick={() => handleAddTag(tag.id)}
                     disabled={isSelected}
@@ -87,7 +88,7 @@ export const TagPicker = ({
                     {isSelected && (
                       <Check className="h-4 w-4 text-primary-500 flex-shrink-0" />
                     )}
-                  </button>
+                  </Button>
                 );
               })}
             </div>

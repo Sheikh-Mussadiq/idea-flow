@@ -246,17 +246,17 @@ export const BoardProvider = ({ children }) => {
             const membersMap = new Map(
               (prev.members || []).map((m) => [m.user?.id, m.user])
             );
-            
+
             // For optimistic update, use membersMap (realtime hook will fetch missing users)
             const assignees = (updates.assigned_to || [])
               .map((uid) => membersMap.get(uid))
               .filter(Boolean);
-            
+
             // Fetch user details for assignees not in membersMap (async, will update when fetched)
             const missingAssigneeIds = (updates.assigned_to || []).filter(
               (uid) => !membersMap.has(uid)
             );
-            
+
             if (missingAssigneeIds.length > 0) {
               // Fetch missing users asynchronously
               supabase
@@ -270,11 +270,11 @@ export const BoardProvider = ({ children }) => {
                         (current.members || []).map((m) => [m.user?.id, m.user])
                       );
                       users.forEach((u) => updatedMembersMap.set(u.id, u));
-                      
+
                       const updatedAssignees = (updates.assigned_to || [])
                         .map((uid) => updatedMembersMap.get(uid))
                         .filter(Boolean);
-                      
+
                       return {
                         ...current,
                         cards: current.cards.map((card) =>
@@ -291,7 +291,7 @@ export const BoardProvider = ({ children }) => {
                   }
                 });
             }
-            
+
             return {
               ...prev,
               cards: prev.cards.map((card) =>
@@ -306,7 +306,7 @@ export const BoardProvider = ({ children }) => {
               ),
             };
           }
-          
+
           return {
             ...prev,
             cards: prev.cards.map((card) =>
@@ -409,18 +409,6 @@ export const BoardProvider = ({ children }) => {
         is_completed: false,
         position: 0, // You might want to calculate this based on existing subtasks
       });
-
-      // Update local state
-      if (currentBoard) {
-        setCurrentBoard((prev) => ({
-          ...prev,
-          cards: prev.cards.map((card) =>
-            card.id === cardId
-              ? { ...card, subtasks: [...(card.subtasks || []), newSubtask] }
-              : card
-          ),
-        }));
-      }
 
       return newSubtask;
     } catch (error) {
@@ -1216,21 +1204,6 @@ export const BoardProvider = ({ children }) => {
         },
         currentUser.id
       );
-
-      // Update currentBoard cards with the new comment
-      if (currentBoard) {
-        setCurrentBoard((prev) => ({
-          ...prev,
-          cards: prev.cards.map((card) =>
-            card.id === cardId
-              ? {
-                  ...card,
-                  comments: [...(card.comments || []), newComment],
-                }
-              : card
-          ),
-        }));
-      }
 
       return newComment;
     } catch (error) {

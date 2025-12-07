@@ -12,7 +12,7 @@ import { attachmentService } from "../../../services/attachmentService";
 export const TaskModal = ({
   isOpen,
   onClose,
-  idea,
+  card,
   columns,
   teamMembers,
   availableTags = [],
@@ -32,7 +32,7 @@ export const TaskModal = ({
   onRemoveLabel,
   onCreateTag,
   comments,
-  onAddCommentToIdea,
+  onAddComment,
   onDeleteComment,
   onUpdateComment,
   onArchiveTask,
@@ -43,17 +43,16 @@ export const TaskModal = ({
   const [activeTab, setActiveTab] = useState("subtasks");
   const [isClosing, setIsClosing] = useState(false);
   const [localDescription, setLocalDescription] = useState("");
-  const [tagsState, setTagsState] = useState([]);
   const [attachmentsWithUrls, setAttachmentsWithUrls] = useState([]);
 
   // Generate signed URLs for attachments when modal opens (lazy loading)
   useEffect(() => {
-    if (!isOpen || !idea) {
+    if (!isOpen || !card) {
       setAttachmentsWithUrls([]);
       return;
     }
 
-    const attachments = idea.attachments || [];
+    const attachments = card.attachments || [];
     if (attachments.length === 0) {
       setAttachmentsWithUrls([]);
       return;
@@ -82,7 +81,10 @@ export const TaskModal = ({
               );
               return { ...att, url: signedUrl };
             } catch (error) {
-              console.error(`Error generating URL for attachment ${att.id}:`, error);
+              console.error(
+                `Error generating URL for attachment ${att.id}:`,
+                error
+              );
               return { ...att, url: null };
             }
           })
@@ -96,7 +98,7 @@ export const TaskModal = ({
 
         // Update the card in the board context with the new URLs (cache them)
         if (onUpdateCard) {
-          onUpdateCard(idea.id, { attachments: allAttachments });
+          onUpdateCard(card.id, { attachments: allAttachments });
         }
 
         setAttachmentsWithUrls(allAttachments);
@@ -108,7 +110,7 @@ export const TaskModal = ({
 
     generateUrls();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, idea?.id]);
+  }, [isOpen, card?.id, card?.attachments]);
 
   useLayoutEffect(() => {
     if (isOpen) {
@@ -123,9 +125,9 @@ export const TaskModal = ({
     return () => {
       document.body.style.overflow = "";
     };
-  }, [isOpen]);
+  }, [isOpen, card?.id]);
 
-  if (!isOpen || !idea) return null;
+  if (!isOpen || !card) return null;
 
   const handleClose = () => {
     setIsClosing(true);
@@ -136,7 +138,7 @@ export const TaskModal = ({
 
   const handleDescriptionSave = (value) => {
     setLocalDescription(value);
-    onUpdateDescription?.(idea.id, value);
+    onUpdateDescription?.(card.id, value);
   };
 
   const handleStatusChange = (column) => {
@@ -144,74 +146,80 @@ export const TaskModal = ({
     // Mock notification
     addNotification({
       userId: "current-user",
-      message: `Status updated to '${column.title}' for '${idea.title}'`,
+      message: `Status updated to '${column.title}' for '${card.title}'`,
       type: "activity",
-      taskId: idea.id,
-      boardId: idea.boardId,
+      taskId: card.id,
+      boardId: card.boardId,
     });
   };
 
   const handleAddMember = (member) => {
-    onAssign?.(idea.id, member);
+    onAssign?.(card.id, member);
     // Mock notification
     addNotification({
       userId: "current-user",
-      message: `Assigned ${member.user?.full_name || member.user?.email} to '${idea.title}'`,
+      message: `Assigned ${member.user?.full_name || member.user?.email} to '${
+        card.title
+      }'`,
       type: "assignment",
-      taskId: idea.id,
-      boardId: idea.boardId,
+      taskId: card.id,
+      boardId: card.boardId,
     });
   };
 
   const handleRemoveMember = (member) => {
-    onAssign?.(idea.id, member); // Toggle will handle removal
+    onAssign?.(card.id, member); // Toggle will handle removal
   };
 
   const handleTitleSave = (newTitle) => {
-    onUpdateTitle?.(idea.id, newTitle);
+    onUpdateTitle?.(card.id, newTitle);
   };
 
   const handleDueDateChange = (date) => {
-    onChangeDueDate?.(idea.id, date);
+    onChangeDueDate?.(card.id, date);
     addNotification({
       userId: "current-user",
-      message: `Due date changed to ${date} for '${idea.title}'`,
+      message: `Due date changed to ${date} for '${card.title}'`,
       type: "due",
-      taskId: idea.id,
-      boardId: idea.boardId,
+      taskId: card.id,
+      boardId: card.boardId,
     });
   };
 
   const handleAddComment = (text) => {
-    onAddCommentToIdea?.(idea.id, text);
+    onAddComment?.(card.id, text);
 
     // Check for mentions
     if (text.includes("@")) {
       addNotification({
         userId: "current-user",
-        message: `You were mentioned in a comment on '${idea.title}'`,
+        message: `You were mentioned in a comment on '${card.title}'`,
         type: "mention",
-        taskId: idea.id,
-        boardId: idea.boardId,
+        taskId: card.id,
+        boardId: card.boardId,
       });
     } else {
       // Notify participants
       addNotification({
         userId: "current-user",
-        message: `New comment on '${idea.title}'`,
+        message: `New comment on '${card.title}'`,
         type: "general",
-        taskId: idea.id,
-        boardId: idea.boardId,
+        taskId: card.id,
+        boardId: card.boardId,
       });
     }
   };
 
-  // Map idea data to sidebar props
+  // Map card data to sidebar props
   const assignees =
-    idea.assignees || (idea.assignedTo ? [idea.assignedTo] : []);
+    card.assignees || (card.assignedTo ? [card.assignedTo] : []);
 
-  // Use attachmentsWithUrls if available (has signed URLs), otherwise fallback to idea.attachments
-  const attachments = (attachmentsWithUrls.length > 0 ? attachmentsWithUrls : idea.attachments || []).map((att) => ({
+  // Use attachmentsWithUrls if available (has signed URLs), otherwise fallback to card.attachments
+  const attachments = (
+    attachmentsWithUrls.length > 0
+      ? attachmentsWithUrls
+      : card.attachments || []
+  ).map((att) => ({
     ...att,
     size: att.file_size || att.size || 0,
   }));
@@ -235,7 +243,7 @@ export const TaskModal = ({
       >
         {/* Header */}
         <TaskModalHeader
-          title={idea.title}
+          title={card.title}
           breadcrumb="Project UI/UX / In section review"
           onClose={handleClose}
           onEdit={() => console.log("Edit")}
@@ -248,10 +256,10 @@ export const TaskModal = ({
         <div className="flex-1 overflow-y-auto min-h-0">
           {/* Sidebar (now top content) */}
           <TaskModalSidebar
-            status={idea.kanbanStatus || "Backlog"}
-            dueDate={idea.dueDate}
+            status={card.kanbanStatus || "Backlog"}
+            dueDate={card.dueDate}
             assignees={assignees}
-            tags={tagsState}
+            tags={card.labels || card.tags || []}
             description={localDescription}
             attachments={attachments}
             onStatusChange={handleStatusChange}
@@ -259,11 +267,11 @@ export const TaskModal = ({
             onAddMember={handleAddMember}
             onRemoveMember={handleRemoveMember}
             onDescriptionChange={handleDescriptionSave}
-            onRemoveAttachment={(attId) => onRemoveAttachment?.(idea.id, attId)}
+            onRemoveAttachment={(attId) => onRemoveAttachment?.(card.id, attId)}
             onViewAttachment={(att) => window.open(att.url, "_blank")}
-            onAddAttachment={(file) => onAddAttachment?.(idea.id, file)}
-            onAddLabel={(tagId) => onAddLabel?.(idea.id, tagId)}
-            onRemoveLabel={(tagId) => onRemoveLabel?.(idea.id, tagId)}
+            onAddAttachment={(file) => onAddAttachment?.(card.id, file)}
+            onAddLabel={(tagId) => onAddLabel?.(card.id, tagId)}
+            onRemoveLabel={(tagId) => onRemoveLabel?.(card.id, tagId)}
             onCreateTag={onCreateTag}
             availableTags={availableTags}
             boardId={boardId}
@@ -276,10 +284,10 @@ export const TaskModal = ({
           <TaskModalTabs activeTab={activeTab} onTabChange={setActiveTab}>
             {activeTab === "subtasks" && (
               <SubtasksTab
-                subtasks={idea.subtasks || []}
-                onToggle={(subtaskId) => onToggleSubtask?.(idea.id, subtaskId)}
-                onAdd={(text) => onAddSubtask?.(idea.id, text)}
-                onRemove={(subtaskId) => onRemoveSubtask?.(idea.id, subtaskId)}
+                subtasks={card.subtasks || []}
+                onToggle={(subtaskId) => onToggleSubtask?.(card.id, subtaskId)}
+                onAdd={(text) => onAddSubtask?.(card.id, text)}
+                onRemove={(subtaskId) => onRemoveSubtask?.(card.id, subtaskId)}
                 canEdit={canEdit}
               />
             )}
@@ -288,14 +296,14 @@ export const TaskModal = ({
                 comments={comments || []}
                 onAdd={handleAddComment}
                 onUpdate={(commentId, text) =>
-                  onUpdateComment?.(idea.id, commentId, text)
+                  onUpdateComment?.(card.id, commentId, text)
                 }
-                onDelete={(commentId) => onDeleteComment?.(idea.id, commentId)}
+                onDelete={(commentId) => onDeleteComment?.(card.id, commentId)}
                 canEdit={canEdit}
               />
             )}
             {activeTab === "activities" && (
-              <ActivitiesTab activities={idea.activity || []} />
+              <ActivitiesTab activities={card.activity || []} />
             )}
             {activeTab === "team" && (
               <TeamTab

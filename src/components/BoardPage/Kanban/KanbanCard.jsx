@@ -96,11 +96,17 @@ export const KanbanCardContent = memo(
 
           {/* Assignees */}
           <div className="flex -space-x-2">
-            {(card.assignees && card.assignees.length > 0) ? (
+            {card.assignees && card.assignees.length > 0 ? (
               card.assignees.slice(0, 3).map((assignee, i) => {
                 const assigneeId = assignee.id || assignee.user?.id;
-                const assigneeName = assignee.full_name || assignee.user?.full_name || assignee.name || assignee.user?.email || "?";
-                const assigneeAvatar = assignee.avatar_url || assignee.user?.avatar_url;
+                const assigneeName =
+                  assignee.full_name ||
+                  assignee.user?.full_name ||
+                  assignee.name ||
+                  assignee.user?.email ||
+                  "?";
+                const assigneeAvatar =
+                  assignee.avatar_url || assignee.user?.avatar_url;
                 return (
                   <Avatar
                     key={assigneeId || i}
@@ -115,9 +121,18 @@ export const KanbanCardContent = memo(
               })
             ) : card.assignedTo ? (
               <Avatar className="h-6 w-6 border-[1.5px] border-white dark:border-neutral-900 ring-1 ring-neutral-100 dark:ring-neutral-700">
-                <AvatarImage src={card.assignedTo.avatar_url || card.assignedTo.user?.avatar_url} />
+                <AvatarImage
+                  src={
+                    card.assignedTo.avatar_url ||
+                    card.assignedTo.user?.avatar_url
+                  }
+                />
                 <AvatarFallback className="text-[9px] bg-primary-50 dark:bg-neutral-700 text-primary-600 dark:text-neutral-200 font-semibold">
-                  {(card.assignedTo.full_name || card.assignedTo.user?.full_name || card.assignedTo.name)?.charAt(0) || "?"}
+                  {(
+                    card.assignedTo.full_name ||
+                    card.assignedTo.user?.full_name ||
+                    card.assignedTo.name
+                  )?.charAt(0) || "?"}
                 </AvatarFallback>
               </Avatar>
             ) : null}
