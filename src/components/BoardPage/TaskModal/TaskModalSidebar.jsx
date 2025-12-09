@@ -20,6 +20,7 @@ import {
   DropdownMenuTrigger,
 } from "../../ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "../../ui/avatar";
+import { RichTextEditor } from "../../ui/RichTextEditor";
 
 export const TaskModalSidebar = ({
   status,
@@ -216,14 +217,21 @@ export const TaskModalSidebar = ({
             <FileText className="h-4 w-4" />
             <span>Description</span>
           </div>
-          <div className="bg-neutral-50 dark:bg-neutral-800/50 rounded-xl p-1 border border-neutral-100 dark:border-neutral-800">
-            <textarea
+          <div
+            className="bg-neutral-50 dark:bg-neutral-800/50 rounded-xl border border-neutral-100 dark:border-neutral-800 overflow-hidden flex flex-col"
+            style={{
+              resize: "vertical",
+              overflow: "hidden",
+              height: "180px",
+              minHeight: "100px",
+              maxHeight: "400px",
+            }}
+          >
+            <RichTextEditor
               value={description || ""}
-              onChange={(e) => onDescriptionChange?.(e.target.value)}
+              onChange={onDescriptionChange}
               disabled={!canEdit}
               placeholder="Add more details, notes, or context..."
-              className="w-full px-4 py-3 text-sm bg-transparent border-none focus:outline-none focus:ring-0 resize-none text-neutral-700 dark:text-neutral-200 placeholder:text-neutral-400"
-              rows={4}
             />
           </div>
         </div>

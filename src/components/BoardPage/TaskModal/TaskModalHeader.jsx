@@ -40,7 +40,7 @@ export const TaskModalHeader = ({
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2 text-xs text-neutral-500 dark:text-neutral-400">
           <button className="hover:text-primary-500 dark:hover:text-white transition-colors">
-            <Maximize2 className="h-3.5 w-3.5" />
+            <Maximize2 className="h-4 w-4" />
           </button>
           <span>{breadcrumb || "Project UI/UX / In section review"}</span>
         </div>
@@ -50,32 +50,32 @@ export const TaskModalHeader = ({
               variant="ghost"
               size="icon"
               onClick={() => setIsEditing(true)}
-              className="h-7 w-7 text-neutral-400 dark:text-neutral-500 hover:text-neutral-600 dark:hover:text-neutral-300"
+              className="text-neutral-400 dark:text-neutral-500 hover:text-neutral-600 dark:hover:text-neutral-300"
             >
-              <Edit3 className="h-3.5 w-3.5" />
+              <Edit3 className="h-4 w-4" />
             </Button>
           )}
           <Button
             variant="ghost"
             size="icon"
             onClick={onExpand}
-            className="h-7 w-7 text-neutral-400 dark:text-neutral-500 hover:text-neutral-600 dark:hover:text-neutral-300"
+            className="text-neutral-400 dark:text-neutral-500 hover:text-neutral-600 dark:hover:text-neutral-300"
           >
-            <ExternalLink className="h-3.5 w-3.5" />
+            <ExternalLink className="h-4 w-4" />
           </Button>
           <Button
             variant="ghost"
             size="icon"
-            className="h-7 w-7 text-neutral-400 dark:text-neutral-500 hover:text-neutral-600 dark:hover:text-neutral-300"
+            className="text-neutral-400 dark:text-neutral-500 hover:text-neutral-600 dark:hover:text-neutral-300"
           >
-            <MoreVertical className="h-3.5 w-3.5" />
+            <MoreVertical className="h-4 w-4" />
           </Button>
           <div className="w-px h-4 bg-neutral-200 dark:bg-neutral-700 mx-1" />
           <Button
             variant="ghost"
             size="icon"
             onClick={onClose}
-            className="h-7 w-7 text-neutral-400 dark:text-neutral-500 hover:text-neutral-600 dark:hover:text-neutral-300"
+            className="text-neutral-400 dark:text-neutral-500 hover:text-neutral-600 dark:hover:text-neutral-300"
           >
             <X className="h-4 w-4" />
           </Button>

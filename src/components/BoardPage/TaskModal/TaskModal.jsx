@@ -1,4 +1,10 @@
-import { useEffect, useLayoutEffect, useState } from "react";
+import {
+  useEffect,
+  useLayoutEffect,
+  useState,
+  useCallback,
+  useRef,
+} from "react";
 import { TaskModalHeader } from "./TaskModalHeader";
 import { TaskModalSidebar } from "./TaskModalSidebar";
 import { TaskModalTabs } from "./TaskModalTabs";
@@ -42,7 +48,29 @@ export const TaskModal = ({
   const { addNotification } = useNotifications();
   const [activeTab, setActiveTab] = useState("subtasks");
   const [isClosing, setIsClosing] = useState(false);
-  const [localDescription, setLocalDescription] = useState("");
+  const [localDescription, setLocalDescription] = useState(
+    card?.description || ""
+  );
+  const descriptionUpdateTimeoutRef = useRef(null);
+
+  const prevCardIdRef = useRef(card?.id);
+
+  // Sync local description only when switching cards (prevent overwriting while typing with debounced updates)
+  useEffect(() => {
+    if (card?.id !== prevCardIdRef.current) {
+      setLocalDescription(card?.description || "");
+      prevCardIdRef.current = card?.id;
+    }
+  }, [card?.id, card?.description]);
+
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (descriptionUpdateTimeoutRef.current) {
+        clearTimeout(descriptionUpdateTimeoutRef.current);
+      }
+    };
+  }, []);
   const [attachmentsWithUrls, setAttachmentsWithUrls] = useState([]);
 
   // Generate signed URLs for attachments when modal opens (lazy loading)
@@ -138,8 +166,19 @@ export const TaskModal = ({
 
   const handleDescriptionSave = (value) => {
     setLocalDescription(value);
-    onUpdateDescription?.(card.id, value);
+
+    // Clear existing timeout
+    if (descriptionUpdateTimeoutRef.current) {
+      clearTimeout(descriptionUpdateTimeoutRef.current);
+    }
+
+    // Set new timeout for 1 second debounce
+    descriptionUpdateTimeoutRef.current = setTimeout(() => {
+      onUpdateDescription?.(card.id, value);
+    }, 1000);
   };
+
+  // Cleanup timeout on unmount
 
   const handleStatusChange = (column) => {
     onStatusChange?.(column.id);

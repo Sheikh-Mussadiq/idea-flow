@@ -4,6 +4,15 @@ import { CSS } from "@dnd-kit/utilities";
 import { MessageSquare, Paperclip, MoreHorizontal } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "../../ui/avatar";
 
+// Helper to strip HTML tags for preview text
+const stripHtml = (html) => {
+  if (!html) return "";
+  // Create a temporary element to parse HTML and extract text
+  const temp = document.createElement("div");
+  temp.innerHTML = html;
+  return temp.textContent || temp.innerText || "";
+};
+
 export const KanbanCardContent = memo(
   ({ card, onClick, style, className, ...props }) => {
     return (
@@ -69,7 +78,7 @@ export const KanbanCardContent = memo(
         {/* Description Preview */}
         {card.description && (
           <p className="text-xs text-neutral-500 dark:text-neutral-400 line-clamp-2 mb-3 leading-relaxed">
-            {card.description}
+            {stripHtml(card.description)}
           </p>
         )}
 
