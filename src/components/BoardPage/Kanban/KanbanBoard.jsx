@@ -23,6 +23,7 @@ export const KanbanBoard = ({
   onAddCard,
   onReorderCards,
   canEdit,
+  availableTags,
 }) => {
   const [activeId, setActiveId] = useState(null);
   const { createColumn, currentBoard } = useBoard();
@@ -175,6 +176,7 @@ export const KanbanBoard = ({
               cards={cardsByColumnId[column.id] || []}
               onOpenTask={onOpenTask}
               onAddCard={() => onAddCard(column.id)}
+              availableTags={availableTags}
             />
           ))}
 

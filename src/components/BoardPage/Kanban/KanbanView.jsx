@@ -13,6 +13,7 @@ export const KanbanView = ({
   onReorderCards,
   teamMembers,
   canEdit,
+  availableTags,
 }) => {
   return (
     <div className="h-full w-full bg-neutral-50 flex overflow-hidden">
@@ -30,6 +31,7 @@ export const KanbanView = ({
           onAddCard={onAddCard}
           onReorderCards={onReorderCards}
           canEdit={canEdit}
+          availableTags={availableTags}
         />
       </div>
 

@@ -297,12 +297,16 @@ export const TaskModal = ({
           <TaskModalSidebar
             status={card.kanbanStatus || "Backlog"}
             dueDate={card.dueDate}
+            priority={card.priority}
             assignees={assignees}
             tags={card.labels || card.tags || []}
             description={localDescription}
             attachments={attachments}
             onStatusChange={handleStatusChange}
             onDueDateChange={handleDueDateChange}
+            onPriorityChange={(priority) =>
+              onChangePriority?.(card.id, priority)
+            }
             onAddMember={handleAddMember}
             onRemoveMember={handleRemoveMember}
             onDescriptionChange={handleDescriptionSave}

@@ -14,6 +14,7 @@ export const TagPicker = ({
   availableTags = [],
   selectedTagIds = [],
   onAddTag,
+  onRemoveTag,
   onCreateTag,
   canEdit = true,
   boardId,
@@ -34,9 +35,13 @@ export const TagPicker = ({
     }
   };
 
-  const handleAddTag = (tagId) => {
-    onAddTag?.(tagId);
-    setIsOpen(false);
+  const handleTagClick = (tagId, isSelected) => {
+    if (isSelected) {
+      onRemoveTag?.(tagId);
+    } else {
+      onAddTag?.(tagId);
+    }
+    // Keep dropdown open for multiple selections
   };
 
   const colorOptions = [
@@ -64,27 +69,35 @@ export const TagPicker = ({
       <DropdownMenuContent align="end" className="w-64">
         {/* Existing Tags */}
         <div className="px-2 py-1.5">
-          <p className="text-xs font-semibold text-neutral-600 mb-2">
+          <p className="text-xs font-semibold text-neutral-600 dark:text-neutral-400 mb-2">
             Available Tags
           </p>
           {availableTags.length === 0 ? (
-            <p className="text-xs text-neutral-400 py-2">No tags yet</p>
+            <p className="text-xs text-neutral-400 dark:text-neutral-500 py-2">
+              No tags yet
+            </p>
           ) : (
-            <div className="space-y-1 max-h-48 overflow-y-auto">
+            <div className="space-y-1 max-h-48 overflow-y-auto custom-scrollbar">
               {availableTags.map((tag) => {
                 const isSelected = selectedTagIds.includes(tag.id);
                 return (
                   <Button
                     key={tag.id}
-                    onClick={() => handleAddTag(tag.id)}
-                    disabled={isSelected}
-                    className="w-full flex items-center gap-2 px-2 py-1.5 rounded text-sm hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors text-left disabled:opacity-50 disabled:cursor-not-allowed"
+                    onClick={() => handleTagClick(tag.id, isSelected)}
+                    variant="ghost"
+                    className={`w-full flex items-center gap-2 px-2 py-1.5 rounded text-sm justify-start font-normal h-auto hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors ${
+                      isSelected
+                        ? "bg-neutral-50 dark:bg-neutral-800/50"
+                        : "bg-transparent"
+                    }`}
                   >
                     <div
                       className="h-3 w-3 rounded-full flex-shrink-0"
                       style={{ backgroundColor: tag.color }}
                     />
-                    <span className="flex-1 truncate">{tag.name}</span>
+                    <span className="flex-1 truncate ml-1 text-left text-neutral-700 dark:text-neutral-200">
+                      {tag.name}
+                    </span>
                     {isSelected && (
                       <Check className="h-4 w-4 text-primary-500 flex-shrink-0" />
                     )}
@@ -99,7 +112,7 @@ export const TagPicker = ({
 
         {/* Create New Tag */}
         <div className="px-2 py-2 space-y-2">
-          <p className="text-xs font-semibold text-neutral-600">
+          <p className="text-xs font-semibold text-neutral-600 dark:text-neutral-400">
             Create New Tag
           </p>
           <Input
@@ -112,17 +125,17 @@ export const TagPicker = ({
                 handleCreateTag();
               }
             }}
-            className="h-8 text-xs"
+            className="h-8 text-xs bg-white dark:bg-neutral-800 border-neutral-200 dark:border-neutral-700"
           />
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1 flex-wrap">
             {colorOptions.map((color) => (
               <button
                 key={color}
                 onClick={() => setNewTagColor(color)}
                 className={`h-6 w-6 rounded-full border-2 transition-all ${
                   newTagColor === color
-                    ? "border-neutral-900 dark:border-white"
-                    : "border-transparent"
+                    ? "border-neutral-900 dark:border-white scale-110"
+                    : "border-transparent hover:scale-105"
                 }`}
                 style={{ backgroundColor: color }}
                 title={color}

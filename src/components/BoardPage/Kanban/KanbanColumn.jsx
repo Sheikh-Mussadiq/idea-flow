@@ -15,7 +15,14 @@ import {
 import { useState } from "react";
 import { useBoard } from "../../../context/BoardContext";
 
-export const KanbanColumn = ({ id, title, cards, onOpenTask, onAddCard }) => {
+export const KanbanColumn = ({
+  id,
+  title,
+  cards,
+  onOpenTask,
+  onAddCard,
+  availableTags,
+}) => {
   const { setNodeRef, isOver } = useDroppable({
     id: id,
   });
@@ -119,6 +126,7 @@ export const KanbanColumn = ({ id, title, cards, onOpenTask, onAddCard }) => {
                   key={card.id}
                   card={card}
                   onClick={() => onOpenTask(card.id)}
+                  availableTags={availableTags}
                 />
               ))}
             </div>

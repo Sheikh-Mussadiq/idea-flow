@@ -39,9 +39,9 @@ export const DropdownMenuContent = ({
 }) => {
   const ctx = useContext(DropdownMenuContext);
   if (!ctx || !ctx.open) return null;
-  
+
   const alignmentClass = align === "end" ? "right-0" : "left-0";
-  
+
   return (
     <div
       className={`absolute z-50 mt-1 min-w-[10rem] rounded-xl border border-neutral-200/60 dark:border-neutral-700 bg-white dark:bg-neutral-900 p-1 shadow-md ${alignmentClass} ${className}`}
@@ -59,7 +59,7 @@ export const DropdownMenuItem = ({ className = "", onClick, ...props }) => {
   return (
     <button
       type="button"
-      className={`flex w-full cursor-pointer select-none items-center rounded-md px-2 py-1.5 text-xs text-neutral-900 hover:bg-neutral-100 ${className}`}
+      className={`flex w-full cursor-pointer select-none items-center rounded-md px-2 py-1.5 text-xs text-neutral-900 dark:text-neutral-200 hover:bg-neutral-100 dark:hover:bg-neutral-800 ${className}`}
       onClick={handleClick}
       {...props}
     />
@@ -68,11 +68,14 @@ export const DropdownMenuItem = ({ className = "", onClick, ...props }) => {
 
 export const DropdownMenuLabel = ({ className = "", ...props }) => (
   <div
-    className={`px-2 py-1.5 text-xs font-semibold text-neutral-500 ${className}`}
+    className={`px-2 py-1.5 text-xs font-semibold text-neutral-500 dark:text-neutral-400 ${className}`}
     {...props}
   />
 );
 
 export const DropdownMenuSeparator = ({ className = "", ...props }) => (
-  <div className={`my-1 h-px bg-neutral-200/60 ${className}`} {...props} />
+  <div
+    className={`my-1 h-px bg-neutral-200/60 dark:bg-neutral-800 ${className}`}
+    {...props}
+  />
 );

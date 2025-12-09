@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   Calendar,
   Tag,
@@ -8,7 +9,13 @@ import {
   FileText,
   Paperclip,
   Plus,
+  Flag,
+  X,
+  Loader2,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
+import { useRef } from "react";
 import { StatusBadge } from "./StatusBadge";
 import { AvatarGroup } from "./AvatarGroup";
 import { AttachmentCard } from "./AttachmentCard";
@@ -18,6 +25,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from "../../ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "../../ui/avatar";
 import { RichTextEditor } from "../../ui/RichTextEditor";
@@ -25,12 +33,14 @@ import { RichTextEditor } from "../../ui/RichTextEditor";
 export const TaskModalSidebar = ({
   status,
   dueDate,
+  priority,
   assignees,
   tags,
   description,
   attachments,
   onStatusChange,
   onDueDateChange,
+  onPriorityChange,
   onAddMember,
   onRemoveMember,
   onDescriptionChange,
@@ -46,11 +56,35 @@ export const TaskModalSidebar = ({
   columns = [],
   teamMembers = [],
 }) => {
+  const [removingTagId, setRemovingTagId] = useState(null);
+  const attachmentScrollRef = useRef(null);
+
+  const scrollAttachments = (direction) => {
+    if (attachmentScrollRef.current) {
+      const scrollAmount = 300; // Approx card width + gap
+      attachmentScrollRef.current.scrollBy({
+        left: direction === "left" ? -scrollAmount : scrollAmount,
+        behavior: "smooth",
+      });
+    }
+  };
+
   const handleFileChange = (e) => {
     const file = e.target.files?.[0];
     if (file) {
       onAddAttachment?.(file);
       e.target.value = ""; // Reset
+    }
+  };
+
+  const handleRemoveTag = async (tagId) => {
+    setRemovingTagId(tagId);
+    try {
+      await onRemoveLabel?.(tagId);
+    } catch (err) {
+      console.error("Error removing tag", err);
+    } finally {
+      setRemovingTagId(null);
     }
   };
 
@@ -79,10 +113,16 @@ export const TaskModalSidebar = ({
                   <DropdownMenuItem
                     key={col.id}
                     onClick={() => onStatusChange?.(col)}
-                    className="gap-2"
+                    className="gap-2 cursor-pointer focus:bg-neutral-100 dark:focus:bg-neutral-800 focus:text-neutral-900 dark:focus:text-neutral-50"
                   >
-                    {status === col.title && <Check className="h-4 w-4" />}
-                    <span className={status === col.title ? "ml-0" : "ml-6"}>
+                    {status === col.title && (
+                      <Check className="h-4 w-4 dark:text-neutral-200" />
+                    )}
+                    <span
+                      className={`${
+                        status === col.title ? "ml-0" : "ml-6"
+                      } dark:text-neutral-200`}
+                    >
                       {col.title}
                     </span>
                   </DropdownMenuItem>
@@ -118,6 +158,82 @@ export const TaskModalSidebar = ({
             )}
           </div>
 
+          {/* Priority */}
+          <div className="flex items-center gap-2 text-sm text-neutral-500 pt-1.5">
+            <Flag className="h-4 w-4" />
+            <span>Priority</span>
+          </div>
+          <div>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild disabled={!canEdit}>
+                <div
+                  className={`inline-flex items-center gap-2 px-2.5 py-1 rounded-md border cursor-pointer transition-colors ${
+                    !priority
+                      ? "bg-neutral-50 dark:bg-neutral-800 border-neutral-200 dark:border-neutral-700 text-neutral-500"
+                      : priority.toLowerCase() === "high"
+                      ? "bg-red-50 dark:bg-red-900/20 border-red-100 dark:border-red-800 text-red-600 dark:text-red-400"
+                      : priority.toLowerCase() === "medium"
+                      ? "bg-orange-50 dark:bg-orange-900/20 border-orange-100 dark:border-orange-800 text-orange-600 dark:text-orange-400"
+                      : "bg-blue-50 dark:bg-blue-900/20 border-blue-100 dark:border-blue-800 text-blue-600 dark:text-blue-400"
+                  }`}
+                >
+                  <Flag
+                    className={`h-3.5 w-3.5 ${priority ? "fill-current" : ""}`}
+                  />
+                  <span className="text-xs font-medium">
+                    {priority
+                      ? priority.charAt(0).toUpperCase() + priority.slice(1)
+                      : "Set priority"}
+                  </span>
+                </div>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start">
+                {[
+                  {
+                    label: "High",
+                    value: "high",
+                    color: "text-red-600 dark:text-red-500",
+                  },
+                  {
+                    label: "Medium",
+                    value: "medium",
+                    color: "text-orange-600 dark:text-orange-500",
+                  },
+                  {
+                    label: "Low",
+                    value: "low",
+                    color: "text-blue-600 dark:text-blue-500",
+                  },
+                ].map((option) => (
+                  <DropdownMenuItem
+                    key={option.value}
+                    onClick={() => onPriorityChange?.(option.value)}
+                    className="gap-2 cursor-pointer focus:bg-neutral-100 dark:focus:bg-neutral-800 focus:text-neutral-900 dark:focus:text-neutral-50"
+                  >
+                    <Flag className={`h-4 w-4 fill-current ${option.color}`} />
+                    <span className="dark:text-neutral-200">
+                      {option.label}
+                    </span>
+                    {priority === option.value && (
+                      <Check className="h-4 w-4 ml-auto dark:text-neutral-200" />
+                    )}
+                  </DropdownMenuItem>
+                ))}
+                {priority && (
+                  <>
+                    <DropdownMenuSeparator className="dark:bg-neutral-700" />
+                    <DropdownMenuItem
+                      onClick={() => onPriorityChange?.(null)}
+                      className="text-neutral-500 dark:text-neutral-400 cursor-pointer focus:bg-neutral-100 dark:focus:bg-neutral-800 focus:text-neutral-700 dark:focus:text-neutral-200"
+                    >
+                      Clear priority
+                    </DropdownMenuItem>
+                  </>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+
           {/* Assignee */}
           <div className="flex items-center gap-2 text-sm text-neutral-500 pt-1.5">
             <Users className="h-4 w-4" />
@@ -150,7 +266,7 @@ export const TaskModalSidebar = ({
                       <DropdownMenuItem
                         key={memberId}
                         onClick={() => onAddMember?.(member)}
-                        className="gap-2"
+                        className="gap-2 cursor-pointer focus:bg-neutral-100 dark:focus:!bg-neutral-800 focus:text-neutral-900 dark:focus:text-neutral-50"
                       >
                         <div className="relative">
                           <Avatar className="h-6 w-6">
@@ -160,12 +276,12 @@ export const TaskModalSidebar = ({
                             </AvatarFallback>
                           </Avatar>
                           {isAssigned && (
-                            <div className="absolute -bottom-1 -right-1 bg-green-500 rounded-full p-0.5 border border-white">
+                            <div className="absolute -bottom-1 -right-1 bg-green-500 rounded-full p-0.5 border border-white dark:border-neutral-900">
                               <Check className="h-2 w-2 text-white" />
                             </div>
                           )}
                         </div>
-                        <span className="flex-1 truncate">
+                        <span className="flex-1 truncate dark:text-neutral-200">
                           {member.user?.full_name || member.user?.email}
                         </span>
                       </DropdownMenuItem>
@@ -182,28 +298,64 @@ export const TaskModalSidebar = ({
             <span>Tags</span>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            {tags?.map((tag, index) => (
-              <span
-                key={index}
-                className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-md"
-                style={{
-                  backgroundColor: tag.color ? `${tag.color}15` : "#6366f115",
-                  color: tag.color || "#6366f1",
-                }}
-              >
-                <div
-                  className="w-1.5 h-1.5 rounded-full"
-                  style={{ backgroundColor: tag.color || "#6366f1" }}
-                />
-                {tag.name}
-              </span>
-            ))}
+            {tags?.map((tag, index) => {
+              // Handle both tag objects and tag IDs
+              let tagObj = typeof tag === "object" ? tag : null;
+
+              // If tag is an ID, find it in availableTags
+              if (!tagObj && availableTags) {
+                tagObj = availableTags.find((t) => t.id === tag);
+              }
+
+              if (!tagObj) return null;
+
+              return (
+                <span
+                  key={index}
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-medium rounded-md group/tag relative overflow-hidden"
+                  style={{
+                    backgroundColor: tagObj.color
+                      ? `${tagObj.color}15`
+                      : "#6366f115",
+                    color: tagObj.color || "#6366f1",
+                  }}
+                >
+                  <div
+                    className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+                    style={{ backgroundColor: tagObj.color || "#6366f1" }}
+                  />
+                  <span className="group-hover/tag:[mask-image:linear-gradient(to_right,black_45%,transparent)] transition-all duration-200">
+                    {tagObj.name}
+                  </span>
+                  {canEdit && (
+                    <>
+                      {removingTagId === tagObj.id ? (
+                        <div className="absolute right-0 top-0 bottom-0 w-6 flex items-center justify-center">
+                          <Loader2 className="h-3 w-3 animate-spin text-neutral-500 dark:text-neutral-400" />
+                        </div>
+                      ) : (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleRemoveTag(tagObj.id);
+                          }}
+                          className="absolute right-0 top-0 bottom-0 w-6 flex items-center justify-center opacity-0 group-hover/tag:opacity-100 transition-opacity duration-200 text-neutral-500 dark:text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200"
+                        >
+                          <X className="h-3 w-3" />
+                        </button>
+                      )}
+                    </>
+                  )}
+                </span>
+              );
+            })}
             <TagPicker
               availableTags={availableTags}
               selectedTagIds={(tags || []).map((t) =>
                 typeof t === "object" ? t.id : t
               )}
               onAddTag={onAddLabel}
+              onRemoveTag={onRemoveLabel}
               onCreateTag={onCreateTag}
               boardId={boardId}
               canEdit={canEdit}
@@ -251,32 +403,54 @@ export const TaskModalSidebar = ({
             )}
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {attachments?.map((attachment) => (
-              <AttachmentCard
-                key={attachment.id}
-                attachment={attachment}
-                onRemove={onRemoveAttachment}
-                onView={onViewAttachment}
-                canEdit={canEdit}
-              />
-            ))}
-            {canEdit && (
-              <div className="relative group">
-                <input
-                  type="file"
-                  id="file-upload"
-                  className="hidden"
-                  onChange={handleFileChange}
-                />
-                <label
-                  htmlFor="file-upload"
-                  className="flex items-center justify-center w-16 h-16 rounded-xl border border-dashed border-neutral-300 dark:border-neutral-600 hover:border-primary-500 dark:hover:border-primary-500 hover:bg-primary-50 dark:hover:bg-primary-900/10 cursor-pointer transition-all"
+          <div className="relative group/attachments">
+            {(attachments?.length > 0 || canEdit) && (
+              <>
+                <button
+                  onClick={() => scrollAttachments("left")}
+                  className="absolute -left-4 top-1/2 -translate-y-1/2 z-10 w-8 h-8 flex items-center justify-center rounded-full bg-white/90 dark:bg-neutral-800/90 shadow-sm border border-neutral-200 dark:border-neutral-700 text-neutral-500 dark:text-neutral-400 hover:text-primary-600 dark:hover:text-primary-400 opacity-0 group-hover/attachments:opacity-100 transition-opacity disabled:opacity-0"
                 >
-                  <Plus className="h-6 w-6 text-neutral-400 group-hover:text-primary-500 transition-colors" />
-                </label>
-              </div>
+                  <ChevronLeft className="h-4 w-4" />
+                </button>
+                <button
+                  onClick={() => scrollAttachments("right")}
+                  className="absolute -right-4 top-1/2 -translate-y-1/2 z-10 w-8 h-8 flex items-center justify-center rounded-full bg-white/90 dark:bg-neutral-800/90 shadow-sm border border-neutral-200 dark:border-neutral-700 text-neutral-500 dark:text-neutral-400 hover:text-primary-600 dark:hover:text-primary-400 opacity-0 group-hover/attachments:opacity-100 transition-opacity disabled:opacity-0"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </button>
+              </>
             )}
+
+            <div
+              ref={attachmentScrollRef}
+              className="flex items-center gap-3 overflow-x-auto w-full custom-scrollbar snap-x no-scrollbar scroll-smooth px-5 [mask-image:linear-gradient(to_right,transparent,black_20px,black_calc(100%-20px),transparent)] [-webkit-mask-image:linear-gradient(to_right,transparent,black_20px,black_calc(100%-20px),transparent)]"
+            >
+              {attachments?.map((attachment) => (
+                <AttachmentCard
+                  key={attachment.id}
+                  attachment={attachment}
+                  onRemove={onRemoveAttachment}
+                  onView={onViewAttachment}
+                  canEdit={canEdit}
+                />
+              ))}
+              {canEdit && (
+                <div className="relative group flex-shrink-0 snap-start">
+                  <input
+                    type="file"
+                    id="file-upload"
+                    className="hidden"
+                    onChange={handleFileChange}
+                  />
+                  <label
+                    htmlFor="file-upload"
+                    className="flex items-center justify-center w-16 h-[66px] rounded-xl border border-dashed border-neutral-300 dark:border-neutral-600 hover:border-primary-500 dark:hover:border-primary-500 hover:bg-primary-50 dark:hover:bg-primary-900/10 cursor-pointer transition-all"
+                  >
+                    <Plus className="h-6 w-6 text-neutral-400 group-hover:text-primary-500 transition-colors" />
+                  </label>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>

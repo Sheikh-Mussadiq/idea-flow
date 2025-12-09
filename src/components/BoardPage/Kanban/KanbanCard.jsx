@@ -14,7 +14,7 @@ const stripHtml = (html) => {
 };
 
 export const KanbanCardContent = memo(
-  ({ card, onClick, style, className, ...props }) => {
+  ({ card, onClick, style, className, availableTags, ...props }) => {
     return (
       <div
         style={style}
@@ -48,8 +48,15 @@ export const KanbanCardContent = memo(
           )}
           {(card.tags || []).map((tag, i) => {
             // Handle both tag objects and tag IDs
-            const tagObj = typeof tag === "object" ? tag : null;
+            let tagObj = typeof tag === "object" ? tag : null;
+
+            // If tag is an ID, find it in availableTags
+            if (!tagObj && availableTags) {
+              tagObj = availableTags.find((t) => t.id === tag);
+            }
+
             if (!tagObj) return null;
+
             return (
               <span
                 key={tagObj.id || i}
@@ -152,7 +159,7 @@ export const KanbanCardContent = memo(
   }
 );
 
-export const KanbanCard = memo(({ card, onClick }) => {
+export const KanbanCard = memo(({ card, onClick, availableTags }) => {
   const {
     attributes,
     listeners,
@@ -185,7 +192,11 @@ export const KanbanCard = memo(({ card, onClick }) => {
 
   return (
     <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
-      <KanbanCardContent card={card} onClick={onClick} />
+      <KanbanCardContent
+        card={card}
+        onClick={onClick}
+        availableTags={availableTags}
+      />
     </div>
   );
 });

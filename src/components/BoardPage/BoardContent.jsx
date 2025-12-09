@@ -546,6 +546,7 @@ export const BoardContent = ({
           onOpenTask={handleOpenCard}
           onAddCard={handleAddCard}
           onReorderCards={onUpdateCards}
+          availableTags={currentBoard?.tags || []}
           canEdit={!isViewer}
         />
       )}
