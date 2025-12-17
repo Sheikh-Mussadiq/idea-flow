@@ -254,7 +254,7 @@ export const TaskModalSidebar = ({
                     Add members <Plus className="h-3 w-3" />
                   </button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="w-56">
+                <DropdownMenuContent align="start" className="w-auto">
                   {teamMembers.map((member) => {
                     const memberId =
                       member.user?.id || member.user_id || member.id;
@@ -266,7 +266,11 @@ export const TaskModalSidebar = ({
                       <DropdownMenuItem
                         key={memberId}
                         onClick={() => onAddMember?.(member)}
-                        className="gap-2 cursor-pointer focus:bg-neutral-100 dark:focus:!bg-neutral-800 focus:text-neutral-900 dark:focus:text-neutral-50"
+                        className={`gap-2 cursor-pointer focus:bg-neutral-100 dark:focus:!bg-neutral-800 focus:text-neutral-900 dark:focus:text-neutral-50 ${
+                          isAssigned
+                            ? "bg-primary-50 dark:bg-primary-900/10"
+                            : ""
+                        }`}
                       >
                         <div className="relative">
                           <Avatar className="h-6 w-6">
@@ -281,7 +285,7 @@ export const TaskModalSidebar = ({
                             </div>
                           )}
                         </div>
-                        <span className="flex-1 truncate dark:text-neutral-200">
+                        <span className="truncate dark:text-neutral-200">
                           {member.user?.full_name || member.user?.email}
                         </span>
                       </DropdownMenuItem>

@@ -87,9 +87,9 @@ export const CommentsTab = ({
         {transformedComments.map((comment) => (
           <div
             key={comment.id}
-            className="group flex items-start gap-3 p-4 bg-white border border-neutral-200 rounded-lg hover:border-neutral-300 transition-colors"
+            className="group flex items-start gap-3 p-4 bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-lg hover:border-neutral-300 dark:hover:border-neutral-600 transition-colors"
           >
-            <Avatar className="h-8 w-8 border border-neutral-200 flex-shrink-0">
+            <Avatar className="h-8 w-8 border border-neutral-200 dark:border-neutral-700 flex-shrink-0">
               <AvatarFallback className="bg-primary-500/10 text-primary-500 text-xs font-medium">
                 {comment.avatar}
               </AvatarFallback>
@@ -97,16 +97,16 @@ export const CommentsTab = ({
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between gap-2 mb-1">
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium text-neutral-900">
+                  <span className="text-sm font-medium text-neutral-900 dark:text-neutral-200">
                     {comment.author}
                   </span>
-                  <span className="text-xs text-neutral-500">
+                  <span className="text-xs text-neutral-500 dark:text-neutral-400">
                     {comment.timestamp}
                   </span>
                 </div>
                 {canEdit && (
-                  <button className="opacity-0 group-hover:opacity-100 p-1 hover:bg-neutral-100 rounded transition-opacity">
-                    <MoreVertical className="h-4 w-4 text-neutral-400" />
+                  <button className="opacity-0 group-hover:opacity-100 p-1 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded transition-opacity">
+                    <MoreVertical className="h-4 w-4 text-neutral-400 dark:text-neutral-500" />
                   </button>
                 )}
               </div>
@@ -115,7 +115,7 @@ export const CommentsTab = ({
                   <textarea
                     value={editText}
                     onChange={(e) => setEditText(e.target.value)}
-                    className="w-full px-3 py-2 text-sm border border-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
+                    className="w-full px-3 py-2 text-sm border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none"
                     rows={3}
                   />
                   <div className="flex items-center gap-2">
@@ -133,7 +133,7 @@ export const CommentsTab = ({
                       }}
                       variant="ghost"
                       size="sm"
-                      className="h-7 px-3 text-xs"
+                      className="h-7 px-3 text-xs dark:text-neutral-400 dark:hover:text-neutral-200"
                     >
                       Cancel
                     </Button>
@@ -141,11 +141,11 @@ export const CommentsTab = ({
                 </div>
               ) : (
                 <>
-                  <p className="text-sm text-neutral-700 whitespace-pre-wrap">
+                  <p className="text-sm text-neutral-700 dark:text-neutral-300 whitespace-pre-wrap">
                     {comment.text}
                   </p>
                   <div className="flex items-center gap-3 mt-2">
-                    <button className="flex items-center gap-1 text-xs text-neutral-500 hover:text-error-500 transition-colors">
+                    <button className="flex items-center gap-1 text-xs text-neutral-500 dark:text-neutral-400 hover:text-error-500 dark:hover:text-error-400 transition-colors">
                       <Heart className="h-3.5 w-3.5" />
                       <span>2</span>
                     </button>
@@ -153,19 +153,19 @@ export const CommentsTab = ({
                       <>
                         <button
                           onClick={() => startEdit(comment)}
-                          className="text-xs text-neutral-500 hover:text-primary-500 transition-colors"
+                          className="text-xs text-neutral-500 dark:text-neutral-400 hover:text-primary-500 dark:hover:text-primary-400 transition-colors"
                         >
                           Reply
                         </button>
                         <button
                           onClick={() => startEdit(comment)}
-                          className="text-xs text-neutral-500 hover:text-primary-500 transition-colors"
+                          className="text-xs text-neutral-500 dark:text-neutral-400 hover:text-primary-500 dark:hover:text-primary-400 transition-colors"
                         >
                           Edit
                         </button>
                         <button
                           onClick={() => onDelete?.(comment.id)}
-                          className="text-xs text-neutral-500 hover:text-error-500 transition-colors"
+                          className="text-xs text-neutral-500 dark:text-neutral-400 hover:text-error-500 dark:hover:text-error-400 transition-colors"
                         >
                           Delete
                         </button>
@@ -181,26 +181,26 @@ export const CommentsTab = ({
 
       {/* Empty state */}
       {comments.length === 0 && (
-        <div className="py-8 text-center text-neutral-500 text-sm">
+        <div className="py-8 text-center text-neutral-500 dark:text-neutral-400 text-sm">
           No comments yet. Start the conversation below.
         </div>
       )}
 
       {/* Add new comment */}
       {canEdit && (
-        <div className="border border-neutral-200 rounded-lg bg-white">
+        <div className="border border-neutral-200 dark:border-neutral-700 rounded-lg bg-white dark:bg-neutral-800">
           <textarea
             value={newComment}
             onChange={(e) => setNewComment(e.target.value)}
             placeholder="Write a comment..."
-            className="w-full px-4 py-3 text-sm focus:outline-none resize-none rounded-t-lg"
+            className="w-full px-4 py-3 text-sm focus:outline-none resize-none rounded-t-lg bg-transparent text-neutral-900 dark:text-neutral-200 placeholder:text-neutral-400 dark:placeholder:text-neutral-500"
             rows={3}
           />
           <CommentToolbar
             onAskAI={() => console.log("Ask AI")}
             disabled={!canEdit}
           />
-          <div className="px-4 py-3 flex items-center justify-end gap-2 border-t border-neutral-200">
+          <div className="px-4 py-3 flex items-center justify-end gap-2 border-t border-neutral-200 dark:border-neutral-700">
             <Button
               onClick={handleAdd}
               disabled={!newComment.trim()}

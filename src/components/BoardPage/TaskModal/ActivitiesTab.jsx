@@ -48,14 +48,17 @@ export const ActivitiesTab = ({ activities = [] }) => {
       {activities.length > 0 ? (
         <div className="relative">
           {/* Timeline line */}
-          <div className="absolute left-4 top-4 bottom-4 w-px bg-neutral-200" />
+          <div className="absolute left-4 top-4 bottom-4 w-px bg-neutral-200 dark:bg-neutral-700" />
 
           {/* Activities */}
           <div className="space-y-4">
             {activities.map((activity, index) => (
-              <div key={activity.id || index} className="relative flex gap-3 pl-0">
+              <div
+                key={activity.id || index}
+                className="relative flex gap-3 pl-0"
+              >
                 {/* Icon */}
-                <div className="relative z-10 flex-shrink-0 h-8 w-8 flex items-center justify-center bg-white border-2 border-neutral-200 rounded-full">
+                <div className="relative z-10 flex-shrink-0 h-8 w-8 flex items-center justify-center bg-white dark:bg-neutral-800 border-2 border-neutral-200 dark:border-neutral-700 rounded-full">
                   {getActivityIcon(activity.type)}
                 </div>
 
@@ -63,17 +66,19 @@ export const ActivitiesTab = ({ activities = [] }) => {
                 <div className="flex-1 pt-0.5">
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex-1">
-                      <p className="text-sm text-neutral-900">
+                      <p className="text-sm text-neutral-900 dark:text-neutral-200">
                         <span className="font-medium">{activity.user}</span>{" "}
-                        <span className="text-neutral-600">{activity.action}</span>
+                        <span className="text-neutral-600 dark:text-neutral-400">
+                          {activity.action}
+                        </span>
                       </p>
                       {activity.details && (
-                        <p className="text-xs text-neutral-500 mt-1">
+                        <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1">
                           {activity.details}
                         </p>
                       )}
                     </div>
-                    <span className="text-xs text-neutral-500 flex-shrink-0">
+                    <span className="text-xs text-neutral-500 dark:text-neutral-400 flex-shrink-0">
                       {formatTimestamp(activity.timestamp)}
                     </span>
                   </div>
@@ -83,7 +88,7 @@ export const ActivitiesTab = ({ activities = [] }) => {
           </div>
         </div>
       ) : (
-        <div className="py-8 text-center text-neutral-500 text-sm">
+        <div className="py-8 text-center text-neutral-500 dark:text-neutral-400 text-sm">
           No activity yet. Actions on this task will appear here.
         </div>
       )}

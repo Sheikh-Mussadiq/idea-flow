@@ -66,7 +66,7 @@ export const TagPicker = ({
           Add Tag
         </button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-64">
+      <DropdownMenuContent align="start" className="w-64">
         {/* Existing Tags */}
         <div className="px-2 py-1.5">
           <p className="text-xs font-semibold text-neutral-600 dark:text-neutral-400 mb-2">
