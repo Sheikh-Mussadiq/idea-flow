@@ -3,23 +3,80 @@ import { supabase } from "../lib/supabaseClient";
 // Helper function to fetch user details for assignee UUIDs
 async function fetchAssigneeUsers(assigneeIds) {
   if (!assigneeIds || assigneeIds.length === 0) return [];
-  
+
   const { data: users, error } = await supabase
     .from("users")
     .select("id, full_name, email, avatar_url")
     .in("id", assigneeIds);
-  
+
   if (error) {
     console.error("Error fetching assignee users:", error);
     return [];
   }
-  
+
   return users || [];
 }
 
 export const boardService = {
+  // Get user specific categories
+  async getUserCategories(userId) {
+    if (!userId) return [];
+
+    const { data, error } = await supabase
+      .from("board_categories")
+      .select("*")
+      .eq("user_id", userId)
+      .order("name");
+
+    if (error) throw error;
+    return data;
+  },
+
+  async createCategory(userId, name, color) {
+    if (!userId) throw new Error("User ID is required");
+
+    const { data, error } = await supabase
+      .from("board_categories")
+      .insert({
+        user_id: userId,
+        name,
+        color,
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  },
+
+  async assignBoardToCategory(userId, boardId, categoryId) {
+    if (!userId) throw new Error("User ID is required");
+
+    // First remove existing assignment for this board/user
+    await supabase
+      .from("board_category_assignments")
+      .delete()
+      .match({ user_id: userId, board_id: boardId });
+
+    if (!categoryId) return null;
+
+    const { data, error } = await supabase
+      .from("board_category_assignments")
+      .insert({
+        user_id: userId,
+        board_id: boardId,
+        category_id: categoryId,
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  },
+
   // Optimized fetch for sidebar/dashboard (lightweight)
-  async getBoardsList() {
+  async getBoardsList(userId) {
+    // We need to fetch basic board info + user specific favs and categories
     const { data, error } = await supabase
       .from("boards")
       .select(
@@ -29,7 +86,6 @@ export const boardService = {
         description,
         color,
         icon,
-        is_favorite,
         is_archived,
         owner_id,
         updated_at,
@@ -44,6 +100,11 @@ export const boardService = {
           name,
           description,
           ideas:ai_ideas(count)
+        ),
+        favourites:board_favourites(id, user_id),
+        category_assignments:board_category_assignments(
+          user_id,
+          category:board_categories(id, name, color)
         )
       `
       )
@@ -54,6 +115,16 @@ export const boardService = {
     // Transform data to include card count and flow ideas count
     return data.map((board) => ({
       ...board,
+      // Check if current user has favorited this board
+      is_favorite:
+        board.favourites && board.favourites.some((f) => f.user_id === userId),
+      // Get the category name for the current user
+      category:
+        board.category_assignments?.find((ca) => ca.user_id === userId)
+          ?.category?.name || null,
+      categoryColor:
+        board.category_assignments?.find((ca) => ca.user_id === userId)
+          ?.category?.color || null,
       cardCount: board.cards?.[0]?.count || 0,
       ai_flows: (board.ai_flows || []).map((flow) => ({
         ...flow,
@@ -64,7 +135,7 @@ export const boardService = {
   },
 
   // Get complete board details (cumulative fetch)
-  async getBoardDetails(boardId) {
+  async getBoardDetails(userId, boardId) {
     const { data, error } = await supabase
       .from("boards")
       .select(
@@ -97,6 +168,10 @@ export const boardService = {
               user:users(*)
             )
           )
+        ),
+        favourites:board_favourites(id),
+        category_assignments:board_category_assignments(
+          category:board_categories(id, name, color)
         )
       `
       )
@@ -209,6 +284,8 @@ export const boardService = {
 
     return {
       ...data,
+      is_favorite: data.favourites && data.favourites.length > 0, // Assuming RLS filters favourites to current user
+      category: data.category_assignments?.[0]?.category?.name || null, // Assuming RLS filters assignments
       cards: cards,
       flowIdeas: flowIdeas,
       settings: {
@@ -220,15 +297,32 @@ export const boardService = {
     };
   },
 
-  async createBoard(board) {
+  async createBoard(userId, board) {
     // 1. Create the board
+    // Remove is_favorite from the insert payload as it's no longer on boards table
+    const { is_favorite, ...boardData } = board;
+
+    // Ensure owner_id is set
+    const boardPayload = {
+      ...boardData,
+      owner_id: userId,
+    };
+
     const { data: newBoard, error: boardError } = await supabase
       .from("boards")
-      .insert(board)
+      .insert(boardPayload)
       .select()
       .single();
 
     if (boardError) throw boardError;
+
+    // Handle favorite if initially true (rare for creation, but possible)
+    if (is_favorite) {
+      await supabase.from("board_favourites").insert({
+        user_id: userId,
+        board_id: newBoard.id,
+      });
+    }
 
     try {
       // 2. Create default columns
@@ -260,22 +354,56 @@ export const boardService = {
       return newBoard;
     } catch (error) {
       // If setup fails, we should probably delete the board to avoid inconsistent state
-      // But for now, we'll just log it and return the board (user can fix manually or we can improve later)
       console.error("Error setting up board defaults:", error);
       return newBoard;
     }
   },
 
-  async updateBoard(boardId, updates) {
-    const { data, error } = await supabase
-      .from("boards")
-      .update(updates)
-      .eq("id", boardId)
-      .select()
-      .single();
+  async updateBoard(userId, boardId, updates) {
+    // Separate board updates from category updates
+    const { category, ...boardUpdates } = updates;
 
-    if (error) throw error;
-    return data;
+    let updatedBoard = null;
+
+    if (Object.keys(boardUpdates).length > 0) {
+      const { data, error } = await supabase
+        .from("boards")
+        .update(boardUpdates)
+        .eq("id", boardId)
+        .select()
+        .single();
+
+      if (error) throw error;
+      updatedBoard = data;
+    }
+
+    // Handle category update if present
+    if (category !== undefined) {
+      const categories = await this.getUserCategories(userId);
+      let targetCategoryId = null;
+
+      if (category) {
+        const existingCat = categories.find((c) => c.name === category);
+        if (existingCat) {
+          targetCategoryId = existingCat.id;
+        } else {
+          // Create new category implicitly or fail?
+          // Let's create it for UX
+          // We need a color, random or default
+          const newCat = await this.createCategory(userId, category, "#8b5cf6");
+          targetCategoryId = newCat.id;
+        }
+      }
+
+      await this.assignBoardToCategory(userId, boardId, targetCategoryId);
+    }
+
+    // If we didn't update board itself but did update category, return fetched board
+    if (!updatedBoard) {
+      return this.getBoardDetails(userId, boardId);
+    }
+
+    return updatedBoard;
   },
 
   async deleteBoard(boardId) {
@@ -284,15 +412,26 @@ export const boardService = {
     if (error) throw error;
   },
 
-  async toggleFavorite(boardId, isFavorite) {
-    const { data, error } = await supabase
-      .from("boards")
-      .update({ is_favorite: isFavorite })
-      .eq("id", boardId)
-      .select()
-      .single();
+  async toggleFavorite(userId, boardId, isFavorite) {
+    if (!userId) throw new Error("User ID is required");
 
-    if (error) throw error;
-    return data;
+    if (isFavorite) {
+      // Add favorite
+      const { error } = await supabase
+        .from("board_favourites")
+        .insert({ user_id: userId, board_id: boardId });
+
+      if (error && error.code !== "23505") throw error; // Ignore unique violation
+    } else {
+      // Remove favorite
+      const { error } = await supabase
+        .from("board_favourites")
+        .delete()
+        .match({ user_id: userId, board_id: boardId });
+
+      if (error) throw error;
+    }
+
+    return { id: boardId, is_favorite: isFavorite };
   },
 };

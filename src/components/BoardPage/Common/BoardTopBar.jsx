@@ -36,6 +36,7 @@ export function BoardHeader({
   viewMode,
   onChangeViewMode,
   filters,
+  onToggleFavorite,
 }) {
   const [isActivityOpen, setIsActivityOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -78,8 +79,19 @@ export function BoardHeader({
               >
                 {activeBoard.name}
               </TruncatedText>
-              <button className="text-neutral-400 dark:text-neutral-500 hover:text-yellow-400 transition-colors flex-shrink-0">
-                <Star className="h-5 w-5" />
+              <button
+                onClick={onToggleFavorite}
+                className={`transition-colors flex-shrink-0 ${
+                  activeBoard.is_favorite
+                    ? "text-yellow-400 hover:text-yellow-500"
+                    : "text-neutral-400 dark:text-neutral-500 hover:text-yellow-400"
+                }`}
+              >
+                <Star
+                  className={`h-5 w-5 ${
+                    activeBoard.is_favorite ? "fill-current" : ""
+                  }`}
+                />
               </button>
             </div>
             {activeBoard.description && (

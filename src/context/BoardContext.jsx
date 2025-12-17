@@ -19,13 +19,16 @@ const BoardContext = createContext(null);
 
 export const BoardProvider = ({ children }) => {
   const [boards, setBoards] = useState([]);
+  const [userCategories, setUserCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [currentBoard, setCurrentBoard] = useState(null);
   const { currentUser } = useAuth();
 
-  // Fetch boards list on mount
+  // Fetch boards and categories list on mount
   useEffect(() => {
-    fetchBoards();
+    if (currentUser) {
+      Promise.all([fetchBoards(), fetchUserCategories()]);
+    }
 
     // Realtime subscription for boards list
     const channel = supabase
@@ -39,14 +42,38 @@ export const BoardProvider = ({ children }) => {
       )
       .subscribe();
 
+    // Realtime subscription for categories
+    const categoriesChannel = supabase
+      .channel("public:board_categories")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "board_categories" },
+        () => {
+          fetchUserCategories();
+        }
+      )
+      .subscribe();
+
     return () => {
       supabase.removeChannel(channel);
+      supabase.removeChannel(categoriesChannel);
     };
-  }, []);
+  }, [currentUser]);
+
+  const fetchUserCategories = async () => {
+    try {
+      if (!currentUser?.id) return;
+      const data = await boardService.getUserCategories(currentUser.id);
+      setUserCategories(data);
+    } catch (error) {
+      console.error("Error fetching categories:", error);
+    }
+  };
 
   const fetchBoards = async () => {
     try {
-      const data = await boardService.getBoardsList();
+      if (!currentUser?.id) return;
+      const data = await boardService.getBoardsList(currentUser.id);
       setBoards(data);
     } catch (error) {
       console.error("Error fetching boards:", error);
@@ -56,10 +83,13 @@ export const BoardProvider = ({ children }) => {
     }
   };
 
+  // ... (keeping fetchBoardDetails same)
+
   const fetchBoardDetails = async (boardId) => {
     try {
+      if (!currentUser?.id) return null;
       setLoading(true);
-      const data = await boardService.getBoardDetails(boardId);
+      const data = await boardService.getBoardDetails(currentUser.id, boardId);
       setCurrentBoard(data);
       console.log(data);
       return data;
@@ -80,12 +110,11 @@ export const BoardProvider = ({ children }) => {
 
   const createBoard = async (name, description = "") => {
     try {
-      if (!currentUser) throw new Error("User not authenticated");
+      if (!currentUser?.id) throw new Error("User not authenticated");
 
-      const newBoard = await boardService.createBoard({
+      const newBoard = await boardService.createBoard(currentUser.id, {
         name,
         description,
-        owner_id: currentUser.id,
         is_favorite: false,
         is_archived: false,
       });
@@ -102,7 +131,18 @@ export const BoardProvider = ({ children }) => {
 
   const updateBoard = async (boardId, updates) => {
     try {
-      const updatedBoard = await boardService.updateBoard(boardId, updates);
+      if (!currentUser?.id) throw new Error("User not authenticated");
+      const updatedBoard = await boardService.updateBoard(
+        currentUser.id,
+        boardId,
+        updates
+      );
+
+      // If category was updated, we might need to refresh categories list if a new one was created
+      if (updates.category) {
+        fetchUserCategories();
+      }
+
       setBoards((prev) =>
         prev.map((b) => (b.id === boardId ? { ...b, ...updatedBoard } : b))
       );
@@ -156,10 +196,12 @@ export const BoardProvider = ({ children }) => {
 
   const toggleFavorite = async (boardId) => {
     try {
+      if (!currentUser?.id) return;
       const board = boards.find((b) => b.id === boardId);
       if (!board) return;
 
       const updatedBoard = await boardService.toggleFavorite(
+        currentUser.id,
         boardId,
         !board.is_favorite
       );
@@ -168,9 +210,36 @@ export const BoardProvider = ({ children }) => {
           b.id === boardId ? { ...b, is_favorite: updatedBoard.is_favorite } : b
         )
       );
+
+      if (currentBoard?.id === boardId) {
+        setCurrentBoard((prev) => ({
+          ...prev,
+          is_favorite: updatedBoard.is_favorite,
+        }));
+      }
     } catch (error) {
       console.error("Error toggling favorite:", error);
       toast.error("Failed to update favorite status");
+    }
+  };
+
+  const createCategory = async (name, color) => {
+    try {
+      if (!currentUser?.id) throw new Error("User not authenticated");
+      const newCategory = await boardService.createCategory(
+        currentUser.id,
+        name,
+        color
+      );
+      setUserCategories((prev) =>
+        [...prev, newCategory].sort((a, b) => a.name.localeCompare(b.name))
+      );
+      toast.success("Category created");
+      return newCategory;
+    } catch (error) {
+      console.error("Error creating category:", error);
+      toast.error("Failed to create category");
+      throw error;
     }
   };
 
@@ -1275,6 +1344,7 @@ export const BoardProvider = ({ children }) => {
     <BoardContext.Provider
       value={{
         boards,
+        userCategories,
         setBoards,
         currentBoard,
         loading,
@@ -1287,6 +1357,7 @@ export const BoardProvider = ({ children }) => {
         restoreBoard,
         duplicateBoard,
         toggleFavorite,
+        createCategory,
         createCard,
         updateCard,
         deleteCard,

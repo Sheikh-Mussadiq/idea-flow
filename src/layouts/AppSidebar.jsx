@@ -13,10 +13,11 @@ import {
   HelpCircle,
   LogOut,
   Plus,
+  Check,
+  ChevronRight,
 } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
-import { boardCategories } from "../data/mockData.js";
 import { useBoard } from "../context/BoardContext";
 import {
   DropdownMenu,
@@ -24,6 +25,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
   DropdownMenuSeparator,
+  DropdownMenuLabel,
 } from "../components/ui/dropdown-menu";
 import {
   MoreHorizontal,
@@ -63,8 +65,27 @@ export const AppSidebar = () => {
       .toUpperCase()
       .slice(0, 2) || "UU";
 
-  const { boards, archiveBoard, deleteBoard, duplicateBoard, toggleFavorite } =
-    useBoard();
+  const {
+    boards,
+    userCategories,
+    archiveBoard,
+    deleteBoard,
+    duplicateBoard,
+    toggleFavorite,
+    createCategory,
+    updateBoard,
+  } = useBoard();
+
+  const [isCreatingCategory, setIsCreatingCategory] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState("");
+  const [expandedCategories, setExpandedCategories] = useState({});
+
+  const toggleCategory = (categoryId) => {
+    setExpandedCategories((prev) => ({
+      ...prev,
+      [categoryId]: !prev[categoryId],
+    }));
+  };
 
   const ITEMS_WITH_CONTENT = ["boards", "ai-flow"];
 
@@ -89,7 +110,7 @@ export const AppSidebar = () => {
 
   return (
     <aside
-      className="h-full bg-white dark:bg-neutral-950 flex shrink-0 transition-all duration-300 ease-in-out p-1"
+      className="h-full bg-white dark:bg-neutral-950 flex shrink-0 transition-all duration-300 ease-in-out p-1.5"
       style={{ width: isExpanded ? "348px" : "72px" }}
       onMouseLeave={() => setIsExpanded(false)}
     >
@@ -234,7 +255,7 @@ export const AppSidebar = () => {
                               </TruncatedText>
                             </button>
 
-                            <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <div className="flex items-center gap-2 opacity-100">
                               {board.cardCount > 0 && (
                                 <span className="text-[10px] font-medium text-neutral-400">
                                   {board.cardCount}
@@ -247,7 +268,8 @@ export const AppSidebar = () => {
                                   </button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent
-                                  align="end"
+                                  side="right"
+                                  align="start"
                                   className="w-48 dark:bg-neutral-900 dark:border-neutral-700"
                                 >
                                   <DropdownMenuItem
@@ -293,18 +315,20 @@ export const AppSidebar = () => {
                         const isActive = board.id === boardId;
 
                         return (
-                          <button
+                          <div
                             key={board.id}
-                            onClick={() =>
-                              navigate(`/boards/${board.id}/kanban`)
-                            }
-                            className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                            className={`group w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm font-medium transition-all ${
                               isActive
-                                ? "bg-white text-neutral-900 shadow-sm ring-1 ring-neutral-100"
-                                : "text-neutral-600 hover:bg-white hover:shadow-sm hover:text-neutral-900"
+                                ? "bg-white dark:bg-neutral-800 shadow-sm text-neutral-900 dark:text-white"
+                                : "text-neutral-600 dark:text-neutral-400 hover:bg-white/50 dark:hover:bg-neutral-800/50 hover:text-neutral-900 dark:hover:text-neutral-200"
                             }`}
                           >
-                            <div className="flex items-center gap-3 min-w-0">
+                            <button
+                              onClick={() =>
+                                navigate(`/boards/${board.id}/kanban`)
+                              }
+                              className="flex-1 flex items-center gap-3 min-w-0 text-left"
+                            >
                               <span className="text-base shrink-0">
                                 {board.icon}
                               </span>
@@ -315,49 +339,375 @@ export const AppSidebar = () => {
                               >
                                 {board.name}
                               </TruncatedText>
+                            </button>
+
+                            <div className="flex items-center gap-2">
+                              {board.cardCount > 0 && (
+                                <span className="text-[10px] font-medium text-neutral-400 shrink-0">
+                                  {board.cardCount}
+                                </span>
+                              )}
+                              <div className="opacity-100">
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <button className="p-1 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded">
+                                      <MoreHorizontal className="h-3 w-3 text-neutral-400" />
+                                    </button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent
+                                    side="right"
+                                    align="start"
+                                    className="w-48 dark:bg-neutral-900 dark:border-neutral-700"
+                                  >
+                                    <DropdownMenuItem
+                                      onClick={() => toggleFavorite(board.id)}
+                                    >
+                                      <Star
+                                        className={`mr-2 h-4 w-4 ${
+                                          board.is_favorite
+                                            ? "fill-orange-400 text-orange-400"
+                                            : ""
+                                        }`}
+                                      />
+                                      <span>
+                                        {board.is_favorite
+                                          ? "Unfavorite"
+                                          : "Favorite"}
+                                      </span>
+                                    </DropdownMenuItem>
+                                    <DropdownMenuSeparator className="dark:bg-neutral-700" />
+                                    <DropdownMenuItem
+                                      onClick={() => duplicateBoard(board.id)}
+                                    >
+                                      <Copy className="mr-2 h-4 w-4" />
+                                      <span>Duplicate</span>
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                      onClick={() => archiveBoard(board.id)}
+                                    >
+                                      <ArchiveIcon className="mr-2 h-4 w-4" />
+                                      <span>Archive</span>
+                                    </DropdownMenuItem>
+
+                                    <DropdownMenuSeparator className="dark:bg-neutral-700" />
+                                    <DropdownMenuLabel>
+                                      Move to Category
+                                    </DropdownMenuLabel>
+                                    <DropdownMenuItem
+                                      onClick={() =>
+                                        updateBoard(board.id, {
+                                          category: null,
+                                        })
+                                      }
+                                      className="justify-between"
+                                    >
+                                      <span>None</span>
+                                      {!board.category && (
+                                        <Check className="h-3 w-3" />
+                                      )}
+                                    </DropdownMenuItem>
+                                    {userCategories.map((cat) => (
+                                      <DropdownMenuItem
+                                        key={cat.id}
+                                        onClick={() =>
+                                          updateBoard(board.id, {
+                                            category: cat.name,
+                                          })
+                                        }
+                                        className="justify-between"
+                                      >
+                                        <div className="flex items-center gap-2">
+                                          <div
+                                            className="h-2 w-2 rounded-full"
+                                            style={{
+                                              backgroundColor: cat.color,
+                                            }}
+                                          />
+                                          <span className="truncate max-w-[100px]">
+                                            {cat.name}
+                                          </span>
+                                        </div>
+                                        {board.category === cat.name && (
+                                          <Check className="h-3 w-3" />
+                                        )}
+                                      </DropdownMenuItem>
+                                    ))}
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              </div>
                             </div>
-                            {board.cardCount > 0 && (
-                              <span className="text-[10px] font-medium text-neutral-400 shrink-0 ml-2">
-                                {board.cardCount}
-                              </span>
-                            )}
-                          </button>
+                          </div>
                         );
                       })}
                   </div>
 
                   {/* Categories */}
                   <div className="space-y-1">
-                    <div className="flex items-center justify-between px-2 mb-2">
+                    <div className="flex items-center justify-between px-2 mb-2 group">
                       <div className="text-[11px] font-bold text-neutral-400 uppercase tracking-wider">
                         Categories
                       </div>
-                      <ChevronDown className="h-3 w-3 text-neutral-400" />
+                      <div className="flex items-center gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                        <button
+                          onClick={() => {
+                            if (!isCreatingCategory) {
+                              setIsCreatingCategory(true);
+                              setTimeout(
+                                () =>
+                                  document
+                                    .getElementById("new-category-input")
+                                    ?.focus(),
+                                0
+                              );
+                            }
+                          }}
+                          className="hover:bg-neutral-200 dark:hover:bg-neutral-800 rounded p-0.5 transition-colors"
+                        >
+                          <Plus className="h-3 w-3 text-neutral-400" />
+                        </button>
+                        <ChevronDown className="h-3 w-3 text-neutral-400" />
+                      </div>
                     </div>
-                    {boardCategories.map((category) => {
-                      // Note: Category filtering might need adjustment if categories aren't in DB yet
+
+                    {isCreatingCategory && (
+                      <div className="px-2 mb-2 animate-in fade-in slide-in-from-top-1 duration-200">
+                        <div className="flex items-center gap-1">
+                          <input
+                            id="new-category-input"
+                            type="text"
+                            value={newCategoryName}
+                            onChange={(e) => setNewCategoryName(e.target.value)}
+                            placeholder="Name..."
+                            className="w-full text-xs px-2 py-1.5 rounded border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 focus:outline-none focus:ring-1 focus:ring-primary-500"
+                            onKeyDown={async (e) => {
+                              if (e.key === "Enter") {
+                                if (newCategoryName.trim()) {
+                                  // Random color
+                                  const colors = [
+                                    "#ef4444",
+                                    "#f97316",
+                                    "#f59e0b",
+                                    "#10b981",
+                                    "#3b82f6",
+                                    "#6366f1",
+                                    "#8b5cf6",
+                                    "#ec4899",
+                                  ];
+                                  const randomColor =
+                                    colors[
+                                      Math.floor(Math.random() * colors.length)
+                                    ];
+                                  await createCategory(
+                                    newCategoryName.trim(),
+                                    randomColor
+                                  );
+                                  setNewCategoryName("");
+                                  setIsCreatingCategory(false);
+                                }
+                              } else if (e.key === "Escape") {
+                                setIsCreatingCategory(false);
+                                setNewCategoryName("");
+                              }
+                            }}
+                            onBlur={() => {
+                              // Optional: close on blur if empty, or keep open?
+                              // Keeping open might be annoying if user clicks away.
+                              // Let's close if empty, but maybe wait a bit to avoid race conditions with submit
+                              if (!newCategoryName.trim()) {
+                                setIsCreatingCategory(false);
+                              }
+                            }}
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    {userCategories.map((category) => {
                       const categoryBoards = boards.filter(
                         (board) => board.category === category.name
                       );
+                      const isExpanded = expandedCategories[category.id];
 
                       return (
-                        <button
-                          key={category.id}
-                          className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm font-medium text-neutral-600 hover:bg-white hover:shadow-sm transition-all"
-                        >
-                          <div className="flex items-center gap-3">
-                            <div
-                              className="h-2 w-2 rounded-full"
-                              style={{ backgroundColor: category.color }}
-                            />
-                            <span className="truncate">{category.name}</span>
-                          </div>
-                          {categoryBoards.length > 0 && (
-                            <span className="text-[10px] font-medium text-neutral-400">
-                              {categoryBoards.length}
-                            </span>
+                        <div key={category.id} className="space-y-0.5">
+                          <button
+                            onClick={() => toggleCategory(category.id)}
+                            className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm font-medium text-neutral-600 hover:bg-white hover:shadow-sm transition-all group"
+                          >
+                            <div className="flex items-center gap-3 overflow-hidden">
+                              <div
+                                className={`transition-transform duration-200 ${
+                                  isExpanded ? "rotate-90" : ""
+                                }`}
+                              >
+                                <ChevronRight className="h-3 w-3 text-neutral-400 group-hover:text-neutral-600" />
+                              </div>
+                              <div className="flex items-center gap-2 truncate">
+                                <div
+                                  className="h-2 w-2 rounded-full shrink-0"
+                                  style={{ backgroundColor: category.color }}
+                                />
+                                <span className="truncate">
+                                  {category.name}
+                                </span>
+                              </div>
+                            </div>
+                            {categoryBoards.length > 0 && (
+                              <span className="text-[10px] font-medium text-neutral-400">
+                                {categoryBoards.length}
+                              </span>
+                            )}
+                          </button>
+
+                          {/* Boards in Category */}
+                          {isExpanded && (
+                            <div className="pl-4 space-y-0.5 animate-in slide-in-from-top-1 fade-in duration-200">
+                              {categoryBoards.map((board) => (
+                                <div key={board.id} className="group relative">
+                                  <div
+                                    onClick={() =>
+                                      navigate(`/boards/${board.id}`)
+                                    }
+                                    className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-all cursor-pointer ${
+                                      boardId === board.id
+                                        ? "bg-white shadow-sm ring-1 ring-black/5 dark:bg-neutral-800 dark:ring-white/10"
+                                        : "text-neutral-600 hover:bg-white hover:shadow-sm dark:text-neutral-400 dark:hover:bg-neutral-800"
+                                    }`}
+                                  >
+                                    <div className="flex items-center gap-3 truncate">
+                                      <span className="text-lg leading-none shrink-0">
+                                        {board.icon || "🐳"}
+                                      </span>
+                                      <div className="flex flex-col items-start truncate">
+                                        <span className="font-medium truncate">
+                                          {board.name}
+                                        </span>
+                                      </div>
+                                    </div>
+
+                                    {/* Dropdown Menu for Category Item - reusing same menu structure but minimal if needed 
+                                            Actually let's copy the full dropdown from 'All Boards' to maintain consistency
+                                         */}
+                                    <div
+                                      onClick={(e) => e.stopPropagation()}
+                                      className="opacity-100"
+                                    >
+                                      <DropdownMenu>
+                                        <DropdownMenuTrigger asChild>
+                                          <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-6 w-6 rounded-md hover:bg-neutral-100 dark:hover:bg-neutral-700 -mr-1"
+                                          >
+                                            <MoreHorizontal className="h-4 w-4 text-neutral-400" />
+                                          </Button>
+                                        </DropdownMenuTrigger>
+                                        <DropdownMenuContent
+                                          side="right"
+                                          align="start"
+                                          className="w-56"
+                                        >
+                                          <DropdownMenuItem
+                                            onClick={() =>
+                                              navigate(`/boards/${board.id}`)
+                                            }
+                                          >
+                                            <Share2 className="mr-2 h-4 w-4" />
+                                            <span>Open Board</span>
+                                          </DropdownMenuItem>
+                                          <DropdownMenuSeparator className="dark:bg-neutral-700" />
+                                          <DropdownMenuItem
+                                            onClick={() =>
+                                              toggleFavorite(board.id)
+                                            }
+                                          >
+                                            <Star
+                                              className={`mr-2 h-4 w-4 ${
+                                                board.is_favorite
+                                                  ? "fill-orange-400 text-orange-400"
+                                                  : ""
+                                              }`}
+                                            />
+                                            <span>
+                                              {board.is_favorite
+                                                ? "Unfavorite"
+                                                : "Favorite"}
+                                            </span>
+                                          </DropdownMenuItem>
+                                          <DropdownMenuSeparator className="dark:bg-neutral-700" />
+                                          <DropdownMenuLabel>
+                                            Move to Category
+                                          </DropdownMenuLabel>
+                                          <DropdownMenuItem
+                                            onClick={() =>
+                                              updateBoard(board.id, {
+                                                category: null,
+                                              })
+                                            }
+                                            className="justify-between"
+                                          >
+                                            <span>None</span>
+                                            {!board.category && (
+                                              <Check className="h-3 w-3" />
+                                            )}
+                                          </DropdownMenuItem>
+                                          {userCategories.map((cat) => (
+                                            <DropdownMenuItem
+                                              key={cat.id}
+                                              onClick={() =>
+                                                updateBoard(board.id, {
+                                                  category: cat.name,
+                                                })
+                                              }
+                                              className="justify-between"
+                                            >
+                                              <div className="flex items-center gap-2">
+                                                <div
+                                                  className="h-2 w-2 rounded-full"
+                                                  style={{
+                                                    backgroundColor: cat.color,
+                                                  }}
+                                                />
+                                                <span className="truncate max-w-[100px]">
+                                                  {cat.name}
+                                                </span>
+                                              </div>
+                                              {board.category === cat.name && (
+                                                <Check className="h-3 w-3" />
+                                              )}
+                                            </DropdownMenuItem>
+                                          ))}
+                                          <DropdownMenuSeparator className="dark:bg-neutral-700" />
+                                          <DropdownMenuItem
+                                            onClick={() =>
+                                              duplicateBoard(board.id)
+                                            }
+                                          >
+                                            <Copy className="mr-2 h-4 w-4" />
+                                            <span>Duplicate</span>
+                                          </DropdownMenuItem>
+                                          <DropdownMenuItem
+                                            onClick={() =>
+                                              archiveBoard(board.id)
+                                            }
+                                          >
+                                            <ArchiveIcon className="mr-2 h-4 w-4" />
+                                            <span>Archive</span>
+                                          </DropdownMenuItem>
+                                        </DropdownMenuContent>
+                                      </DropdownMenu>
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                              {categoryBoards.length === 0 && (
+                                <div className="px-3 py-2 text-xs text-neutral-400 italic">
+                                  No boards
+                                </div>
+                              )}
+                            </div>
                           )}
-                        </button>
+                        </div>
                       );
                     })}
                   </div>

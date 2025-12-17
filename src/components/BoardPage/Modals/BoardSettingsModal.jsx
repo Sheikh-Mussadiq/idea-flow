@@ -39,11 +39,12 @@ const EMOJI_OPTIONS = [
 ];
 
 export const BoardSettingsModal = ({ isOpen, onClose, board }) => {
-  const { updateBoard } = useBoard();
+  const { updateBoard, userCategories } = useBoard();
   const [settings, setSettings] = useState({
     name: board?.name || "",
     description: board?.description || "",
     icon: board?.icon || "🐳",
+    category: board?.category || null,
     visibility: board?.visibility || "private",
     allowComments: board?.allowComments ?? true,
     allowInvites: board?.allowInvites ?? true,
@@ -60,6 +61,7 @@ export const BoardSettingsModal = ({ isOpen, onClose, board }) => {
         name: board.name || "",
         description: board.description || "",
         icon: board.icon || "🐳",
+        category: board.category || null,
         visibility: board.visibility || "private",
         allowComments: board.allowComments ?? true,
         allowInvites: board.allowInvites ?? true,
@@ -81,6 +83,7 @@ export const BoardSettingsModal = ({ isOpen, onClose, board }) => {
         name: settings.name,
         description: settings.description,
         icon: settings.icon,
+        category: settings.category,
       });
       toast.success("Board settings saved successfully!");
       onClose();
@@ -189,6 +192,47 @@ export const BoardSettingsModal = ({ isOpen, onClose, board }) => {
                     placeholder="Enter board name"
                     className="dark:bg-neutral-800 dark:border-neutral-700 dark:text-white"
                   />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
+                  Category
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {userCategories.map((category) => (
+                    <button
+                      key={category.id}
+                      type="button"
+                      onClick={() =>
+                        setSettings({ ...settings, category: category.name })
+                      }
+                      className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-all border ${
+                        settings.category === category.name
+                          ? "bg-white dark:bg-neutral-800 border-primary-500 ring-1 ring-primary-500"
+                          : "bg-white dark:bg-neutral-800 border-neutral-200 dark:border-neutral-700 hover:border-neutral-300 dark:hover:border-neutral-600"
+                      }`}
+                    >
+                      <div
+                        className="h-2 w-2 rounded-full"
+                        style={{ backgroundColor: category.color }}
+                      />
+                      <span className="text-neutral-700 dark:text-neutral-200">
+                        {category.name}
+                      </span>
+                    </button>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => setSettings({ ...settings, category: null })}
+                    className={`px-3 py-1.5 rounded-lg text-sm transition-all border ${
+                      !settings.category
+                        ? "bg-white dark:bg-neutral-800 border-primary-500 ring-1 ring-primary-500 text-neutral-900 dark:text-white"
+                        : "bg-white dark:bg-neutral-800 border-neutral-200 dark:border-neutral-700 text-neutral-500 dark:text-neutral-400 hover:border-neutral-300 dark:hover:border-neutral-600"
+                    }`}
+                  >
+                    No Category
+                  </button>
                 </div>
               </div>
 
