@@ -1,8 +1,15 @@
 import { memo } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { MessageSquare, Paperclip, MoreHorizontal } from "lucide-react";
+import { MessageSquare, Paperclip, MoreHorizontal, Trash2 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "../../ui/avatar";
+import { useBoard } from "../../../context/BoardContext";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "../../ui/dropdown-menu";
 
 // Helper to strip HTML tags for preview text
 const stripHtml = (html) => {
@@ -15,6 +22,15 @@ const stripHtml = (html) => {
 
 export const KanbanCardContent = memo(
   ({ card, onClick, style, className, availableTags, ...props }) => {
+    const { deleteCard } = useBoard();
+
+    const handleDelete = (e) => {
+      e.stopPropagation(); // Prevent card click
+      if (window.confirm("Are you sure you want to delete this card?")) {
+        deleteCard(card.id);
+      }
+    };
+
     return (
       <div
         style={style}
@@ -77,9 +93,24 @@ export const KanbanCardContent = memo(
           <h3 className="text-[15px] font-medium text-neutral-800 dark:text-neutral-100 leading-snug group-hover:text-primary-600 dark:group-hover:text-white transition-colors">
             {card.title}
           </h3>
-          <button className="opacity-0 group-hover:opacity-100 text-neutral-400 dark:text-neutral-500 hover:text-neutral-600 dark:hover:text-neutral-300 transition-all p-1 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded">
-            <MoreHorizontal className="h-4 w-4" />
-          </button>
+          <div onClick={(e) => e.stopPropagation()}>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="opacity-0 group-hover:opacity-100 data-[state=open]:opacity-100 text-neutral-400 dark:text-neutral-500 hover:text-neutral-600 dark:hover:text-neutral-300 transition-all p-1 hover:bg-neutral-100 dark:hover:bg-neutral-800 data-[state=open]:bg-neutral-100 dark:data-[state=open]:bg-neutral-800 rounded">
+                  <MoreHorizontal className="h-4 w-4" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-28">
+                <DropdownMenuItem
+                  onClick={handleDelete}
+                  className="text-red-600 dark:text-red-400 focus:text-red-600 dark:focus:text-red-400"
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  <span>Delete</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
 
         {/* Description Preview */}

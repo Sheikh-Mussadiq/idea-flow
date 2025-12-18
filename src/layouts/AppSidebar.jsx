@@ -38,6 +38,8 @@ import {
 import { toast } from "sonner";
 import { TruncatedText } from "../components/ui/TruncatedText";
 import { useAuth } from "../context/AuthContext";
+import { CreateBoardModal } from "../components/BoardPage/Modals/CreateBoardModal";
+import { CreateCategoryModal } from "../components/BoardPage/Modals/CreateCategoryModal";
 
 const PRIMARY_NAV = [
   { id: "home", icon: Home, label: "Home", to: "/" },
@@ -76,9 +78,22 @@ export const AppSidebar = () => {
     updateBoard,
   } = useBoard();
 
-  const [isCreatingCategory, setIsCreatingCategory] = useState(false);
-  const [newCategoryName, setNewCategoryName] = useState("");
   const [expandedCategories, setExpandedCategories] = useState({});
+  const [expandedSections, setExpandedSections] = useState({
+    favorites: true,
+    boards: true,
+    categories: true,
+    flows: true,
+  });
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
+
+  const toggleSection = (section) => {
+    setExpandedSections((prev) => ({
+      ...prev,
+      [section]: !prev[section],
+    }));
+  };
 
   const toggleCategory = (categoryId) => {
     setExpandedCategories((prev) => ({
@@ -145,18 +160,20 @@ export const AppSidebar = () => {
                   }
                 }}
                 onMouseEnter={() => handleItemHover(item.id)}
-                className={`group relative w-12 h-12 rounded-xl flex flex-col items-center justify-center gap-1 transition-all duration-200 ${
+                className={`group relative w-12 h-12 rounded-xl flex flex-col items-center justify-center gap-1.5 transition-all duration-200 ${
                   activePrimary === item.id
-                    ? "bg-primary-900 dark:bg-white text-white dark:text-neutral-900 shadow-md"
-                    : "text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-50 dark:hover:bg-neutral-700"
+                    ? "bg-primary-900 dark:bg-white text-white dark:text-neutral-900 shadow-lg shadow-primary-900/20 dark:shadow-none"
+                    : "text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:bg-neutral-900/5 dark:hover:bg-neutral-800/50"
                 }`}
               >
                 <item.icon
-                  className={`h-5 w-5 ${
+                  className={`h-5 w-5 transition-transform duration-200 group-hover:scale-110 ${
                     activePrimary === item.id ? "fill-current" : ""
                   }`}
                 />
-                <span className="text-[10px] font-medium">{item.label}</span>
+                <span className="text-[9px] font-bold uppercase tracking-tight">
+                  {item.label}
+                </span>
               </button>
             ))}
           </nav>
@@ -165,14 +182,14 @@ export const AppSidebar = () => {
           <div className="flex flex-col items-center gap-4 mb-4">
             <button
               onMouseEnter={() => setIsExpanded(false)}
-              className="w-10 h-10 rounded-xl flex items-center justify-center text-neutral-400 dark:text-neutral-500 hover:text-neutral-600 dark:hover:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-700 transition-colors"
+              className="w-10 h-10 rounded-xl flex items-center justify-center text-neutral-400 dark:text-neutral-500 hover:text-neutral-600 dark:hover:text-neutral-300 hover:bg-neutral-900/5 dark:hover:bg-neutral-800/50 transition-colors"
             >
               <HelpCircle className="h-5 w-5" />
             </button>
             <button
               onMouseEnter={() => setIsExpanded(false)}
               onClick={() => navigate("/settings")}
-              className="w-10 h-10 rounded-xl flex items-center justify-center text-neutral-400 dark:text-neutral-500 hover:text-neutral-600 dark:hover:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-700 transition-colors"
+              className="w-10 h-10 rounded-xl flex items-center justify-center text-neutral-400 dark:text-neutral-500 hover:text-neutral-600 dark:hover:text-neutral-300 hover:bg-neutral-900/5 dark:hover:bg-neutral-800/50 transition-colors"
             >
               <Settings className="h-5 w-5" />
             </button>
@@ -214,507 +231,502 @@ export const AppSidebar = () => {
                 <>
                   {/* Favorites */}
                   <div className="space-y-1">
-                    <div className="flex items-center justify-between px-2 mb-2">
-                      <div className="text-[11px] font-bold text-neutral-400 uppercase tracking-wider">
+                    <button
+                      onClick={() => toggleSection("favorites")}
+                      className="w-full h-10 flex items-center justify-between px-2 hover:bg-neutral-900/5 dark:hover:bg-neutral-800/50 rounded-lg transition-all group"
+                    >
+                      <div className="text-xs font-semibold text-neutral-400 dark:text-neutral-500 uppercase tracking-[0.08em] group-hover:text-neutral-600 dark:group-hover:text-neutral-300 transition-colors">
                         Favorites
                       </div>
-                      <ChevronDown className="h-3 w-3 text-neutral-400" />
-                    </div>
-                    {boards
-                      .filter(
-                        (board) => board.is_favorite && !board.is_archived
-                      )
-                      .map((board) => {
-                        const isActive = board.id === boardId;
+                      <ChevronDown
+                        className={`h-4 w-4 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 transition-transform duration-200 ${
+                          expandedSections.favorites ? "" : "-rotate-90"
+                        }`}
+                      />
+                    </button>
+                    {expandedSections.favorites && (
+                      <div className="space-y-1 mt-1">
+                        {boards
+                          .filter(
+                            (board) => board.is_favorite && !board.is_archived
+                          )
+                          .map((board) => {
+                            const isActive = board.id === boardId;
 
-                        return (
-                          <div
-                            key={board.id}
-                            className={`group w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-                              isActive
-                                ? "bg-white dark:bg-neutral-800 shadow-sm text-neutral-900 dark:text-white"
-                                : "text-neutral-600 dark:text-neutral-400 hover:bg-white/50 dark:hover:bg-neutral-800/50 hover:text-neutral-900 dark:hover:text-neutral-200"
-                            }`}
-                          >
-                            <button
-                              onClick={() =>
-                                navigate(`/boards/${board.id}/kanban`)
-                              }
-                              className="flex-1 flex items-center gap-3 min-w-0 text-left"
-                            >
-                              <Star className="h-4 w-4 text-orange-400 fill-orange-400 shrink-0" />
-                              <span className="text-base shrink-0">
-                                {board.icon}
-                              </span>
-                              <TruncatedText
-                                as="span"
-                                className="truncate"
-                                title={board.name}
+                            return (
+                              <div
+                                key={board.id}
+                                className={`group w-full flex items-center justify-between px-3 py-1.5 rounded-lg text-[13px] font-semibold transition-all ${
+                                  isActive
+                                    ? "bg-neutral-900 dark:bg-white shadow-xl shadow-neutral-900/10 text-white dark:text-neutral-900"
+                                    : "text-neutral-600 dark:text-neutral-400 hover:bg-neutral-900/5 dark:hover:bg-neutral-700/30 has-[[data-state=open]]:bg-neutral-900/5 has-[[data-state=open]]:dark:bg-neutral-700/30 hover:text-neutral-900 dark:hover:text-neutral-200"
+                                }`}
                               >
-                                {board.name}
-                              </TruncatedText>
-                            </button>
-
-                            <div className="flex items-center gap-2 opacity-100">
-                              {board.cardCount > 0 && (
-                                <span className="text-[10px] font-medium text-neutral-400">
-                                  {board.cardCount}
-                                </span>
-                              )}
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <button className="p-1 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded">
-                                    <MoreHorizontal className="h-3 w-3 text-neutral-400" />
-                                  </button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent
-                                  side="right"
-                                  align="start"
-                                  className="w-48 dark:bg-neutral-900 dark:border-neutral-700"
+                                <button
+                                  onClick={() =>
+                                    navigate(`/boards/${board.id}/kanban`)
+                                  }
+                                  className="flex-1 flex items-center gap-3 min-w-0 text-left"
                                 >
-                                  <DropdownMenuItem
-                                    onClick={() => toggleFavorite(board.id)}
+                                  <Star className="h-4 w-4 text-orange-400 fill-orange-400 shrink-0" />
+                                  <span className="text-base shrink-0">
+                                    {board.icon}
+                                  </span>
+                                  <TruncatedText
+                                    as="span"
+                                    className="truncate"
+                                    title={board.name}
                                   >
-                                    <Star className="mr-2 h-4 w-4" />
-                                    <span>Unfavorite</span>
-                                  </DropdownMenuItem>
-                                  <DropdownMenuSeparator className="dark:bg-neutral-700" />
-                                  <DropdownMenuItem
-                                    onClick={() => duplicateBoard(board.id)}
-                                  >
-                                    <Copy className="mr-2 h-4 w-4" />
-                                    <span>Duplicate</span>
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem
-                                    onClick={() => archiveBoard(board.id)}
-                                  >
-                                    <ArchiveIcon className="mr-2 h-4 w-4" />
-                                    <span>Archive</span>
-                                  </DropdownMenuItem>
-                                </DropdownMenuContent>
-                              </DropdownMenu>
-                            </div>
-                          </div>
-                        );
-                      })}
+                                    {board.name}
+                                  </TruncatedText>
+                                </button>
+
+                                <div className="flex items-center gap-2 opacity-100">
+                                  {board.cardCount > 0 && (
+                                    <span className="text-[10px] font-medium text-neutral-400">
+                                      {board.cardCount}
+                                    </span>
+                                  )}
+                                  <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                      <button className="p-1 hover:bg-neutral-900/10 dark:hover:bg-neutral-700/50 data-[state=open]:bg-neutral-900/5 dark:data-[state=open]:bg-neutral-700/30 rounded-md transition-colors">
+                                        <MoreHorizontal className="h-3.5 w-3.5 text-neutral-400 group-hover:text-neutral-600 dark:group-hover:text-neutral-200" />
+                                      </button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent
+                                      side="right"
+                                      align="start"
+                                      className="w-48 dark:bg-neutral-900 dark:border-neutral-700"
+                                    >
+                                      <DropdownMenuItem
+                                        onClick={() => toggleFavorite(board.id)}
+                                      >
+                                        <Star className="mr-2 h-4 w-4" />
+                                        <span>Unfavorite</span>
+                                      </DropdownMenuItem>
+                                      <DropdownMenuSeparator className="dark:bg-neutral-700" />
+                                      <DropdownMenuItem
+                                        onClick={() => duplicateBoard(board.id)}
+                                      >
+                                        <Copy className="mr-2 h-4 w-4" />
+                                        <span>Duplicate</span>
+                                      </DropdownMenuItem>
+                                      <DropdownMenuItem
+                                        onClick={() => archiveBoard(board.id)}
+                                      >
+                                        <ArchiveIcon className="mr-2 h-4 w-4" />
+                                        <span>Archive</span>
+                                      </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                  </DropdownMenu>
+                                </div>
+                              </div>
+                            );
+                          })}
+                      </div>
+                    )}
                   </div>
 
                   {/* Boards */}
                   <div className="space-y-1">
-                    <div className="flex items-center justify-between px-2 mb-2">
-                      <div className="text-[11px] font-bold text-neutral-400 uppercase tracking-wider">
+                    <button
+                      onClick={() => toggleSection("boards")}
+                      className="w-full h-10 flex items-center justify-between px-2 hover:bg-neutral-900/5 dark:hover:bg-neutral-800/50 rounded-lg transition-all group"
+                    >
+                      <div className="text-xs font-semibold text-neutral-400 dark:text-neutral-500 uppercase tracking-[0.08em] group-hover:text-neutral-600 dark:group-hover:text-neutral-300 transition-colors">
                         All Boards
                       </div>
-                      <button className="hover:bg-white rounded p-0.5 transition-colors">
-                        <Plus className="h-3 w-3 text-neutral-400" />
-                      </button>
-                    </div>
-                    {boards
-                      .filter((board) => !board.is_archived)
-                      .map((board) => {
-                        const isActive = board.id === boardId;
-
-                        return (
-                          <div
-                            key={board.id}
-                            className={`group w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm font-medium transition-all ${
-                              isActive
-                                ? "bg-white dark:bg-neutral-800 shadow-sm text-neutral-900 dark:text-white"
-                                : "text-neutral-600 dark:text-neutral-400 hover:bg-white/50 dark:hover:bg-neutral-800/50 hover:text-neutral-900 dark:hover:text-neutral-200"
-                            }`}
-                          >
-                            <button
-                              onClick={() =>
-                                navigate(`/boards/${board.id}/kanban`)
-                              }
-                              className="flex-1 flex items-center gap-3 min-w-0 text-left"
-                            >
-                              <span className="text-base shrink-0">
-                                {board.icon}
-                              </span>
-                              <TruncatedText
-                                as="span"
-                                className="truncate"
-                                title={board.name}
-                              >
-                                {board.name}
-                              </TruncatedText>
-                            </button>
-
-                            <div className="flex items-center gap-2">
-                              {board.cardCount > 0 && (
-                                <span className="text-[10px] font-medium text-neutral-400 shrink-0">
-                                  {board.cardCount}
-                                </span>
-                              )}
-                              <div className="opacity-100">
-                                <DropdownMenu>
-                                  <DropdownMenuTrigger asChild>
-                                    <button className="p-1 hover:bg-neutral-100 dark:hover:bg-neutral-700 rounded">
-                                      <MoreHorizontal className="h-3 w-3 text-neutral-400" />
-                                    </button>
-                                  </DropdownMenuTrigger>
-                                  <DropdownMenuContent
-                                    side="right"
-                                    align="start"
-                                    className="w-48 dark:bg-neutral-900 dark:border-neutral-700"
-                                  >
-                                    <DropdownMenuItem
-                                      onClick={() => toggleFavorite(board.id)}
-                                    >
-                                      <Star
-                                        className={`mr-2 h-4 w-4 ${
-                                          board.is_favorite
-                                            ? "fill-orange-400 text-orange-400"
-                                            : ""
-                                        }`}
-                                      />
-                                      <span>
-                                        {board.is_favorite
-                                          ? "Unfavorite"
-                                          : "Favorite"}
-                                      </span>
-                                    </DropdownMenuItem>
-                                    <DropdownMenuSeparator className="dark:bg-neutral-700" />
-                                    <DropdownMenuItem
-                                      onClick={() => duplicateBoard(board.id)}
-                                    >
-                                      <Copy className="mr-2 h-4 w-4" />
-                                      <span>Duplicate</span>
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem
-                                      onClick={() => archiveBoard(board.id)}
-                                    >
-                                      <ArchiveIcon className="mr-2 h-4 w-4" />
-                                      <span>Archive</span>
-                                    </DropdownMenuItem>
-
-                                    <DropdownMenuSeparator className="dark:bg-neutral-700" />
-                                    <DropdownMenuLabel>
-                                      Move to Category
-                                    </DropdownMenuLabel>
-                                    <DropdownMenuItem
-                                      onClick={() =>
-                                        updateBoard(board.id, {
-                                          category: null,
-                                        })
-                                      }
-                                      className="justify-between"
-                                    >
-                                      <span>None</span>
-                                      {!board.category && (
-                                        <Check className="h-3 w-3" />
-                                      )}
-                                    </DropdownMenuItem>
-                                    {userCategories.map((cat) => (
-                                      <DropdownMenuItem
-                                        key={cat.id}
-                                        onClick={() =>
-                                          updateBoard(board.id, {
-                                            category: cat.name,
-                                          })
-                                        }
-                                        className="justify-between"
-                                      >
-                                        <div className="flex items-center gap-2">
-                                          <div
-                                            className="h-2 w-2 rounded-full"
-                                            style={{
-                                              backgroundColor: cat.color,
-                                            }}
-                                          />
-                                          <span className="truncate max-w-[100px]">
-                                            {cat.name}
-                                          </span>
-                                        </div>
-                                        {board.category === cat.name && (
-                                          <Check className="h-3 w-3" />
-                                        )}
-                                      </DropdownMenuItem>
-                                    ))}
-                                  </DropdownMenuContent>
-                                </DropdownMenu>
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })}
-                  </div>
-
-                  {/* Categories */}
-                  <div className="space-y-1">
-                    <div className="flex items-center justify-between px-2 mb-2 group">
-                      <div className="text-[11px] font-bold text-neutral-400 uppercase tracking-wider">
-                        Categories
-                      </div>
-                      <div className="flex items-center gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
-                        <button
-                          onClick={() => {
-                            if (!isCreatingCategory) {
-                              setIsCreatingCategory(true);
-                              setTimeout(
-                                () =>
-                                  document
-                                    .getElementById("new-category-input")
-                                    ?.focus(),
-                                0
-                              );
-                            }
+                      <div className="flex items-center gap-1.5">
+                        <div
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setIsCreateModalOpen(true);
                           }}
-                          className="hover:bg-neutral-200 dark:hover:bg-neutral-800 rounded p-0.5 transition-colors"
+                          className="hover:bg-neutral-200 dark:hover:bg-neutral-800 rounded-md p-1 transition-colors"
                         >
-                          <Plus className="h-3 w-3 text-neutral-400" />
-                        </button>
-                        <ChevronDown className="h-3 w-3 text-neutral-400" />
-                      </div>
-                    </div>
-
-                    {isCreatingCategory && (
-                      <div className="px-2 mb-2 animate-in fade-in slide-in-from-top-1 duration-200">
-                        <div className="flex items-center gap-1">
-                          <input
-                            id="new-category-input"
-                            type="text"
-                            value={newCategoryName}
-                            onChange={(e) => setNewCategoryName(e.target.value)}
-                            placeholder="Name..."
-                            className="w-full text-xs px-2 py-1.5 rounded border border-neutral-200 dark:border-neutral-700 bg-white dark:bg-neutral-900 focus:outline-none focus:ring-1 focus:ring-primary-500"
-                            onKeyDown={async (e) => {
-                              if (e.key === "Enter") {
-                                if (newCategoryName.trim()) {
-                                  // Random color
-                                  const colors = [
-                                    "#ef4444",
-                                    "#f97316",
-                                    "#f59e0b",
-                                    "#10b981",
-                                    "#3b82f6",
-                                    "#6366f1",
-                                    "#8b5cf6",
-                                    "#ec4899",
-                                  ];
-                                  const randomColor =
-                                    colors[
-                                      Math.floor(Math.random() * colors.length)
-                                    ];
-                                  await createCategory(
-                                    newCategoryName.trim(),
-                                    randomColor
-                                  );
-                                  setNewCategoryName("");
-                                  setIsCreatingCategory(false);
-                                }
-                              } else if (e.key === "Escape") {
-                                setIsCreatingCategory(false);
-                                setNewCategoryName("");
-                              }
-                            }}
-                            onBlur={() => {
-                              // Optional: close on blur if empty, or keep open?
-                              // Keeping open might be annoying if user clicks away.
-                              // Let's close if empty, but maybe wait a bit to avoid race conditions with submit
-                              if (!newCategoryName.trim()) {
-                                setIsCreatingCategory(false);
-                              }
-                            }}
-                          />
+                          <Plus className="h-4 w-4 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 transition-colors" />
                         </div>
+                        <ChevronDown
+                          className={`h-4 w-4 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 transition-transform duration-200 ${
+                            expandedSections.boards ? "" : "-rotate-90"
+                          }`}
+                        />
                       </div>
-                    )}
+                    </button>
+                    {expandedSections.boards && (
+                      <div className="space-y-1 mt-1">
+                        {boards
+                          .filter((board) => !board.is_archived)
+                          .map((board) => {
+                            const isActive = board.id === boardId;
 
-                    {userCategories.map((category) => {
-                      const categoryBoards = boards.filter(
-                        (board) => board.category === category.name
-                      );
-                      const isExpanded = expandedCategories[category.id];
-
-                      return (
-                        <div key={category.id} className="space-y-0.5">
-                          <button
-                            onClick={() => toggleCategory(category.id)}
-                            className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm font-medium text-neutral-600 hover:bg-white hover:shadow-sm transition-all group"
-                          >
-                            <div className="flex items-center gap-3 overflow-hidden">
+                            return (
                               <div
-                                className={`transition-transform duration-200 ${
-                                  isExpanded ? "rotate-90" : ""
+                                key={board.id}
+                                className={`group w-full flex items-center justify-between px-3 py-1.5 rounded-lg text-[13px] font-semibold transition-all ${
+                                  isActive
+                                    ? "bg-neutral-900 dark:bg-white shadow-xl shadow-neutral-900/10 text-white dark:text-neutral-900"
+                                    : "text-neutral-600 dark:text-neutral-400 hover:bg-neutral-900/5 dark:hover:bg-neutral-700/30 has-[[data-state=open]]:bg-neutral-900/5 has-[[data-state=open]]:dark:bg-neutral-700/30 hover:text-neutral-900 dark:hover:text-neutral-200"
                                 }`}
                               >
-                                <ChevronRight className="h-3 w-3 text-neutral-400 group-hover:text-neutral-600" />
-                              </div>
-                              <div className="flex items-center gap-2 truncate">
-                                <div
-                                  className="h-2 w-2 rounded-full shrink-0"
-                                  style={{ backgroundColor: category.color }}
-                                />
-                                <span className="truncate">
-                                  {category.name}
-                                </span>
-                              </div>
-                            </div>
-                            {categoryBoards.length > 0 && (
-                              <span className="text-[10px] font-medium text-neutral-400">
-                                {categoryBoards.length}
-                              </span>
-                            )}
-                          </button>
-
-                          {/* Boards in Category */}
-                          {isExpanded && (
-                            <div className="pl-4 space-y-0.5 animate-in slide-in-from-top-1 fade-in duration-200">
-                              {categoryBoards.map((board) => (
-                                <div key={board.id} className="group relative">
-                                  <div
-                                    onClick={() =>
-                                      navigate(`/boards/${board.id}`)
-                                    }
-                                    className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-all cursor-pointer ${
-                                      boardId === board.id
-                                        ? "bg-white shadow-sm ring-1 ring-black/5 dark:bg-neutral-800 dark:ring-white/10"
-                                        : "text-neutral-600 hover:bg-white hover:shadow-sm dark:text-neutral-400 dark:hover:bg-neutral-800"
-                                    }`}
+                                <button
+                                  onClick={() =>
+                                    navigate(`/boards/${board.id}/kanban`)
+                                  }
+                                  className="flex-1 flex items-center gap-3 min-w-0 text-left"
+                                >
+                                  <span className="text-base shrink-0">
+                                    {board.icon}
+                                  </span>
+                                  <TruncatedText
+                                    as="span"
+                                    className="truncate"
+                                    title={board.name}
                                   >
-                                    <div className="flex items-center gap-3 truncate">
-                                      <span className="text-lg leading-none shrink-0">
-                                        {board.icon || "🐳"}
-                                      </span>
-                                      <div className="flex flex-col items-start truncate">
-                                        <span className="font-medium truncate">
-                                          {board.name}
-                                        </span>
-                                      </div>
-                                    </div>
+                                    {board.name}
+                                  </TruncatedText>
+                                </button>
 
-                                    {/* Dropdown Menu for Category Item - reusing same menu structure but minimal if needed 
-                                            Actually let's copy the full dropdown from 'All Boards' to maintain consistency
-                                         */}
-                                    <div
-                                      onClick={(e) => e.stopPropagation()}
-                                      className="opacity-100"
-                                    >
-                                      <DropdownMenu>
-                                        <DropdownMenuTrigger asChild>
-                                          <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            className="h-6 w-6 rounded-md hover:bg-neutral-100 dark:hover:bg-neutral-700 -mr-1"
-                                          >
-                                            <MoreHorizontal className="h-4 w-4 text-neutral-400" />
-                                          </Button>
-                                        </DropdownMenuTrigger>
-                                        <DropdownMenuContent
-                                          side="right"
-                                          align="start"
-                                          className="w-56"
+                                <div className="flex items-center gap-2">
+                                  {board.cardCount > 0 && (
+                                    <span className="text-[10px] font-medium text-neutral-400 shrink-0">
+                                      {board.cardCount}
+                                    </span>
+                                  )}
+                                  <div className="opacity-100">
+                                    <DropdownMenu>
+                                      <DropdownMenuTrigger asChild>
+                                        <button className="p-1 hover:bg-neutral-900/10 dark:hover:bg-neutral-700/50 data-[state=open]:bg-neutral-900/5 dark:data-[state=open]:bg-neutral-700/30 rounded-md transition-colors">
+                                          <MoreHorizontal className="h-3.5 w-3.5 text-neutral-400 group-hover:text-neutral-600 dark:group-hover:text-neutral-200" />
+                                        </button>
+                                      </DropdownMenuTrigger>
+                                      <DropdownMenuContent
+                                        side="right"
+                                        align="start"
+                                        className="w-48 dark:bg-neutral-900 dark:border-neutral-700"
+                                      >
+                                        <DropdownMenuItem
+                                          onClick={() =>
+                                            toggleFavorite(board.id)
+                                          }
                                         >
+                                          <Star
+                                            className={`mr-2 h-4 w-4 ${
+                                              board.is_favorite
+                                                ? "fill-orange-400 text-orange-400"
+                                                : ""
+                                            }`}
+                                          />
+                                          <span>
+                                            {board.is_favorite
+                                              ? "Unfavorite"
+                                              : "Favorite"}
+                                          </span>
+                                        </DropdownMenuItem>
+                                        <DropdownMenuSeparator className="dark:bg-neutral-700" />
+                                        <DropdownMenuItem
+                                          onClick={() =>
+                                            duplicateBoard(board.id)
+                                          }
+                                        >
+                                          <Copy className="mr-2 h-4 w-4" />
+                                          <span>Duplicate</span>
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem
+                                          onClick={() => archiveBoard(board.id)}
+                                        >
+                                          <ArchiveIcon className="mr-2 h-4 w-4" />
+                                          <span>Archive</span>
+                                        </DropdownMenuItem>
+
+                                        <DropdownMenuSeparator className="dark:bg-neutral-700" />
+                                        <DropdownMenuLabel>
+                                          Move to Category
+                                        </DropdownMenuLabel>
+                                        <DropdownMenuItem
+                                          onClick={() =>
+                                            updateBoard(board.id, {
+                                              category: null,
+                                            })
+                                          }
+                                          className="justify-between"
+                                        >
+                                          <span>None</span>
+                                          {!board.category && (
+                                            <Check className="h-3 w-3" />
+                                          )}
+                                        </DropdownMenuItem>
+                                        {userCategories.map((cat) => (
                                           <DropdownMenuItem
-                                            onClick={() =>
-                                              navigate(`/boards/${board.id}`)
-                                            }
-                                          >
-                                            <Share2 className="mr-2 h-4 w-4" />
-                                            <span>Open Board</span>
-                                          </DropdownMenuItem>
-                                          <DropdownMenuSeparator className="dark:bg-neutral-700" />
-                                          <DropdownMenuItem
-                                            onClick={() =>
-                                              toggleFavorite(board.id)
-                                            }
-                                          >
-                                            <Star
-                                              className={`mr-2 h-4 w-4 ${
-                                                board.is_favorite
-                                                  ? "fill-orange-400 text-orange-400"
-                                                  : ""
-                                              }`}
-                                            />
-                                            <span>
-                                              {board.is_favorite
-                                                ? "Unfavorite"
-                                                : "Favorite"}
-                                            </span>
-                                          </DropdownMenuItem>
-                                          <DropdownMenuSeparator className="dark:bg-neutral-700" />
-                                          <DropdownMenuLabel>
-                                            Move to Category
-                                          </DropdownMenuLabel>
-                                          <DropdownMenuItem
+                                            key={cat.id}
                                             onClick={() =>
                                               updateBoard(board.id, {
-                                                category: null,
+                                                category: cat.name,
                                               })
                                             }
                                             className="justify-between"
                                           >
-                                            <span>None</span>
-                                            {!board.category && (
+                                            <div className="flex items-center gap-2">
+                                              <div
+                                                className="h-2 w-2 rounded-full"
+                                                style={{
+                                                  backgroundColor: cat.color,
+                                                }}
+                                              />
+                                              <span className="truncate max-w-[100px]">
+                                                {cat.name}
+                                              </span>
+                                            </div>
+                                            {board.category === cat.name && (
                                               <Check className="h-3 w-3" />
                                             )}
                                           </DropdownMenuItem>
-                                          {userCategories.map((cat) => (
-                                            <DropdownMenuItem
-                                              key={cat.id}
-                                              onClick={() =>
-                                                updateBoard(board.id, {
-                                                  category: cat.name,
-                                                })
-                                              }
-                                              className="justify-between"
-                                            >
-                                              <div className="flex items-center gap-2">
-                                                <div
-                                                  className="h-2 w-2 rounded-full"
-                                                  style={{
-                                                    backgroundColor: cat.color,
-                                                  }}
-                                                />
-                                                <span className="truncate max-w-[100px]">
-                                                  {cat.name}
-                                                </span>
-                                              </div>
-                                              {board.category === cat.name && (
-                                                <Check className="h-3 w-3" />
-                                              )}
-                                            </DropdownMenuItem>
-                                          ))}
-                                          <DropdownMenuSeparator className="dark:bg-neutral-700" />
-                                          <DropdownMenuItem
-                                            onClick={() =>
-                                              duplicateBoard(board.id)
-                                            }
-                                          >
-                                            <Copy className="mr-2 h-4 w-4" />
-                                            <span>Duplicate</span>
-                                          </DropdownMenuItem>
-                                          <DropdownMenuItem
-                                            onClick={() =>
-                                              archiveBoard(board.id)
-                                            }
-                                          >
-                                            <ArchiveIcon className="mr-2 h-4 w-4" />
-                                            <span>Archive</span>
-                                          </DropdownMenuItem>
-                                        </DropdownMenuContent>
-                                      </DropdownMenu>
-                                    </div>
+                                        ))}
+                                      </DropdownMenuContent>
+                                    </DropdownMenu>
                                   </div>
                                 </div>
-                              ))}
-                              {categoryBoards.length === 0 && (
-                                <div className="px-3 py-2 text-xs text-neutral-400 italic">
-                                  No boards
+                              </div>
+                            );
+                          })}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Categories */}
+                  <div className="space-y-1">
+                    <button
+                      onClick={() => toggleSection("categories")}
+                      className="w-full h-10 flex items-center justify-between px-2 hover:bg-neutral-900/5 dark:hover:bg-neutral-800/50 rounded-lg transition-all group"
+                    >
+                      <div className="text-xs font-semibold text-neutral-400 dark:text-neutral-500 uppercase tracking-[0.08em] group-hover:text-neutral-600 dark:group-hover:text-neutral-300 transition-colors">
+                        Categories
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <div
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setIsCategoryModalOpen(true);
+                          }}
+                          className="hover:bg-neutral-200 dark:hover:bg-neutral-800 rounded-md p-1 transition-colors"
+                        >
+                          <Plus className="h-4 w-4 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 transition-colors" />
+                        </div>
+                        <ChevronDown
+                          className={`h-4 w-4 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 transition-transform duration-200 ${
+                            expandedSections.categories ? "" : "-rotate-90"
+                          }`}
+                        />
+                      </div>
+                    </button>
+                    {expandedSections.categories && (
+                      <div className="space-y-1 mt-1">
+                        {/* Categories List */}
+
+                        {userCategories.map((category) => {
+                          const categoryBoards = boards.filter(
+                            (board) => board.category === category.name
+                          );
+                          const isExpanded = expandedCategories[category.id];
+
+                          return (
+                            <div key={category.id} className="space-y-0.5">
+                              <button
+                                onClick={() => toggleCategory(category.id)}
+                                className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-semibold text-neutral-600 dark:text-neutral-400 hover:bg-neutral-900/5 dark:hover:bg-neutral-700/30 transition-all group"
+                              >
+                                <div className="flex items-center gap-3 overflow-hidden">
+                                  <div
+                                    className={`transition-transform duration-200 ${
+                                      isExpanded ? "rotate-90" : ""
+                                    }`}
+                                  >
+                                    <ChevronRight className="h-3 w-3 text-neutral-400 group-hover:text-neutral-600" />
+                                  </div>
+                                  <div className="flex items-center gap-2 truncate">
+                                    <div
+                                      className="h-2 w-2 rounded-full shrink-0"
+                                      style={{
+                                        backgroundColor: category.color,
+                                      }}
+                                    />
+                                    <span className="truncate">
+                                      {category.name}
+                                    </span>
+                                  </div>
+                                </div>
+                                {categoryBoards.length > 0 && (
+                                  <span className="text-[10px] font-medium text-neutral-400">
+                                    {categoryBoards.length}
+                                  </span>
+                                )}
+                              </button>
+
+                              {/* Boards in Category */}
+                              {isExpanded && (
+                                <div className="pl-4 space-y-0.5 animate-in slide-in-from-top-1 fade-in duration-200">
+                                  {categoryBoards.map((board) => (
+                                    <div
+                                      key={board.id}
+                                      className="group relative"
+                                    >
+                                      <div
+                                        onClick={() =>
+                                          navigate(`/boards/${board.id}`)
+                                        }
+                                        className={`w-full flex items-center justify-between px-3 py-1.5 rounded-lg text-[13px] transition-all cursor-pointer ${
+                                          boardId === board.id
+                                            ? "bg-neutral-900 dark:bg-white shadow-xl shadow-neutral-900/10 font-bold text-white dark:text-neutral-900"
+                                            : "text-neutral-600 dark:text-neutral-400 hover:bg-neutral-900/5 dark:hover:bg-neutral-700/30 has-[[data-state=open]]:bg-neutral-900/5 has-[[data-state=open]]:dark:bg-neutral-700/30 hover:text-neutral-900 dark:hover:text-neutral-200 font-semibold"
+                                        }`}
+                                      >
+                                        <div className="flex items-center gap-3 truncate">
+                                          <span className="text-base shrink-0">
+                                            {board.icon || "🐳"}
+                                          </span>
+                                          <div className="flex flex-col items-start truncate">
+                                            <span className="font-semibold truncate">
+                                              {board.name}
+                                            </span>
+                                          </div>
+                                        </div>
+
+                                        {/* Dropdown Menu for Category Item - reusing same menu structure but minimal if needed 
+                                            Actually let's copy the full dropdown from 'All Boards' to maintain consistency
+                                         */}
+                                        <div
+                                          onClick={(e) => e.stopPropagation()}
+                                          className="opacity-100"
+                                        >
+                                          <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                              <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                className="h-7 w-7 rounded-lg hover:bg-neutral-900/10 dark:hover:bg-neutral-700/50 data-[state=open]:bg-neutral-900/5 dark:data-[state=open]:bg-neutral-700/30 transition-colors -mr-1"
+                                              >
+                                                <MoreHorizontal className="h-3.5 w-3.5 text-neutral-400 group-hover:text-neutral-600 dark:group-hover:text-neutral-200" />
+                                              </Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent
+                                              side="right"
+                                              align="start"
+                                              className="w-56"
+                                            >
+                                              <DropdownMenuItem
+                                                onClick={() =>
+                                                  navigate(
+                                                    `/boards/${board.id}`
+                                                  )
+                                                }
+                                              >
+                                                <Share2 className="mr-2 h-4 w-4" />
+                                                <span>Open Board</span>
+                                              </DropdownMenuItem>
+                                              <DropdownMenuSeparator className="dark:bg-neutral-700" />
+                                              <DropdownMenuItem
+                                                onClick={() =>
+                                                  toggleFavorite(board.id)
+                                                }
+                                              >
+                                                <Star
+                                                  className={`mr-2 h-4 w-4 ${
+                                                    board.is_favorite
+                                                      ? "fill-orange-400 text-orange-400"
+                                                      : ""
+                                                  }`}
+                                                />
+                                                <span>
+                                                  {board.is_favorite
+                                                    ? "Unfavorite"
+                                                    : "Favorite"}
+                                                </span>
+                                              </DropdownMenuItem>
+                                              <DropdownMenuSeparator className="dark:bg-neutral-700" />
+                                              <DropdownMenuLabel>
+                                                Move to Category
+                                              </DropdownMenuLabel>
+                                              <DropdownMenuItem
+                                                onClick={() =>
+                                                  updateBoard(board.id, {
+                                                    category: null,
+                                                  })
+                                                }
+                                                className="justify-between"
+                                              >
+                                                <span>None</span>
+                                                {!board.category && (
+                                                  <Check className="h-3 w-3" />
+                                                )}
+                                              </DropdownMenuItem>
+                                              {userCategories.map((cat) => (
+                                                <DropdownMenuItem
+                                                  key={cat.id}
+                                                  onClick={() =>
+                                                    updateBoard(board.id, {
+                                                      category: cat.name,
+                                                    })
+                                                  }
+                                                  className="justify-between"
+                                                >
+                                                  <div className="flex items-center gap-2">
+                                                    <div
+                                                      className="h-2 w-2 rounded-full"
+                                                      style={{
+                                                        backgroundColor:
+                                                          cat.color,
+                                                      }}
+                                                    />
+                                                    <span className="truncate max-w-[100px]">
+                                                      {cat.name}
+                                                    </span>
+                                                  </div>
+                                                  {board.category ===
+                                                    cat.name && (
+                                                    <Check className="h-3 w-3" />
+                                                  )}
+                                                </DropdownMenuItem>
+                                              ))}
+                                              <DropdownMenuSeparator className="dark:bg-neutral-700" />
+                                              <DropdownMenuItem
+                                                onClick={() =>
+                                                  duplicateBoard(board.id)
+                                                }
+                                              >
+                                                <Copy className="mr-2 h-4 w-4" />
+                                                <span>Duplicate</span>
+                                              </DropdownMenuItem>
+                                              <DropdownMenuItem
+                                                onClick={() =>
+                                                  archiveBoard(board.id)
+                                                }
+                                              >
+                                                <ArchiveIcon className="mr-2 h-4 w-4" />
+                                                <span>Archive</span>
+                                              </DropdownMenuItem>
+                                            </DropdownMenuContent>
+                                          </DropdownMenu>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  ))}
+                                  {categoryBoards.length === 0 && (
+                                    <div className="px-3 py-2 text-xs text-neutral-400 italic">
+                                      No boards
+                                    </div>
+                                  )}
                                 </div>
                               )}
                             </div>
-                          )}
-                        </div>
-                      );
-                    })}
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
 
                   {/* Archive */}
                   <div className="pt-2">
-                    <button className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-neutral-600 hover:bg-white hover:shadow-sm transition-all">
+                    <button className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-neutral-600 hover:bg-white dark:hover:bg-neutral-700/30 hover:shadow-sm transition-all">
                       <Archive className="h-4 w-4 text-neutral-400" />
                       <span>Archive</span>
                     </button>
@@ -726,81 +738,101 @@ export const AppSidebar = () => {
                 <>
                   {/* AI Flows */}
                   <div className="space-y-1">
-                    <div className="flex items-center justify-between px-2 mb-2">
-                      <div className="text-[11px] font-bold text-neutral-400 uppercase tracking-wider">
+                    <button
+                      onClick={() => toggleSection("flows")}
+                      className="w-full h-10 flex items-center justify-between px-2 hover:bg-neutral-900/5 dark:hover:bg-neutral-800/50 rounded-lg transition-all group"
+                    >
+                      <div className="text-[11px] font-extrabold text-neutral-400 dark:text-neutral-500 uppercase tracking-[0.08em] group-hover:text-neutral-600 dark:group-hover:text-neutral-300 transition-colors">
                         AI Flows
                       </div>
-                      <button className="hover:bg-white rounded p-0.5 transition-colors">
-                        <Plus className="h-3 w-3 text-neutral-400" />
-                      </button>
-                    </div>
-                    {/* Get all flows from all boards */}
-                    {boards
-                      .filter((board) => !board.is_archived)
-                      .flatMap((board) =>
-                        (board.ai_flows || []).map((flow) => ({
-                          ...flow,
-                          boardId: board.id,
-                          boardName: board.name,
-                          boardColor: board.color,
-                          boardIcon: board.icon,
-                          ideasCount:
-                            flow.ideasCount || flow.ideas?.length || 0,
-                        }))
-                      )
-                      .map((flow) => {
-                        const isActive = boardId === flow.boardId;
+                      <div className="flex items-center gap-1.5">
+                        <div
+                          onClick={(e) => {
+                            e.stopPropagation();
+                          }}
+                          className="hover:bg-neutral-200 dark:hover:bg-neutral-800 rounded p-1 transition-colors"
+                        >
+                          <Plus className="h-3 w-3 text-neutral-400" />
+                        </div>
+                        <ChevronDown
+                          className={`h-3.5 w-3.5 text-neutral-400 transition-transform duration-200 ${
+                            expandedSections.flows ? "" : "-rotate-90"
+                          }`}
+                        />
+                      </div>
+                    </button>
 
-                        return (
-                          <button
-                            key={flow.id}
-                            onClick={() =>
-                              navigate(
-                                `/boards/${flow.boardId}/flow/${flow.id}`
-                              )
-                            }
-                            className={`w-full flex flex-col gap-1 px-3 py-2.5 rounded-lg text-sm transition-all ${
-                              isActive
-                                ? "bg-white dark:bg-neutral-800 shadow-sm ring-1 ring-neutral-100 dark:ring-neutral-700"
-                                : "hover:bg-white dark:hover:bg-neutral-800 hover:shadow-sm"
-                            }`}
-                          >
-                            <div className="flex items-center justify-between w-full min-w-0 gap-2">
-                              <div className="flex items-center gap-2 min-w-0 flex-1">
-                                <Zap className="h-3.5 w-3.5 text-primary-500 shrink-0" />
-                                <TruncatedText
-                                  as="span"
-                                  className="font-medium text-neutral-900 dark:text-white truncate"
-                                  title={flow.name}
-                                >
-                                  {flow.name}
-                                </TruncatedText>
-                              </div>
-                              <span className="text-[10px] font-medium text-neutral-400 shrink-0">
-                                {flow.ideasCount}
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-1.5 text-[10px] text-neutral-500 dark:text-neutral-400 min-w-0">
-                              <span className="text-base shrink-0">
-                                {flow.boardIcon}
-                              </span>
-                              <TruncatedText
-                                as="span"
-                                className="truncate"
-                                title={flow.boardName}
+                    {expandedSections.flows && (
+                      <div className="space-y-1 mt-1">
+                        {/* Get all flows from all boards */}
+                        {boards
+                          .filter((board) => !board.is_archived)
+                          .flatMap((board) =>
+                            (board.ai_flows || []).map((flow) => ({
+                              ...flow,
+                              boardId: board.id,
+                              boardName: board.name,
+                              boardColor: board.color,
+                              boardIcon: board.icon,
+                              ideasCount:
+                                flow.ideasCount || flow.ideas?.length || 0,
+                            }))
+                          )
+                          .map((flow) => {
+                            const isActive = boardId === flow.boardId;
+
+                            return (
+                              <button
+                                key={flow.id}
+                                onClick={() =>
+                                  navigate(
+                                    `/boards/${flow.boardId}/flow/${flow.id}`
+                                  )
+                                }
+                                className={`w-full flex flex-col gap-1 px-3 py-2.5 rounded-xl text-sm transition-all ${
+                                  isActive
+                                    ? "bg-neutral-900 dark:bg-white shadow-xl shadow-neutral-900/10 text-white dark:text-neutral-900"
+                                    : "hover:bg-neutral-900/5 dark:hover:bg-neutral-700/30 hover:shadow-sm"
+                                }`}
                               >
-                                {flow.boardName}
-                              </TruncatedText>
-                            </div>
-                          </button>
-                        );
-                      })}
-                    {/* Show message if no flows */}
-                    {boards
-                      .filter((b) => !b.is_archived)
-                      .flatMap((b) => b.ai_flows || []).length === 0 && (
-                      <div className="px-3 py-4 text-center text-sm text-neutral-400">
-                        No AI flows yet. Create a board to get started.
+                                <div className="flex items-center justify-between w-full min-w-0 gap-2">
+                                  <div className="flex items-center gap-2 min-w-0 flex-1">
+                                    <Zap className="h-3.5 w-3.5 text-primary-500 shrink-0" />
+                                    <TruncatedText
+                                      as="span"
+                                      className="font-bold text-neutral-900 dark:text-white truncate"
+                                      title={flow.name}
+                                    >
+                                      {flow.name}
+                                    </TruncatedText>
+                                  </div>
+                                  <span className="text-[10px] font-medium text-neutral-400 shrink-0">
+                                    {flow.ideasCount}
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-1.5 text-[10px] text-neutral-500 dark:text-neutral-400 min-w-0">
+                                  <span className="text-base shrink-0">
+                                    {flow.boardIcon}
+                                  </span>
+                                  <TruncatedText
+                                    as="span"
+                                    className="truncate"
+                                    title={flow.boardName}
+                                  >
+                                    {flow.boardName}
+                                  </TruncatedText>
+                                </div>
+                              </button>
+                            );
+                          })}
+                        {/* Show message if no flows */}
+                        {boards
+                          .filter((b) => !b.is_archived)
+                          .flatMap((b) => b.ai_flows || []).length === 0 && (
+                          <div className="px-3 py-4 text-center text-sm text-neutral-400">
+                            No AI flows yet. Create a board to get started.
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
@@ -853,6 +885,14 @@ export const AppSidebar = () => {
           </div>
         </div>
       </div>
+      <CreateBoardModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+      />
+      <CreateCategoryModal
+        isOpen={isCategoryModalOpen}
+        onClose={() => setIsCategoryModalOpen(false)}
+      />
     </aside>
   );
 };

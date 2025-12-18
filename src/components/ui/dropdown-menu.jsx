@@ -39,7 +39,10 @@ export const DropdownMenuTrigger = ({ asChild, children }) => {
   };
 
   if (asChild && children) {
-    return cloneElement(children, { onClick: handleClick });
+    return cloneElement(children, {
+      onClick: handleClick,
+      "data-state": ctx?.open ? "open" : "closed",
+    });
   }
 
   return (

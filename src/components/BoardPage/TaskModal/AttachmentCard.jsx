@@ -160,7 +160,7 @@ export const AttachmentCard = ({
           <Button
             variant="ghost"
             size="icon"
-            className="h-8 w-8 opacity-0 group-hover:opacity-100 shrink-0 text-neutral-400 hover:text-neutral-600 dark:text-neutral-400 dark:hover:text-neutral-200 transition-opacity"
+            className="h-8 w-8 opacity-0 group-hover:opacity-100 shrink-0 text-neutral-400 data-[state=open]:opacity-100 hover:text-neutral-600 dark:text-neutral-400 dark:hover:text-neutral-200 transition-opacity"
           >
             <MoreVertical className="h-4 w-4" />
           </Button>

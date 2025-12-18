@@ -108,19 +108,18 @@ export const BoardProvider = ({ children }) => {
   // Set up realtime subscriptions for cards (excluding position updates)
   useCardsRealtime(currentBoard, setCurrentBoard);
 
-  const createBoard = async (name, description = "") => {
+  const createBoard = async (boardData) => {
     try {
       if (!currentUser?.id) throw new Error("User not authenticated");
 
       const newBoard = await boardService.createBoard(currentUser.id, {
-        name,
-        description,
-        is_favorite: false,
+        ...boardData,
+        is_favorite: boardData.is_favorite || false,
         is_archived: false,
       });
 
       setBoards((prev) => [newBoard, ...prev]);
-      toast.success(`Board "${name}" created`);
+      toast.success(`Board "${boardData.name}" created`);
       return newBoard;
     } catch (error) {
       console.error("Error creating board:", error);

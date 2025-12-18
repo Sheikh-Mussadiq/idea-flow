@@ -14,6 +14,7 @@ import { KanbanCard, KanbanCardContent } from "./KanbanCard.jsx";
 import { KanbanColumn } from "./KanbanColumn.jsx";
 import { useBoard } from "../../../context/BoardContext";
 import { toast } from "sonner";
+import { Plus, X } from "lucide-react";
 
 export const KanbanBoard = ({
   cards,
@@ -129,22 +130,33 @@ export const KanbanBoard = ({
     }
   };
 
-  const handleAddList = async () => {
-    console.log("handleAddList");
+  // State for creating new column
+  const [isCreatingColumn, setIsCreatingColumn] = useState(false);
+  const [newColumnTitle, setNewColumnTitle] = useState("");
 
-    if (!canEdit || !currentBoard) return;
-    const title = window.prompt("Enter list title:");
-    if (!title) return;
+  const handleCreateList = async () => {
+    if (!newColumnTitle.trim() || !canEdit || !currentBoard) return;
 
     try {
       const position =
         columns.length > 0
           ? Math.max(...columns.map((c) => c.position)) + 1
           : 1;
-      await createColumn(currentBoard.id, title, position);
+      await createColumn(currentBoard.id, newColumnTitle.trim(), position);
       toast.success("List added");
+      setNewColumnTitle("");
+      setIsCreatingColumn(false);
     } catch (error) {
       // Error handled in context
+    }
+  };
+
+  const handleKeyDown = (e) => {
+    if (e.key === "Enter") {
+      handleCreateList();
+    } else if (e.key === "Escape") {
+      setIsCreatingColumn(false);
+      setNewColumnTitle("");
     }
   };
 
@@ -180,14 +192,47 @@ export const KanbanBoard = ({
             />
           ))}
 
-          {/* Add another list button */}
+          {/* Add another list button or form */}
           <div className="flex-shrink-0 w-[280px]">
-            <button
-              onClick={handleAddList}
-              className="w-full h-12 rounded-xl border border-dashed border-neutral-300 text-neutral-500 hover:border-neutral-400 hover:text-neutral-600 flex items-center justify-center gap-2 text-sm font-medium transition-colors"
-            >
-              + Add another list
-            </button>
+            {isCreatingColumn ? (
+              <div className="bg-primary-100 dark:bg-neutral-900 rounded-2xl p-2 animate-in fade-in zoom-in-95 duration-200 border border-neutral-200/50 dark:border-neutral-800">
+                <input
+                  type="text"
+                  value={newColumnTitle}
+                  onChange={(e) => setNewColumnTitle(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  placeholder="Enter list title..."
+                  className="w-full font-semibold text-sm text-neutral-800 dark:text-neutral-100 tracking-tight bg-white dark:bg-neutral-800 px-3 py-2 rounded-xl border border-primary-300 dark:border-neutral-600 focus:outline-none focus:ring-2 focus:ring-primary-500 mb-2"
+                  autoFocus
+                />
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={handleCreateList}
+                    disabled={!newColumnTitle.trim()}
+                    className="flex-1 bg-primary-800 hover:bg-primary-700 text-white px-3 py-1.5 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    Add List
+                  </button>
+                  <button
+                    onClick={() => {
+                      setIsCreatingColumn(false);
+                      setNewColumnTitle("");
+                    }}
+                    className="p-1.5 text-neutral-500 hover:text-neutral-700 hover:bg-neutral-200/50 dark:hover:bg-neutral-700/50 rounded-lg transition-colors"
+                  >
+                    <X className="h-5 w-5" />
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <button
+                onClick={() => setIsCreatingColumn(true)}
+                className="w-full h-12 rounded-xl border border-dashed border-neutral-300 text-neutral-500 hover:border-neutral-400 hover:text-neutral-600 flex items-center justify-center gap-2 text-sm font-medium transition-colors"
+              >
+                <Plus className="h-5 w-5" />
+                Add another list
+              </button>
+            )}
           </div>
         </div>
 
